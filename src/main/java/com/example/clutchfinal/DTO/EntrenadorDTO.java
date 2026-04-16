@@ -18,5 +18,5 @@ public class EntrenadorDTO {
     private LocalDate fechaNacimiento;
     private String titulo;
     private Long clubId;
-    private List<Long> equipoIds;
+    private List<EquipoEntrenadorDTO> equipos;
 }

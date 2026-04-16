@@ -2,6 +2,7 @@ package com.example.clutchfinal.Fabrica;
 
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EquipoDTO;
+import com.example.clutchfinal.DTO.EquipoEntrenadorDTO;
 import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.Model.Equipo;
 
@@ -92,9 +93,15 @@ public class FabricaEquipoService {
                         .map(jugador -> jugador.getId())
                         .toList()
         );
-        dto.setEntrenadorIds(
-                equipo.getEntrenadores().stream()
-                        .map(entrenador -> entrenador.getId())
+        dto.setEntrenadores(
+                equipo.getEquiposEntrenadores().stream()
+                        .map(rel -> {
+                            EquipoEntrenadorDTO relDto = new EquipoEntrenadorDTO();
+                            relDto.setEquipoId(rel.getEquipo().getId());
+                            relDto.setEntrenadorId(rel.getEntrenador().getId());
+                            relDto.setRol(rel.getRol());
+                            return relDto;
+                        })
                         .toList()
         );
         return dto;
