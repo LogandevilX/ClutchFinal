@@ -55,3 +55,27 @@ Post:
   "direccion": "Calle Ejemplo 123",
   "nombrePabellon": "Infanta Cristina"
 }
+
+### EQUIPO (creación con entrenadores) ###
+POST /clutch/equipos
+{
+  "nombreEquipo": "Club Europeo de Baloncesto A",
+  "clubId": 2,
+  "entrenadores": [
+    {
+      "entrenadorId": 1,
+      "rol": "PRIMER_ENTRENADOR"
+    },
+    {
+      "entrenadorId": 2,
+      "rol": "SEGUNDO_ENTRENADOR"
+    }
+  ]
+}
+
+### EQUIPOS_ENTRENADORES ###
+POST /clutch/equipos/{equipoId}/entrenadores
+{
+  "entrenadorId": 10,
+  "rol": "PRIMER_ENTRENADOR"
+}

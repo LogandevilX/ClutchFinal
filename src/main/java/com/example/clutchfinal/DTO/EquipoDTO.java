@@ -19,5 +19,5 @@ public class EquipoDTO {
     private BigDecimal puntosEnContra;
     private Long clubId;
     private List<Long> jugadorIds;
-    private List<Long> entrenadorIds;
+    private List<EquipoEntrenadorDTO> entrenadores;
 }

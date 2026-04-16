@@ -43,8 +43,8 @@ public class Entrenador {
     @JoinColumn(name = "id_club", nullable = false)
     private Club club;
 
-    @ManyToMany(mappedBy = "entrenadores", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "entrenador", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Equipo> equipos = new HashSet<>();
+    private Set<EquipoEntrenador> equiposEntrenadores = new HashSet<>();
 }

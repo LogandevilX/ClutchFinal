@@ -150,6 +150,7 @@ CREATE TABLE `Equipos_Entrenadores` (
         PRIMARY KEY (`id_equipo`,`id_entrenador`),
         UNIQUE KEY `unique_equipo_rol` (`id_equipo`,`rol`),
         KEY `fk_eqent_entrenador` (`id_entrenador`),
+        CONSTRAINT `chk_eqent_rol` CHECK (`rol` in ('PRIMER_ENTRENADOR','SEGUNDO_ENTRENADOR')),
         CONSTRAINT `fk_eqent_entrenador` FOREIGN KEY (`id_entrenador`) REFERENCES `Entrenadores` (`id_entrenador`) ON DELETE CASCADE ON UPDATE CASCADE,
         CONSTRAINT `fk_eqent_equipo` FOREIGN KEY (`id_equipo`) REFERENCES `Equipos` (`id_equipo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
