@@ -1,12 +1,10 @@
 package com.example.clutchfinal.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.clutchfinal.DTO.EquipoDTO;
-import com.example.clutchfinal.DTO.EquipoEntrenadorDTO;
 import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.Service.EquipoService;
 
@@ -40,16 +38,6 @@ public class EquipoController {
             EquipoDTO nuevoEquipo = equipoService.save(dto);
             return new ResponseEntity<>(nuevoEquipo, HttpStatus.CREATED);
         } catch (NoSuchElementException | IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PostMapping("/{id}/entrenadores")
-    public ResponseEntity<EquipoEntrenadorDTO> addEntrenador(@PathVariable Long id, @RequestBody EquipoEntrenadorDTO dto) {
-        try {
-            EquipoEntrenadorDTO relacion = equipoService.addEntrenador(id, dto);
-            return new ResponseEntity<>(relacion, HttpStatus.CREATED);
-        } catch (NoSuchElementException | IllegalArgumentException | DataIntegrityViolationException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

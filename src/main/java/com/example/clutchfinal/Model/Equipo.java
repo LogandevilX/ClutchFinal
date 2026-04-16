@@ -53,8 +53,9 @@ public class Equipo {
     @EqualsAndHashCode.Exclude
     private Set<Jugador> jugadores = new HashSet<>();
 
-    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_entrenador", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<EquipoEntrenador> equiposEntrenadores = new HashSet<>();
+    private Entrenador entrenador;
 }

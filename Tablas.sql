@@ -125,6 +125,7 @@ CONSTRAINT `fk_ent_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`)
 CREATE TABLE `Equipos` (
 `id_equipo` int(11) NOT NULL AUTO_INCREMENT,
 `id_club` int(11) NOT NULL,
+`id_entrenador` int(11) NOT NULL,
 `id_categoria` int(11) NOT NULL,
 `nombre_equipo` varchar(100) NOT NULL,
 `partidos_ganados` int(11) NOT NULL DEFAULT 0,
@@ -135,24 +136,11 @@ CREATE TABLE `Equipos` (
 `puntos_en_contra` decimal(4,2) NOT NULL DEFAULT 0.00,
 PRIMARY KEY (`id_equipo`),
 KEY `fk_eq_club` (`id_club`),
+KEY `fk_eq_entrenador` (`id_entrenador`),
 KEY `fk_eq_categoria` (`id_categoria`),
 CONSTRAINT `fk_eq_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`),
+CONSTRAINT `fk_eq_entrenador` FOREIGN KEY (`id_entrenador`) REFERENCES `Entrenadores` (`id_entrenador`),
 CONSTRAINT `fk_eq_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `Categorias` (`id_categoria`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
--- clutch.Equipos_Entrenadores definition
-
-CREATE TABLE `Equipos_Entrenadores` (
-        `id_equipo` int(11) NOT NULL,
-        `id_entrenador` int(11) NOT NULL,
-        `rol` varchar(20) NOT NULL,
-        PRIMARY KEY (`id_equipo`,`id_entrenador`),
-        UNIQUE KEY `unique_equipo_rol` (`id_equipo`,`rol`),
-        KEY `fk_eqent_entrenador` (`id_entrenador`),
-        CONSTRAINT `chk_eqent_rol` CHECK (`rol` in ('PRIMER_ENTRENADOR','SEGUNDO_ENTRENADOR')),
-        CONSTRAINT `fk_eqent_entrenador` FOREIGN KEY (`id_entrenador`) REFERENCES `Entrenadores` (`id_entrenador`) ON DELETE CASCADE ON UPDATE CASCADE,
-        CONSTRAINT `fk_eqent_equipo` FOREIGN KEY (`id_equipo`) REFERENCES `Equipos` (`id_equipo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
