@@ -17,12 +17,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JugadorService {
+
     @Autowired
     private FabricaJugadorService fabricaJugadorService;
     @Autowired
@@ -32,10 +32,10 @@ public class JugadorService {
     @Autowired
     private EquipoRepository equipoRepository;
 
-    public JugadorDTO save(JugadorDTO dto){
+    public JugadorDTO save(JugadorDTO dto) {
         Jugador jugador = fabricaJugadorService.createJugador(dto);
 
-        // Comprobamos que el jpg introducido existo en el direcorio correcto
+        // Comprobamos que el jpg introducido exista en el directorio correcto
         if(dto.getFoto() != null && !dto.getFoto().isEmpty()){
             Path ruta = Paths.get("upload/perfiles/", dto.getFoto());
             if (!Files.exists(ruta)) {
@@ -54,44 +54,37 @@ public class JugadorService {
             throw new IllegalArgumentException("El jugador debe tener por lo menos 14 años.");
         }
 
+        // --- LÓGICA DE EQUIPOS ---
+        if (dto.getEquipoIds() != null && !dto.getEquipoIds().isEmpty()) {
+            // Mapeamos los IDs a entidades Equipo
+            Set<Equipo> equipos = dto.getEquipoIds().stream()
+                    .map(id -> equipoRepository.findById(id)
+                            .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + id)))
+                    .collect(Collectors.toSet());
+
+            if (equipos.size() != dto.getEquipoIds().size()) {
+                throw new NoSuchElementException("Uno o más equipos no fueron encontrados");
+            }
+
+            // Asignación directa, delegando la persistencia a JPA
+            jugador.setEquipos(equipos);
+        }
+
         Jugador jugadorGuardado = jugadorRepository.save(jugador);
-        assignEquipo(jugadorGuardado, dto.getEquipoIds(), clubOpt.get().getId());
         return fabricaJugadorService.createJugadorDTO(jugadorGuardado);
     }
 
-    public JugadorResponseDTO findById(Long id){
+    public JugadorResponseDTO findById(Long id) {
         return jugadorRepository.findById(id)
                 .map(fabricaJugadorService::createResponseDTO)
                 .orElse(null);
     }
 
-    public List<JugadorResponseDTO> findAll(){
+    public List<JugadorResponseDTO> findAll() {
         return fabricaJugadorService.createJugadoresDTO(jugadorRepository.findAll());
     }
 
-    public void deleteById(Long id){
+    public void deleteById(Long id) {
         jugadorRepository.deleteById(id);
-    }
-
-    private void assignEquipo(Jugador jugador, List<Long> equipoIds, Long clubId) {
-        if (equipoIds == null || equipoIds.isEmpty()) {
-            return;
-        }
-        if (equipoIds.size() > 1) {
-            throw new IllegalArgumentException("Solo se puede asignar un equipo al crear o actualizar un jugador.");
-        }
-
-        Long equipoId = equipoIds.get(0);
-        Equipo equipo = equipoRepository.findById(equipoId)
-                .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
-
-        if (!equipo.getClub().getId().equals(clubId)) {
-            throw new IllegalArgumentException("El equipo con ID " + equipoId + " no pertenece al club con ID " + clubId + ".");
-        }
-
-        if (equipo.getJugadores().stream().noneMatch(jugadorActual -> jugadorActual.getId().equals(jugador.getId()))) {
-            equipo.getJugadores().add(jugador);
-            equipoRepository.save(equipo);
-        }
     }
 }

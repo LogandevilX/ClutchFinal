@@ -16,6 +16,8 @@ import java.time.Period;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class EntrenadorService {
@@ -37,13 +39,28 @@ public class EntrenadorService {
         }
         entrenador.setClub(clubOpt.get());
 
+        if (dto.getEquipoIds() != null && !dto.getEquipoIds().isEmpty()) {
+            // Mapeamos los IDs a entidades Equipo
+            Set<Equipo> equipos = dto.getEquipoIds().stream()
+                    .map(id -> equipoRepository.findById(id)
+                            .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + id)))
+                    .collect(Collectors.toSet());
+
+            if (equipos.size() != dto.getEquipoIds().size()) {
+                throw new NoSuchElementException("Uno o más equipos no fueron encontrados");
+            }
+
+            // Asignación directa, delegando la persistencia a JPA
+            entrenador.setEquipos(equipos);
+        }
+
         int edad = Period.between(dto.getFechaNacimiento(), LocalDate.now()).getYears();
         if(edad < 16){
             throw new IllegalArgumentException("El entrenador debe tener por lo menos 16 años.");
         }
 
+
         Entrenador entrenadorGuardado = entrenadorRepository.save(entrenador);
-        assignEquipo(entrenadorGuardado, dto.getEquipoIds(), clubOpt.get().getId());
         return fabricaEntrenadorService.createEntrenadorDTO(entrenadorGuardado);
     }
 
@@ -59,27 +76,5 @@ public class EntrenadorService {
 
     public void deleteById(Long id){
         entrenadorRepository.deleteById(id);
-    }
-
-    private void assignEquipo(Entrenador entrenador, List<Long> equipoIds, Long clubId) {
-        if (equipoIds == null || equipoIds.isEmpty()) {
-            return;
-        }
-        if (equipoIds.size() > 1) {
-            throw new IllegalArgumentException("Solo se puede asignar un equipo al crear o actualizar un entrenador.");
-        }
-
-        Long equipoId = equipoIds.get(0);
-        Equipo equipo = equipoRepository.findById(equipoId)
-                .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
-
-        if (!equipo.getClub().getId().equals(clubId)) {
-            throw new IllegalArgumentException("El equipo con ID " + equipoId + " no pertenece al club con ID " + clubId + ".");
-        }
-
-        if (equipo.getEntrenadores().stream().noneMatch(entrenadorActual -> entrenadorActual.getId().equals(entrenador.getId()))) {
-            equipo.getEntrenadores().add(entrenador);
-            equipoRepository.save(equipo);
-        }
     }
 }
