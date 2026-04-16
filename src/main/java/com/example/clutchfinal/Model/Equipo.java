@@ -1,13 +1,11 @@
 package com.example.clutchfinal.Model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "Equipos")
@@ -45,20 +43,24 @@ public class Equipo {
     @JoinColumn(name = "id_club", nullable = false)
     private Club club;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "Equipos_Jugadores",
+            name = "equipos_jugadores",
             joinColumns = @JoinColumn(name = "id_equipo"),
             inverseJoinColumns = @JoinColumn(name = "id_jugador")
     )
-    private List<Jugador> jugadores = new ArrayList<>();
-    @ManyToMany
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Jugador> jugadores = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "Equipos_Entrenadores",
+            name = "equipos_entrenadores",
             joinColumns = @JoinColumn(name = "id_equipo"),
             inverseJoinColumns = @JoinColumn(name = "id_entrenador")
     )
-    private List<Entrenador> entrenadores = new ArrayList<>();
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Entrenador> entrenadores = new HashSet<>();
 
 }
-
