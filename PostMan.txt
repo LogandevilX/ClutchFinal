@@ -1,0 +1,57 @@
+### TEMPORADA ###
+Post:
+{
+    "denominacion": "Temporada 2024/2025",
+    "fechaInicio": "2024-09-01",
+    "fechaFin": "2025-05-31", (Opcional)
+    "estado": "Finalizada"
+}
+
+### CATEGORIA ###
+Post:
+{
+    "temporadaId": 1,
+    "nombreCategoria": "Sub-22",
+    "genero": "Masculino",
+    "edadMax": 24
+}
+
+### DIVISION ###
+{
+    "nombreDivision": "Bronce",
+    "categoriaId": 1
+}
+
+### FASE ###
+{
+    "nombreFase": "Temporada Regular",
+    "fechaInicio": "2024-09-01",
+    "fechaFin": "2025-03-30",
+    "divisionId": 1
+}
+
+### GRUPO ###
+{
+    "nombreGrupo": "Grupo 4",
+    "faseId": 1
+}
+
+### CLUB ###
+(Con Pabellon)
+{
+  "nombreClub": "Club Europeo de Baloncesto",
+  "cif": "12345678A",
+  "codigoPostal": 28229,
+  "telefono": 123456789,
+  "directorTecnico": "Juan Perez",
+  "escudo": "LOGO_CEB.jpg",
+  "pabellonIds": [2]
+}
+
+### PABELLON ###
+(Sin Club Asignado)
+{
+  "codigoPostal": 28229,
+  "direccion": "Calle Ejemplo 123",
+  "nombrePabellon": "Infanta Cristina"
+}
