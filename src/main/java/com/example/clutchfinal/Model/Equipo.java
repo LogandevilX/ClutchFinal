@@ -53,14 +53,8 @@ public class Equipo {
     @EqualsAndHashCode.Exclude
     private Set<Jugador> jugadores = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "equipos_entrenadores",
-            joinColumns = @JoinColumn(name = "id_equipo"),
-            inverseJoinColumns = @JoinColumn(name = "id_entrenador")
-    )
+    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Entrenador> entrenadores = new HashSet<>();
-
+    private Set<EquipoEntrenador> equiposEntrenadores = new HashSet<>();
 }
