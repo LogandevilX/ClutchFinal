@@ -17,15 +17,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
 public class JugadorService {
-    private static final int MAX_JUGADORES_POR_EQUIPO = 15;
-
     @Autowired
     private FabricaJugadorService fabricaJugadorService;
     @Autowired
@@ -58,7 +55,7 @@ public class JugadorService {
         }
 
         Jugador jugadorGuardado = jugadorRepository.save(jugador);
-        syncEquipos(jugadorGuardado, dto.getEquipoIds());
+        assignEquipo(jugadorGuardado, dto.getEquipoIds(), clubOpt.get().getId());
         return fabricaJugadorService.createJugadorDTO(jugadorGuardado);
     }
 
@@ -76,36 +73,25 @@ public class JugadorService {
         jugadorRepository.deleteById(id);
     }
 
-    private void syncEquipos(Jugador jugador, List<Long> equipoIds) {
-        if (equipoIds == null) {
+    private void assignEquipo(Jugador jugador, List<Long> equipoIds, Long clubId) {
+        if (equipoIds == null || equipoIds.isEmpty()) {
             return;
         }
-
-        List<Equipo> equiposActuales = equipoRepository.findAll().stream()
-                .filter(equipo -> equipo.getJugadores().stream()
-                        .anyMatch(jugadorActual -> jugadorActual.getId().equals(jugador.getId())))
-                .toList();
-
-        for (Equipo equipoActual : equiposActuales) {
-            equipoActual.getJugadores().removeIf(jugadorActual -> jugadorActual.getId().equals(jugador.getId()));
-            equipoRepository.save(equipoActual);
+        if (equipoIds.size() > 1) {
+            throw new IllegalArgumentException("Solo se puede asignar un equipo al crear o actualizar un jugador.");
         }
 
-        List<Equipo> nuevosEquipos = new ArrayList<>();
-        for (Long equipoId : equipoIds) {
-            Equipo equipo = equipoRepository.findById(equipoId)
-                    .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
-            nuevosEquipos.add(equipo);
+        Long equipoId = equipoIds.get(0);
+        Equipo equipo = equipoRepository.findById(equipoId)
+                .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
+
+        if (!equipo.getClub().getId().equals(clubId)) {
+            throw new IllegalArgumentException("El equipo con ID " + equipoId + " no pertenece al club con ID " + clubId + ".");
         }
 
-        for (Equipo equipo : nuevosEquipos) {
-            if (equipo.getJugadores().stream().noneMatch(jugadorActual -> jugadorActual.getId().equals(jugador.getId()))) {
-                if (equipo.getJugadores().size() >= MAX_JUGADORES_POR_EQUIPO) {
-                    throw new IllegalArgumentException("El equipo con ID " + equipo.getId() + " ya tiene el máximo de 15 jugadores.");
-                }
-                equipo.getJugadores().add(jugador);
-                equipoRepository.save(equipo);
-            }
+        if (equipo.getJugadores().stream().noneMatch(jugadorActual -> jugadorActual.getId().equals(jugador.getId()))) {
+            equipo.getJugadores().add(jugador);
+            equipoRepository.save(equipo);
         }
     }
 }

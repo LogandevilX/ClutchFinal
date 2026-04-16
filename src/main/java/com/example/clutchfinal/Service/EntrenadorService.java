@@ -13,15 +13,12 @@ import com.example.clutchfinal.Repository.EquipoRepository;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
 public class EntrenadorService {
-    private static final int MAX_ENTRENADORES_POR_EQUIPO = 2;
-
     @Autowired
     private FabricaEntrenadorService fabricaEntrenadorService;
     @Autowired
@@ -46,7 +43,7 @@ public class EntrenadorService {
         }
 
         Entrenador entrenadorGuardado = entrenadorRepository.save(entrenador);
-        syncEquipos(entrenadorGuardado, dto.getEquipoIds());
+        assignEquipo(entrenadorGuardado, dto.getEquipoIds(), clubOpt.get().getId());
         return fabricaEntrenadorService.createEntrenadorDTO(entrenadorGuardado);
     }
 
@@ -64,36 +61,25 @@ public class EntrenadorService {
         entrenadorRepository.deleteById(id);
     }
 
-    private void syncEquipos(Entrenador entrenador, List<Long> equipoIds) {
-        if (equipoIds == null) {
+    private void assignEquipo(Entrenador entrenador, List<Long> equipoIds, Long clubId) {
+        if (equipoIds == null || equipoIds.isEmpty()) {
             return;
         }
-
-        List<Equipo> equiposActuales = equipoRepository.findAll().stream()
-                .filter(equipo -> equipo.getEntrenadores().stream()
-                        .anyMatch(entrenadorActual -> entrenadorActual.getId().equals(entrenador.getId())))
-                .toList();
-
-        for (Equipo equipoActual : equiposActuales) {
-            equipoActual.getEntrenadores().removeIf(entrenadorActual -> entrenadorActual.getId().equals(entrenador.getId()));
-            equipoRepository.save(equipoActual);
+        if (equipoIds.size() > 1) {
+            throw new IllegalArgumentException("Solo se puede asignar un equipo al crear o actualizar un entrenador.");
         }
 
-        List<Equipo> nuevosEquipos = new ArrayList<>();
-        for (Long equipoId : equipoIds) {
-            Equipo equipo = equipoRepository.findById(equipoId)
-                    .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
-            nuevosEquipos.add(equipo);
+        Long equipoId = equipoIds.get(0);
+        Equipo equipo = equipoRepository.findById(equipoId)
+                .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + equipoId));
+
+        if (!equipo.getClub().getId().equals(clubId)) {
+            throw new IllegalArgumentException("El equipo con ID " + equipoId + " no pertenece al club con ID " + clubId + ".");
         }
 
-        for (Equipo equipo : nuevosEquipos) {
-            if (equipo.getEntrenadores().stream().noneMatch(entrenadorActual -> entrenadorActual.getId().equals(entrenador.getId()))) {
-                if (equipo.getEntrenadores().size() >= MAX_ENTRENADORES_POR_EQUIPO) {
-                    throw new IllegalArgumentException("El equipo con ID " + equipo.getId() + " ya tiene el máximo de 2 entrenadores.");
-                }
-                equipo.getEntrenadores().add(entrenador);
-                equipoRepository.save(equipo);
-            }
+        if (equipo.getEntrenadores().stream().noneMatch(entrenadorActual -> entrenadorActual.getId().equals(entrenador.getId()))) {
+            equipo.getEntrenadores().add(entrenador);
+            equipoRepository.save(equipo);
         }
     }
 }
