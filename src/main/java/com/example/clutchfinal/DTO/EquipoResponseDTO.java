@@ -16,7 +16,6 @@ public class EquipoResponseDTO {
     private Integer posicion;
     private BigDecimal puntosAFavor;
     private BigDecimal puntosEnContra;
-    private Long categoriaId;
     private String direccion;
     private String urlEscudo;
 }

@@ -17,6 +17,11 @@ import org.hibernate.annotations.Check;
 @AllArgsConstructor
 public class EquipoEntrenador {
 
+    public enum RolEntrenador {
+        PRIMER_ENTRENADOR,
+        SEGUNDO_ENTRENADOR
+    }
+
     @EmbeddedId
     private EquipoEntrenadorId id;
 
