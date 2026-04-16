@@ -3,16 +3,11 @@ package com.example.clutchfinal.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EntrenadorDTO;
-import com.example.clutchfinal.DTO.EquipoEntrenadorDTO;
 import com.example.clutchfinal.Fabrica.FabricaEntrenadorService;
 import com.example.clutchfinal.Model.Club;
 import com.example.clutchfinal.Model.Entrenador;
-import com.example.clutchfinal.Model.Equipo;
-import com.example.clutchfinal.Model.EquipoEntrenador;
-import com.example.clutchfinal.Model.EquipoEntrenadorId;
 import com.example.clutchfinal.Repository.ClubRepository;
 import com.example.clutchfinal.Repository.EntrenadorRepository;
-import com.example.clutchfinal.Repository.EquipoRepository;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -28,8 +23,6 @@ public class EntrenadorService {
     private EntrenadorRepository entrenadorRepository;
     @Autowired
     private ClubRepository clubRepository;
-    @Autowired
-    private EquipoRepository equipoRepository;
 
     public EntrenadorDTO save(EntrenadorDTO dto){
         Entrenador entrenador = fabricaEntrenadorService.createEntrenador(dto);
@@ -46,30 +39,6 @@ public class EntrenadorService {
         }
 
         Entrenador entrenadorGuardado = entrenadorRepository.save(entrenador);
-
-        if (dto.getEquipos() != null && !dto.getEquipos().isEmpty()) {
-            entrenadorGuardado.getEquiposEntrenadores().clear();
-
-            for (EquipoEntrenadorDTO relacionDto : dto.getEquipos()) {
-                if (relacionDto.getEquipoId() == null || relacionDto.getRol() == null) {
-                    throw new IllegalArgumentException("Cada relación de entrenador-equipo debe incluir equipoId y rol.");
-                }
-
-                Equipo equipo = equipoRepository.findById(relacionDto.getEquipoId())
-                        .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + relacionDto.getEquipoId()));
-
-                EquipoEntrenador relacion = new EquipoEntrenador();
-                relacion.setId(new EquipoEntrenadorId(equipo.getId(), entrenadorGuardado.getId()));
-                relacion.setEquipo(equipo);
-                relacion.setEntrenador(entrenadorGuardado);
-                relacion.setRol(relacionDto.getRol());
-
-                entrenadorGuardado.getEquiposEntrenadores().add(relacion);
-            }
-
-            entrenadorGuardado = entrenadorRepository.save(entrenadorGuardado);
-        }
-
         return fabricaEntrenadorService.createEntrenadorDTO(entrenadorGuardado);
     }
 

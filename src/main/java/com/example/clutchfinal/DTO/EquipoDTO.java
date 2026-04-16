@@ -18,6 +18,6 @@ public class EquipoDTO {
     private BigDecimal puntosAFavor;
     private BigDecimal puntosEnContra;
     private Long clubId;
+    private Long entrenadorId;
     private List<Long> jugadorIds;
-    private List<EquipoEntrenadorDTO> entrenadores;
 }
