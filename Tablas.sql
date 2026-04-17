@@ -56,7 +56,6 @@ CREATE TABLE `Categorias` (
 `id_temporada` int(11) NOT NULL,
 `nombre_categoria` varchar(50) NOT NULL,
 `genero` varchar(20) NOT NULL,
-`edad_min` int(11) NOT NULL,
 `edad_max` int(11) NOT NULL,
 PRIMARY KEY (`id_categoria`),
 KEY `fk_cat_temporada` (`id_temporada`),
@@ -101,48 +100,46 @@ CONSTRAINT `fk_emp_usuario` FOREIGN KEY (`id_empleado`) REFERENCES `Usuarios` (`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
--- clutch.Entrenadores definition
-
-CREATE TABLE `Entrenadores` (
-`id_entrenador` int(11) NOT NULL AUTO_INCREMENT,
-`id_club` int(11) NOT NULL,
-`DNI` varchar(15) NOT NULL,
-`nombre` varchar(50) NOT NULL,
-`primer_apellido` varchar(50) NOT NULL,
-`segundo_apellido` varchar(50) DEFAULT NULL,
-`telefono` varchar(15) NOT NULL,
-`fecha_nacimiento` datetime NOT NULL,
-`titulo` varchar(50) NOT NULL,
-PRIMARY KEY (`id_entrenador`),
-UNIQUE KEY `DNI` (`DNI`),
-KEY `fk_ent_club` (`id_club`),
-CONSTRAINT `fk_ent_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
 -- clutch.Equipos definition
 
 CREATE TABLE `Equipos` (
-`id_equipo` int(11) NOT NULL AUTO_INCREMENT,
-`id_club` int(11) NOT NULL,
-`id_entrenador` int(11) NOT NULL,
-`id_categoria` int(11) NOT NULL,
-`nombre_equipo` varchar(100) NOT NULL,
-`partidos_ganados` int(11) NOT NULL DEFAULT 0,
-`partidos_perdidos` int(11) NOT NULL DEFAULT 0,
-`puntos` int(11) NOT NULL DEFAULT 0,
-`posicion` int(11) NOT NULL,
-`puntos_a_favor` decimal(4,2) NOT NULL DEFAULT 0.00,
-`puntos_en_contra` decimal(4,2) NOT NULL DEFAULT 0.00,
-PRIMARY KEY (`id_equipo`),
-KEY `fk_eq_club` (`id_club`),
-KEY `fk_eq_entrenador` (`id_entrenador`),
-KEY `fk_eq_categoria` (`id_categoria`),
-CONSTRAINT `fk_eq_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`),
-CONSTRAINT `fk_eq_entrenador` FOREIGN KEY (`id_entrenador`) REFERENCES `Entrenadores` (`id_entrenador`),
-CONSTRAINT `fk_eq_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `Categorias` (`id_categoria`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+   `id_equipo` int(11) NOT NULL AUTO_INCREMENT,
+   `id_club` int(11) NOT NULL,
+   `id_categoria` int(11) NOT NULL,
+   `nombre_equipo` varchar(100) NOT NULL,
+   `partidos_ganados` int(11) NOT NULL DEFAULT 0,
+   `partidos_perdidos` int(11) NOT NULL DEFAULT 0,
+   `puntos` int(11) NOT NULL DEFAULT 0,
+   `posicion` int(11) NOT NULL,
+   `puntos_a_favor` decimal(4,2) NOT NULL DEFAULT 0.00,
+   `puntos_en_contra` decimal(4,2) NOT NULL DEFAULT 0.00,
+   PRIMARY KEY (`id_equipo`),
+   KEY `fk_eq_club` (`id_club`),
+   KEY `fk_eq_categoria` (`id_categoria`),
+   CONSTRAINT `fk_eq_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`),
+   CONSTRAINT `fk_eq_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `Categorias` (`id_categoria`)
+) ENGINE=InnoDB;
 
+-- clutch.Entrenadores definition
+
+CREATE TABLE `Entrenadores` (
+    `id_entrenador` int(11) NOT NULL AUTO_INCREMENT,
+    `id_club` int(11) NOT NULL,
+    `id_equipo` int(11) NULL,
+    `DNI` varchar(15) NOT NULL,
+    `nombre` varchar(50) NOT NULL,
+    `primer_apellido` varchar(50) NOT NULL,
+    `segundo_apellido` varchar(50) DEFAULT NULL,
+    `telefono` varchar(15) NOT NULL,
+    `fecha_nacimiento` datetime NOT NULL,
+    `titulo` varchar(50) NOT NULL,
+    PRIMARY KEY (`id_entrenador`),
+    UNIQUE KEY `DNI` (`DNI`),
+    KEY `fk_ent_equipo` (`id_equipo`),
+    CONSTRAINT `fk_ent_equipo` FOREIGN KEY (`id_equipo`) REFERENCES `Equipos` (`id_equipo`),
+    KEY `fk_ent_club` (`id_club`),
+    CONSTRAINT `fk_ent_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`)
+) ENGINE=InnoDB;
 
 -- clutch.Fases definition
 
@@ -151,7 +148,7 @@ CREATE TABLE `Fases` (
 `id_division` int(11) NOT NULL,
 `nombre_fase` varchar(100) NOT NULL,
 `fecha_inicio` datetime NOT NULL,
-`fecha_fin` datetime NOT NULL,
+`fecha_fin` datetime NULL,
 PRIMARY KEY (`id_fase`),
 KEY `fk_fase_division` (`id_division`),
 CONSTRAINT `fk_fase_division` FOREIGN KEY (`id_division`) REFERENCES `Divisiones` (`id_division`)
@@ -198,7 +195,6 @@ CREATE TABLE `Jugadores` (
 `primer_apellido` varchar(50) NOT NULL,
 `segundo_apellido` varchar(50) DEFAULT NULL,
 `fecha_nacimiento` datetime NOT NULL,
-`genero` varchar(50) DEFAULT NULL,
 `foto` varchar(255) NOT NULL,
 PRIMARY KEY (`id_jugador`),
 UNIQUE KEY `DNI` (`DNI`),
@@ -211,7 +207,6 @@ CONSTRAINT `fk_jug_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`)
 
 CREATE TABLE `Partidos` (
 `id_partido` int(11) NOT NULL AUTO_INCREMENT,
-`id_grupo` int(11) NOT NULL,
 `id_inscripcion_local` int(11) NOT NULL,
 `id_inscripcion_visitante` int(11) NOT NULL,
 `fecha_hora_inicio` datetime NOT NULL,
@@ -220,10 +215,8 @@ CREATE TABLE `Partidos` (
 `puntos_visitante` int(11) NOT NULL DEFAULT 0,
 `pabellonDeJuego` varchar(50) NOT NULL,
 PRIMARY KEY (`id_partido`),
-KEY `fk_part_grupo` (`id_grupo`),
 KEY `fk_part_ins_loc` (`id_inscripcion_local`),
 KEY `fk_part_ins_vis` (`id_inscripcion_visitante`),
-CONSTRAINT `fk_part_grupo` FOREIGN KEY (`id_grupo`) REFERENCES `Grupos` (`id_grupo`),
 CONSTRAINT `fk_part_ins_loc` FOREIGN KEY (`id_inscripcion_local`) REFERENCES `Inscripciones` (`id_inscripcion`),
 CONSTRAINT `fk_part_ins_vis` FOREIGN KEY (`id_inscripcion_visitante`) REFERENCES `Inscripciones` (`id_inscripcion`),
 CONSTRAINT `chk_equipos_distintos` CHECK (`id_inscripcion_local` <> `id_inscripcion_visitante`)
