@@ -35,11 +35,9 @@ public class FabricaEntrenadorService {
         if (entrenador.getClub() != null) {
             dto.setClubId(entrenador.getClub().getId());
         }
-        dto.setEquipoIds(
-                entrenador.getEquipos().stream()
-                        .map(equipo -> equipo.getId())
-                        .toList()
-        );
+        if (entrenador.getEquipo() != null) {
+            dto.setEquipoId(entrenador.getEquipo().getId());
+        }
         return dto;
     }
 

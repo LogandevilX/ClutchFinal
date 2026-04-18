@@ -87,9 +87,11 @@ public class FabricaEquipoService {
         if (equipo.getClub() != null) {
             dto.setClubId(equipo.getClub().getId());
         }
-        if (equipo.getEntrenador() != null) {
-            dto.setEntrenadorId(equipo.getEntrenador().getId());
-        }
+        dto.setEntrenadorIds(
+                equipo.getEntrenadores().stream()
+                        .map(entrenador -> entrenador.getId())
+                        .toList()
+        );
         dto.setJugadorIds(
                 equipo.getJugadores().stream()
                         .map(jugador -> jugador.getId())
