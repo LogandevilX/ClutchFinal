@@ -8,7 +8,6 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -87,17 +86,15 @@ public class PartidoService {
         Equipo equipo = equipoRepository.findById(eventoDTO.getEquipoId())
                 .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado."));
 
-        Jugador jugador = null;
-        if (eventoDTO.getJugadorId() != null) {
-            jugador = jugadorRepository.findById(eventoDTO.getJugadorId())
-                    .orElseThrow(() -> new NoSuchElementException("Jugador no encontrado."));
-        }
+        final Jugador jugador = (eventoDTO.getJugadorId() != null)
+                ? jugadorRepository.findById(eventoDTO.getJugadorId())
+                  .orElseThrow(() -> new NoSuchElementException("Jugador no encontrado."))
+                : null;
 
-        Entrenador entrenador = null;
-        if (eventoDTO.getEntrenadorId() != null) {
-            entrenador = entrenadorRepository.findById(eventoDTO.getEntrenadorId())
-                    .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado."));
-        }
+        final Entrenador entrenador = (eventoDTO.getEntrenadorId() != null)
+                ? entrenadorRepository.findById(eventoDTO.getEntrenadorId())
+                  .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado."))
+                : null;
 
         HistorialPartido evento = new HistorialPartido();
         evento.setPartido(partido);
@@ -162,7 +159,7 @@ public class PartidoService {
                     sumarPuntos(acta, partido, equipo, 2);
                 }
             }
-            case "TRIPLE" -> {
+            case "T3" -> {
                 acta.setTriplesTirados(acta.getTriplesTirados() + 1);
                 if (acierto) {
                     acta.setTriplesAnotados(acta.getTriplesAnotados() + 1);
@@ -182,7 +179,7 @@ public class PartidoService {
     }
 
     private void sumarPuntos(Acta acta, Partido partido, Equipo equipo, int puntos) {
-        acta.setPuntos(acta.getPuntos().add(BigDecimal.valueOf(puntos)));
+        acta.setPuntos(puntos);
 
         if (Objects.equals(partido.getInscripcionLocal().getEquipo().getId(), equipo.getId())) {
             partido.setPuntosLocal(partido.getPuntosLocal() + puntos);

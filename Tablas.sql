@@ -106,28 +106,6 @@ CREATE TABLE `Clubes_Pabellones` (
                                      CONSTRAINT `fk_cp_pabellon` FOREIGN KEY (`id_pabellon`) REFERENCES `Pabellones` (`id_pabellon`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
-
--- clutch.Equipos definition
-CREATE TABLE `Equipos` (
-                           `id_equipo` int(11) NOT NULL AUTO_INCREMENT,
-                           `id_club` int(11) NOT NULL,
-                           `id_categoria` int(11) NOT NULL,
-                           `nombre_equipo` varchar(100) NOT NULL,
-                           `partidos_ganados` int(11) NOT NULL DEFAULT 0,
-                           `partidos_perdidos` int(11) NOT NULL DEFAULT 0,
-                           `puntos` int(11) NOT NULL DEFAULT 0,
-                           `posicion` int(11) NOT NULL,
-                           `puntos_a_favor` decimal(4,2) NOT NULL DEFAULT 0.00,
-                           `puntos_en_contra` decimal(4,2) NOT NULL DEFAULT 0.00,
-                           PRIMARY KEY (`id_equipo`),
-                           KEY `fk_eq_club` (`id_club`),
-                           KEY `fk_eq_entrenador` (`id_entrenador`),
-                           KEY `fk_eq_categoria` (`id_categoria`),
-                           CONSTRAINT `fk_eq_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`),
-                           CONSTRAINT `fk_eq_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `Categorias` (`id_categoria`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- clutch.Entrenadores definition
 CREATE TABLE `Entrenadores` (
                                 `id_entrenador` int(11) NOT NULL AUTO_INCREMENT,
@@ -145,6 +123,25 @@ CREATE TABLE `Entrenadores` (
                                 CONSTRAINT `fk_ent_equipo` FOREIGN KEY (`id_equipo`) REFERENCES `Equipos` (`id_equipo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+-- clutch.Equipos definition
+CREATE TABLE `Equipos` (
+                           `id_equipo` int(11) NOT NULL AUTO_INCREMENT,
+                           `id_club` int(11) NOT NULL,
+                           `id_categoria` int(11) NOT NULL,
+                           `nombre_equipo` varchar(100) NOT NULL,
+                           `partidos_ganados` int(11) NOT NULL DEFAULT 0,
+                           `partidos_perdidos` int(11) NOT NULL DEFAULT 0,
+                           `puntos` int(11) NOT NULL DEFAULT 0,
+                           `posicion` int(11) NOT NULL,
+                           `puntos_a_favor` decimal(4,2) NOT NULL DEFAULT 0.00,
+                           `puntos_en_contra` decimal(4,2) NOT NULL DEFAULT 0.00,
+                           PRIMARY KEY (`id_equipo`),
+                           KEY `fk_eq_club` (`id_club`),
+                           KEY `fk_eq_categoria` (`id_categoria`),
+                           CONSTRAINT `fk_eq_club` FOREIGN KEY (`id_club`) REFERENCES `Clubes` (`id_club`),
+                           CONSTRAINT `fk_eq_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `Categorias` (`id_categoria`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- clutch.Jugadores definition
 CREATE TABLE `Jugadores` (
                              `id_jugador` int(11) NOT NULL AUTO_INCREMENT,
@@ -181,7 +178,7 @@ CREATE TABLE `Partidos` (
 `id_inscripcion_local` int(11) NOT NULL,
 `id_inscripcion_visitante` int(11) NOT NULL,
 `fecha_hora_inicio` datetime NOT NULL,
-`fecha_hora_fin` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+`fecha_hora_fin` datetime NULL,
 `puntos_local` int(11) NOT NULL DEFAULT 0,
 `puntos_visitante` int(11) NOT NULL DEFAULT 0,
 `pabellonDeJuego` varchar(50) NOT NULL,
@@ -203,7 +200,7 @@ CREATE TABLE `Actas` (
 `id_jugador` int(11) NOT NULL,
 `id_equipo` int(11) NOT NULL,
 `minutos_jugados` int(11) NOT NULL DEFAULT 0,
-`puntos` decimal(4,1) NOT NULL DEFAULT 0.0,
+`puntos` int(11) NOT NULL DEFAULT 0,
 `tl_tirados` int(11) NOT NULL DEFAULT 0,
 `tl_anotados` int(11) NOT NULL DEFAULT 0,
 `t2_tirados` int(11) NOT NULL DEFAULT 0,
@@ -230,8 +227,8 @@ CREATE TABLE `Historial_Partidos` (
       `id_evento` int(11) NOT NULL AUTO_INCREMENT,
       `id_partido` int(11) NOT NULL,
       `id_equipo` int(11) NOT NULL,
-      `id_jugador` int(11) DEFAULT NULL,
-      `id_entrenador` int(11) DEFAULT NULL,
+      `id_jugador` int(11) NULL,
+      `id_entrenador` int(11) NULL,
       `tipo_evento` varchar(50) NOT NULL,
       `acierto` varchar(50) DEFAULT NULL,
       `periodo` int(11) NOT NULL,
