@@ -12,7 +12,7 @@ public class ClubResponseDTO {
     private String nombreClub;
     private String cif;
     private Integer codigoPostal;
-    private Integer telefono;
+    private String telefono;
     private String directorTecnico;
     private String pathEscudo;
     private Set<Long> pabellonIds;

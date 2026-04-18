@@ -18,7 +18,6 @@ public class FabricaClubService {
         club.setId(dto.getId());
         club.setNombreClub(dto.getNombreClub());
         club.setCif(dto.getCif());
-        club.setCodigoPostal(dto.getCodigoPostal());
         club.setTelefono(dto.getTelefono());
         club.setDirectorTecnico(dto.getDirectorTecnico());
         club.setEscudo(dto.getEscudo());
@@ -30,7 +29,6 @@ public class FabricaClubService {
         dto.setId(club.getId());
         dto.setNombreClub(club.getNombreClub());
         dto.setCif(club.getCif());
-        dto.setCodigoPostal(club.getCodigoPostal());
         dto.setTelefono(club.getTelefono());
         dto.setDirectorTecnico(club.getDirectorTecnico());
         dto.setEscudo(club.getEscudo());
@@ -46,7 +44,6 @@ public class FabricaClubService {
         dto.setId(club.getId());
         dto.setNombreClub(club.getNombreClub());
         dto.setCif(club.getCif());
-        dto.setCodigoPostal(club.getCodigoPostal());
         dto.setTelefono(club.getTelefono());
         dto.setDirectorTecnico(club.getDirectorTecnico());
         // Nos aseguramos de que la respuesta contenga la ruta relativa del escudo

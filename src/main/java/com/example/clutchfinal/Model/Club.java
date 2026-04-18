@@ -23,11 +23,8 @@ public class Club {
     @Column(name = "CIF", nullable = false)
     private String cif;
 
-    @Column(name = "codigo_postal", nullable = false)
-    private Integer codigoPostal;
-
     @Column(name = "telefono", nullable = false)
-    private Integer telefono;
+    private String telefono;
 
     @Column(name = "director_tecnico", nullable = false)
     private String directorTecnico;
