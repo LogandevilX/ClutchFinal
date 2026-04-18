@@ -3,6 +3,7 @@ package com.example.clutchfinal.Controller;
 import com.example.clutchfinal.DTO.EstadoPartidoDTO;
 import com.example.clutchfinal.DTO.HistorialPartidoDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
+import com.example.clutchfinal.DTO.PartidosResponseDTO;
 import com.example.clutchfinal.Service.PartidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,13 +21,13 @@ public class PartidoController {
     private PartidoService partidoService;
 
     @GetMapping
-    public ResponseEntity<List<PartidoDTO>> findAll() {
+    public ResponseEntity<List<PartidosResponseDTO>> findAll() {
         return new ResponseEntity<>(partidoService.findAllPartidos(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PartidoDTO> findById(@PathVariable Long id) {
-        PartidoDTO dto = partidoService.findPartidoById(id);
+    public ResponseEntity<PartidosResponseDTO> findById(@PathVariable Long id) {
+        PartidosResponseDTO dto = partidoService.findPartidoById(id);
         if (dto == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

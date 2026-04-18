@@ -243,15 +243,15 @@ public class PartidoService {
                 .map(this::toHistorialDTO)
                 .toList();
 
-        return new EstadoPartidoDTO(toPartidoDTO(partido), actas, historial);
+        return new EstadoPartidoDTO(toPartidosResponseDTO(partido), actas, historial);
     }
 
-    public PartidoDTO findPartidoById(Long id) {
-        return partidoRepository.findById(id).map(this::toPartidoDTO).orElse(null);
+    public PartidosResponseDTO findPartidoById(Long id) {
+        return partidoRepository.findById(id).map(this::toPartidosResponseDTO).orElse(null);
     }
 
-    public List<PartidoDTO> findAllPartidos() {
-        return partidoRepository.findAll().stream().map(this::toPartidoDTO).toList();
+    public List<PartidosResponseDTO> findAllPartidos() {
+        return partidoRepository.findAll().stream().map(this::toPartidosResponseDTO).toList();
     }
 
     @Transactional
@@ -273,6 +273,43 @@ public class PartidoService {
                 p.getPuntosVisitante(),
                 p.getPabellonDeJuego()
         );
+    }
+
+
+    private PartidosResponseDTO toPartidosResponseDTO(Partido p) {
+        return new PartidosResponseDTO(
+                p.getId(),
+                p.getGrupo().getId(),
+                toEquipoResponseDTO(p.getInscripcionLocal().getEquipo()),
+                toEquipoResponseDTO(p.getInscripcionVisitante().getEquipo()),
+                p.getFechaHoraInicio(),
+                p.getFechaHoraFin(),
+                p.getPuntosLocal(),
+                p.getPuntosVisitante(),
+                p.getPabellonDeJuego()
+        );
+    }
+
+    private EquipoResponseDTO toEquipoResponseDTO(Equipo equipo) {
+        EquipoResponseDTO dto = new EquipoResponseDTO();
+        dto.setId(equipo.getId());
+        dto.setNombreEquipo(equipo.getNombreEquipo());
+        dto.setPartidosGanados(equipo.getPartidosGanados());
+        dto.setPartidosPerdidos(equipo.getPartidosPerdidos());
+        dto.setPuntos(equipo.getPuntos());
+        dto.setPosicion(equipo.getPosicion());
+        dto.setPuntosAFavor(equipo.getPuntosAFavor());
+        dto.setPuntosEnContra(equipo.getPuntosEnContra());
+
+        if (equipo.getClub() != null) {
+            dto.setUrlEscudo(equipo.getClub().getEscudo() != null ? "/escudos/" + equipo.getClub().getEscudo() : null);
+            dto.setDireccion(equipo.getClub().getPabellones().stream()
+                    .findFirst()
+                    .map(Pabellon::getDireccion)
+                    .orElse(null));
+        }
+
+        return dto;
     }
 
     private ActaDTO toActaDTO(Acta a) {

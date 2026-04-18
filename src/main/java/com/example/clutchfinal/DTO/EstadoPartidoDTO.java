@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EstadoPartidoDTO {
-    private PartidoDTO partido;
+    private PartidosResponseDTO partido;
     private List<ActaDTO> actas;
     private List<HistorialPartidoDTO> historial;
 }
