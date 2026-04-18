@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -18,5 +17,5 @@ public class EntrenadorDTO {
     private LocalDate fechaNacimiento;
     private String titulo;
     private Long clubId;
-    private List<Long> equipoIds;
+    private Long equipoId;
 }

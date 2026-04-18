@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EntrenadorDTO;
 import com.example.clutchfinal.Fabrica.FabricaEntrenadorService;
 import com.example.clutchfinal.Model.Club;
+import com.example.clutchfinal.Model.Equipo;
 import com.example.clutchfinal.Model.Entrenador;
 import com.example.clutchfinal.Repository.ClubRepository;
 import com.example.clutchfinal.Repository.EntrenadorRepository;
+import com.example.clutchfinal.Repository.EquipoRepository;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -23,6 +25,8 @@ public class EntrenadorService {
     private EntrenadorRepository entrenadorRepository;
     @Autowired
     private ClubRepository clubRepository;
+    @Autowired
+    private EquipoRepository equipoRepository;
 
     public EntrenadorDTO save(EntrenadorDTO dto){
         Entrenador entrenador = fabricaEntrenadorService.createEntrenador(dto);
@@ -32,6 +36,28 @@ public class EntrenadorService {
             throw new NoSuchElementException("Club no encontrado con ID: " + dto.getClubId());
         }
         entrenador.setClub(clubOpt.get());
+
+        if (dto.getEquipoId() == null) {
+            throw new IllegalArgumentException("Debes informar equipoId para el entrenador.");
+        }
+
+        Optional<Equipo> equipoOpt = equipoRepository.findById(dto.getEquipoId());
+        if (equipoOpt.isEmpty()) {
+            throw new NoSuchElementException("Equipo no encontrado con ID: " + dto.getEquipoId());
+        }
+        Equipo equipo = equipoOpt.get();
+
+        if (!equipo.getClub().getId().equals(dto.getClubId())) {
+            throw new IllegalArgumentException("El equipo y el entrenador deben pertenecer al mismo club.");
+        }
+
+        long entrenadoresEnEquipo = dto.getId() == null
+                ? entrenadorRepository.countByEquipoId(dto.getEquipoId())
+                : entrenadorRepository.countByEquipoIdAndIdNot(dto.getEquipoId(), dto.getId());
+        if (entrenadoresEnEquipo >= 2) {
+            throw new IllegalArgumentException("Un equipo solo puede tener 2 entrenadores.");
+        }
+        entrenador.setEquipo(equipo);
 
         int edad = Period.between(dto.getFechaNacimiento(), LocalDate.now()).getYears();
         if(edad < 16){

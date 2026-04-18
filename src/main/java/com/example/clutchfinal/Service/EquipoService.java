@@ -14,6 +14,8 @@ import com.example.clutchfinal.Repository.EquipoRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class EquipoService {
@@ -37,23 +39,31 @@ public class EquipoService {
         }
         equipo.setClub(clubOpt.get());
 
-        if (dto.getEntrenadorId() == null) {
-            throw new IllegalArgumentException("Debes informar entrenadorId para el equipo.");
-        }
-
-        Optional<Entrenador> entrenadorOpt = entrenadorRepository.findById(dto.getEntrenadorId());
-        if (entrenadorOpt.isEmpty()) {
-            throw new NoSuchElementException("Entrenador no encontrado con ID: " + dto.getEntrenadorId());
-        }
-        Entrenador entrenador = entrenadorOpt.get();
-
-        if (!entrenador.getClub().getId().equals(dto.getClubId())) {
-            throw new IllegalArgumentException("El entrenador debe pertenecer al mismo club que el equipo.");
-        }
-
-        equipo.setEntrenador(entrenador);
-
         Equipo equipoGuardado = equipoRepository.save(equipo);
+
+        if (dto.getEntrenadorIds() != null && !dto.getEntrenadorIds().isEmpty()) {
+            Set<Long> idsSinDuplicados = dto.getEntrenadorIds().stream().collect(Collectors.toSet());
+            if (idsSinDuplicados.size() != dto.getEntrenadorIds().size()) {
+                throw new IllegalArgumentException("No se permiten IDs de entrenadores duplicados en el mismo equipo.");
+            }
+            if (idsSinDuplicados.size() > 2) {
+                throw new IllegalArgumentException("Un equipo solo puede tener 2 entrenadores.");
+            }
+
+            List<Entrenador> entrenadores = dto.getEntrenadorIds().stream()
+                    .map(id -> entrenadorRepository.findById(id)
+                            .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id)))
+                    .toList();
+
+            for (Entrenador entrenador : entrenadores) {
+                if (!entrenador.getClub().getId().equals(dto.getClubId())) {
+                    throw new IllegalArgumentException("El entrenador debe pertenecer al mismo club que el equipo.");
+                }
+                entrenador.setEquipo(equipoGuardado);
+            }
+            entrenadorRepository.saveAll(entrenadores);
+        }
+
         return fabricaEquipoService.createEquipoDTO(equipoGuardado);
     }
 

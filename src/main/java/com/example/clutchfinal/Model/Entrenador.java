@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "Entrenadores")
@@ -43,8 +41,9 @@ public class Entrenador {
     @JoinColumn(name = "id_club", nullable = false)
     private Club club;
 
-    @OneToMany(mappedBy = "entrenador")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_equipo", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Equipo> equipos = new HashSet<>();
+    private Equipo equipo;
 }
