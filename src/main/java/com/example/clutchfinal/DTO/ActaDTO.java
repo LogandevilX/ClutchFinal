@@ -15,7 +15,7 @@ public class ActaDTO {
     private Long jugadorId;
     private Long equipoId;
     private Integer minutosJugados;
-    private BigDecimal puntos;
+    private Integer puntos;
     private Integer tlTirados;
     private Integer tlAnotados;
     private Integer t2Tirados;

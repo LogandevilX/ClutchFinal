@@ -34,7 +34,7 @@ public class Acta {
     private Integer minutosJugados = 0;
 
     @Column(name = "puntos", nullable = false)
-    private BigDecimal puntos = BigDecimal.ZERO;
+    private Integer puntos = 0;
 
     @Column(name = "tl_tirados", nullable = false)
     private Integer tlTirados = 0;
