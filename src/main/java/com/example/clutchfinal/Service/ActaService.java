@@ -90,7 +90,7 @@ public class ActaService {
     }
 
     private void sumarPuntos(Acta acta, Partido partido, Equipo equipo, int puntos) {
-        acta.setPuntos(acta.getPuntos().add(BigDecimal.valueOf(puntos)));
+        acta.setPuntos(puntos);
 
         if (Objects.equals(partido.getInscripcionLocal().getEquipo().getId(), equipo.getId())) {
             partido.setPuntosLocal(partido.getPuntosLocal() + puntos);

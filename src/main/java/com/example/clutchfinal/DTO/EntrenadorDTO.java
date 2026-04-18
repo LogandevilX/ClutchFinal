@@ -16,6 +16,5 @@ public class EntrenadorDTO {
     private String telefono;
     private LocalDate fechaNacimiento;
     private String titulo;
-    private Long clubId;
     private Long equipoId;
 }

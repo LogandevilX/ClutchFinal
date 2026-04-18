@@ -11,7 +11,6 @@ public class ClubResponseDTO {
     private Long id;
     private String nombreClub;
     private String cif;
-    private Integer codigoPostal;
     private String telefono;
     private String directorTecnico;
     private String pathEscudo;

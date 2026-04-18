@@ -38,10 +38,6 @@ public class Entrenador {
     private String titulo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_club", nullable = false)
-    private Club club;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_equipo", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

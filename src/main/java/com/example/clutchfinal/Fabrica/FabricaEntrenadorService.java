@@ -32,9 +32,6 @@ public class FabricaEntrenadorService {
         dto.setTelefono(entrenador.getTelefono());
         dto.setFechaNacimiento(entrenador.getFechaNacimiento());
         dto.setTitulo(entrenador.getTitulo());
-        if (entrenador.getClub() != null) {
-            dto.setClubId(entrenador.getClub().getId());
-        }
         if (entrenador.getEquipo() != null) {
             dto.setEquipoId(entrenador.getEquipo().getId());
         }

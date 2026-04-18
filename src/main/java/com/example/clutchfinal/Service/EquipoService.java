@@ -54,13 +54,6 @@ public class EquipoService {
                     .map(id -> entrenadorRepository.findById(id)
                             .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id)))
                     .toList();
-
-            for (Entrenador entrenador : entrenadores) {
-                if (!entrenador.getClub().getId().equals(dto.getClubId())) {
-                    throw new IllegalArgumentException("El entrenador debe pertenecer al mismo club que el equipo.");
-                }
-                entrenador.setEquipo(equipoGuardado);
-            }
             entrenadorRepository.saveAll(entrenadores);
         }
 

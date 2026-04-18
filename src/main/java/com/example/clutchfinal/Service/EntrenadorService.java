@@ -31,12 +31,6 @@ public class EntrenadorService {
     public EntrenadorDTO save(EntrenadorDTO dto){
         Entrenador entrenador = fabricaEntrenadorService.createEntrenador(dto);
 
-        Optional<Club> clubOpt = clubRepository.findById(dto.getClubId());
-        if (clubOpt.isEmpty()) {
-            throw new NoSuchElementException("Club no encontrado con ID: " + dto.getClubId());
-        }
-        entrenador.setClub(clubOpt.get());
-
         if (dto.getEquipoId() == null) {
             throw new IllegalArgumentException("Debes informar equipoId para el entrenador.");
         }
@@ -46,10 +40,6 @@ public class EntrenadorService {
             throw new NoSuchElementException("Equipo no encontrado con ID: " + dto.getEquipoId());
         }
         Equipo equipo = equipoOpt.get();
-
-        if (!equipo.getClub().getId().equals(dto.getClubId())) {
-            throw new IllegalArgumentException("El equipo y el entrenador deben pertenecer al mismo club.");
-        }
 
         long entrenadoresEnEquipo = dto.getId() == null
                 ? entrenadorRepository.countByEquipoId(dto.getEquipoId())

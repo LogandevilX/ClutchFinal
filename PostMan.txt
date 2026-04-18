@@ -1,10 +1,18 @@
 ### TEMPORADA ###
 Post:
 {
-    "denominacion": "Temporada 2024/2025",
-    "fechaInicio": "2024-09-01",
-    "fechaFin": "2025-05-31", (Opcional)
-    "estado": "Finalizada"
+    "denominacion": "Temporada 2025/2026",
+    "fechaInicio": "2025-04-18",
+    "estado": "EN CURSO"
+}
+
+Response:
+{
+    "denominacion": "Temporada 2025/2026",
+    "estado": "EN CURSO",
+    "fechaFin": null,
+    "fechaInicio": "2025-04-18",
+    "id": 1
 }
 
 ### CATEGORIA ###
@@ -13,27 +21,59 @@ Post:
     "temporadaId": 1,
     "nombreCategoria": "Sub-22",
     "genero": "Masculino",
-    "edadMax": 24
+    "edadMax": 22
+}
+Response:
+{
+    "edadMax": 22,
+    "genero": "Masculino",
+    "id": 1,
+    "nombreCategoria": "Sub-22",
+    "temporadaId": 1
 }
 
 ### DIVISION ###
+Post:
 {
-    "nombreDivision": "Bronce",
+    "nombreDivision": "Sub-22 ORO",
     "categoriaId": 1
 }
 
-### FASE ###
+Response:
 {
-    "nombreFase": "Temporada Regular",
-    "fechaInicio": "2024-09-01",
-    "fechaFin": "2025-03-30",
-    "divisionId": 1
+    "categoriaId": 1,
+    "id": 2,
+    "nombreDivision": "Sub-22 BRONCE"
+}
+
+### FASE ###
+Post:
+{
+        "divisionId": 1,
+        "fechaInicio": "2026-04-18",
+        "nombreFase": "Fase Regular"
+    }
+
+Response:
+{
+    "divisionId": 1,
+    "fechaFin": null,
+    "fechaInicio": "2026-04-18",
+    "id": 1,
+    "nombreFase": "Fase Regular"
 }
 
 ### GRUPO ###
+Post:
 {
-    "nombreGrupo": "Grupo 4",
+    "nombreGrupo": "Grupo 1",
     "faseId": 1
+}
+Response:
+{
+    "faseId": 1,
+    "id": 1,
+    "nombreGrupo": "Grupo 1"
 }
 
 ### CLUB ###
@@ -49,33 +89,10 @@ Post:
 }
 
 ### PABELLON ###
-(Sin Club Asignado)
+Post:
 {
-  "codigoPostal": 28229,
-  "direccion": "Calle Ejemplo 123",
-  "nombrePabellon": "Infanta Cristina"
+    "codigoPostal": 28804,
+    "direccion": "AVENIDA DE LA VIRGEN DEL VAL, S/N, Alcalá de Henares, Madrid",
+    "nombrePabellon": "Polideportivo El Val"
 }
 
-### EQUIPO (creación con entrenadores) ###
-POST /clutch/equipos
-{
-  "nombreEquipo": "Club Europeo de Baloncesto A",
-  "clubId": 2,
-  "entrenadores": [
-    {
-      "entrenadorId": 1,
-      "rol": "PRIMER_ENTRENADOR"
-    },
-    {
-      "entrenadorId": 2,
-      "rol": "SEGUNDO_ENTRENADOR"
-    }
-  ]
-}
-
-### EQUIPOS_ENTRENADORES ###
-POST /clutch/equipos/{equipoId}/entrenadores
-{
-  "entrenadorId": 10,
-  "rol": "PRIMER_ENTRENADOR"
-}
