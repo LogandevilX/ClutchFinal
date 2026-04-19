@@ -39,10 +39,6 @@ public class Jugador {
     @Column(name = "foto")
     private String foto;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_club", nullable = false)
-    private Club club;
-
     @ManyToMany(mappedBy = "jugadores", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

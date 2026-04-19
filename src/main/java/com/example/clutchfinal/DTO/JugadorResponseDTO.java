@@ -3,6 +3,8 @@ package com.example.clutchfinal.DTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 public class JugadorResponseDTO {
@@ -12,5 +14,5 @@ public class JugadorResponseDTO {
     private String primerApellido;
     private String segundoApellido;
     private String pathFoto;
-    private Long clubId;
+    private Set<Long> equipoIds;
 }

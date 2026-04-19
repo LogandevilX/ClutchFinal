@@ -1,5 +1,6 @@
 package com.example.clutchfinal.Fabrica;
 
+import com.example.clutchfinal.Model.Equipo;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.JugadorDTO;
 import com.example.clutchfinal.DTO.JugadorResponseDTO;
@@ -33,12 +34,9 @@ public class FabricaJugadorService {
         dto.setFechaNacimiento(jugador.getFechaNacimiento());
         dto.setGenero(jugador.getGenero());
         dto.setFoto(jugador.getFoto());
-        if (jugador.getClub() != null) {
-            dto.setClubId(jugador.getClub().getId());
-        }
         dto.setEquipoIds(
                 jugador.getEquipos().stream()
-                        .map(equipo -> equipo.getId())
+                        .map(Equipo::getId)
                         .collect(Collectors.toSet())
         );
         return dto;
@@ -52,12 +50,14 @@ public class FabricaJugadorService {
         dto.setPrimerApellido(jugador.getPrimerApellido());
         dto.setSegundoApellido(jugador.getSegundoApellido());
         // Nos aseguramos de que la respuesta contenga la ruta relativa de la foto
-        if(dto.getPathFoto() != null)
-            dto.setPathFoto("/escudos/" + jugador.getFoto());
+        if(jugador.getFoto() != null)
+            dto.setPathFoto("/perfiles/" + jugador.getFoto());
+        dto.setEquipoIds(
+                jugador.getEquipos().stream()
+                        .map(Equipo::getId)
+                        .collect(Collectors.toSet())
+        );
 
-        if (jugador.getClub() != null) {
-            dto.setClubId(jugador.getClub().getId());
-        }
         return dto;
     }
 
