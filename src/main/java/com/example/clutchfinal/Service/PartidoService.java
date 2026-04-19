@@ -148,16 +148,44 @@ public class PartidoService {
         if (minuto < 0 || minuto > 10) {
             throw new IllegalArgumentException("El minuto debe estar entre 0 y 10.");
         }
-        if (iniciarPeriodoDTO.getTitulares() == null || iniciarPeriodoDTO.getTitulares().isEmpty()) {
-            throw new IllegalArgumentException("Debe enviar los titulares que inician el periodo.");
-        }
-
         Long equipoLocalId = partido.getInscripcionLocal().getEquipo().getId();
         Long equipoVisitanteId = partido.getInscripcionVisitante().getEquipo().getId();
 
         List<Acta> actasPartido = actaRepository.findAllByPartidoId(partidoId);
         List<TitularPeriodoDTO> titulares = iniciarPeriodoDTO.getTitulares();
-        validarTitularesPeriodo(titulares, equipoLocalId, equipoVisitanteId);
+        boolean titularesEnRequest = titulares != null && !titulares.isEmpty();
+
+        if (!titularesEnRequest) {
+            if (iniciarPeriodoDTO.getPeriodo() != 1) {
+                throw new IllegalArgumentException("Debe enviar los titulares que inician el periodo.");
+            }
+
+            List<Acta> titularesActa = actasPartido.stream()
+                    .filter(acta -> Boolean.TRUE.equals(acta.getTitular()))
+                    .toList();
+
+            long titularesLocalActa = titularesActa.stream()
+                    .filter(acta -> Objects.equals(acta.getEquipo().getId(), equipoLocalId))
+                    .count();
+            long titularesVisitanteActa = titularesActa.stream()
+                    .filter(acta -> Objects.equals(acta.getEquipo().getId(), equipoVisitanteId))
+                    .count();
+
+            if (titularesLocalActa != 5 || titularesVisitanteActa != 5) {
+                throw new IllegalStateException("Para iniciar el primer periodo sin titulares en la petición, el acta debe tener 5 titulares por equipo.");
+            }
+
+            titulares = titularesActa.stream()
+                    .map(acta -> {
+                        TitularPeriodoDTO titularPeriodoDTO = new TitularPeriodoDTO();
+                        titularPeriodoDTO.setEquipoId(acta.getEquipo().getId());
+                        titularPeriodoDTO.setJugadorId(acta.getJugador().getId());
+                        return titularPeriodoDTO;
+                    })
+                    .toList();
+        } else {
+            validarTitularesPeriodo(titulares, equipoLocalId, equipoVisitanteId);
+        }
 
         List<Acta> titularesLocal = actasPartido.stream()
                 .filter(acta -> titulares.stream().anyMatch(titular ->
