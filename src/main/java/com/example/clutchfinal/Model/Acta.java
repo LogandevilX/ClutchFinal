@@ -30,6 +30,9 @@ public class Acta {
     @JoinColumn(name = "id_equipo", nullable = false)
     private Equipo equipo;
 
+    @Column(name = "dorsal", nullable = false)
+    private Integer dorsal = 0;
+
     @Column(name = "minutos_jugados", nullable = false)
     private Integer minutosJugados = 0;
 
