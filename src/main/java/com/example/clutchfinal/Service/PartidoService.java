@@ -71,15 +71,55 @@ public class PartidoService {
     }
 
     @Transactional
-    public void inicializarActas(Long partidoId) {
+    public void inicializarActas(Long partidoId, InicializarActasDTO inicializarActasDTO) {
         Partido partido = partidoRepository.findById(partidoId)
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + partidoId));
 
         Equipo equipoLocal = partido.getInscripcionLocal().getEquipo();
         Equipo equipoVisitante = partido.getInscripcionVisitante().getEquipo();
 
-        actaService.inicializarActasParaEquipo(partido, equipoLocal);
-        actaService.inicializarActasParaEquipo(partido, equipoVisitante);
+        List<ActaConvocadoDTO> convocados = inicializarActasDTO != null ? inicializarActasDTO.getConvocados() : null;
+        if (convocados == null || convocados.isEmpty()) {
+            throw new IllegalArgumentException("Debe enviar los jugadores convocados con su dorsal para crear el acta.");
+        }
+
+        List<Long> equiposPermitidos = List.of(equipoLocal.getId(), equipoVisitante.getId());
+        List<Long> jugadoresLocal = equipoLocal.getJugadores().stream().map(Jugador::getId).toList();
+        List<Long> jugadoresVisitante = equipoVisitante.getJugadores().stream().map(Jugador::getId).toList();
+
+        for (ActaConvocadoDTO convocado : convocados) {
+            if (convocado.getEquipoId() == null || convocado.getJugadorId() == null || convocado.getDorsal() == null) {
+                throw new IllegalArgumentException("Cada convocado debe incluir equipoId, jugadorId y dorsal.");
+            }
+            if (convocado.getDorsal() < 0) {
+                throw new IllegalArgumentException("El dorsal no puede ser negativo.");
+            }
+            if (!equiposPermitidos.contains(convocado.getEquipoId())) {
+                throw new IllegalArgumentException("El equipo del convocado no pertenece al partido.");
+            }
+
+            boolean jugadorValido = Objects.equals(convocado.getEquipoId(), equipoLocal.getId())
+                    ? jugadoresLocal.contains(convocado.getJugadorId())
+                    : jugadoresVisitante.contains(convocado.getJugadorId());
+
+            if (!jugadorValido) {
+                throw new IllegalArgumentException("El jugador no pertenece al equipo indicado.");
+            }
+        }
+
+        var equiposPorId = List.of(equipoLocal, equipoVisitante).stream()
+                .collect(java.util.stream.Collectors.toMap(Equipo::getId, equipo -> equipo));
+
+        var jugadoresPorId = convocados.stream()
+                .map(ActaConvocadoDTO::getJugadorId)
+                .distinct()
+                .collect(java.util.stream.Collectors.toMap(
+                        jugadorId -> jugadorId,
+                        jugadorId -> jugadorRepository.findById(jugadorId)
+                                .orElseThrow(() -> new NoSuchElementException("Jugador no encontrado con ID: " + jugadorId))
+                ));
+
+        actaService.inicializarActasConvocados(partido, convocados, equiposPorId, jugadoresPorId);
     }
 
     @Transactional
