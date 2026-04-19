@@ -58,6 +58,13 @@ public class JugadorService {
                 throw new NoSuchElementException("Uno o más equipos no fueron encontrados");
             }
 
+            Long clubIdAsociado = equipos.iterator().next().getClub().getId();
+            boolean hayEquiposDeOtroClub = equipos.stream()
+                    .anyMatch(equipo -> !equipo.getClub().getId().equals(clubIdAsociado));
+            if (hayEquiposDeOtroClub) {
+                throw new IllegalArgumentException("Ese equipo no pertenece al club al que esta asociado el jugador");
+            }
+
             jugador.setEquipos(equipos);
         }
 
