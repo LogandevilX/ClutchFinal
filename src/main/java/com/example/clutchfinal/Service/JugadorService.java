@@ -54,10 +54,12 @@ public class JugadorService {
             throw new IllegalArgumentException("El jugador debe tener por lo menos 14 años.");
         }
 
+        Set<Equipo> equipos = Collections.emptySet();
+
         // --- LÓGICA DE EQUIPOS ---
         if (dto.getEquipoIds() != null && !dto.getEquipoIds().isEmpty()) {
             // Mapeamos los IDs a entidades Equipo
-            Set<Equipo> equipos = dto.getEquipoIds().stream()
+            equipos = dto.getEquipoIds().stream()
                     .map(id -> equipoRepository.findById(id)
                             .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + id)))
                     .collect(Collectors.toSet());
@@ -66,11 +68,20 @@ public class JugadorService {
                 throw new NoSuchElementException("Uno o más equipos no fueron encontrados");
             }
 
-            // Asignación directa, delegando la persistencia a JPA
             jugador.setEquipos(equipos);
         }
 
         Jugador jugadorGuardado = jugadorRepository.save(jugador);
+
+        // Equipo es el lado propietario en la relación @ManyToMany, por lo que
+        // necesitamos actualizar su colección para persistir la relación en la tabla intermedia.
+        for (Equipo equipo : equipos) {
+            equipo.getJugadores().add(jugadorGuardado);
+        }
+        if (!equipos.isEmpty()) {
+            equipoRepository.saveAll(equipos);
+        }
+
         return fabricaJugadorService.createJugadorDTO(jugadorGuardado);
     }
 
