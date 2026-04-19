@@ -2,6 +2,7 @@ package com.example.clutchfinal.Controller;
 
 import com.example.clutchfinal.DTO.EstadoPartidoDTO;
 import com.example.clutchfinal.DTO.HistorialPartidoDTO;
+import com.example.clutchfinal.DTO.InicializarActasDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
 import com.example.clutchfinal.DTO.PartidosResponseDTO;
 import com.example.clutchfinal.Service.PartidoService;
@@ -68,9 +69,9 @@ public class PartidoController {
     }
 
     @PostMapping("/{id}/actas/inicializar")
-    public ResponseEntity<Void> inicializarActas(@PathVariable Long id) {
+    public ResponseEntity<Void> inicializarActas(@PathVariable Long id, @RequestBody InicializarActasDTO dto) {
         try {
-            partidoService.inicializarActas(id);
+            partidoService.inicializarActas(id, dto);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

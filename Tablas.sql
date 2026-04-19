@@ -199,6 +199,7 @@ CREATE TABLE `Actas` (
 `id_partido` int(11) NOT NULL,
 `id_jugador` int(11) NOT NULL,
 `id_equipo` int(11) NOT NULL,
+`dorsal` int(11) NOT NULL DEFAULT 0,
 `minutos_jugados` int(11) NOT NULL DEFAULT 0,
 `puntos` int(11) NOT NULL DEFAULT 0,
 `tl_tirados` int(11) NOT NULL DEFAULT 0,

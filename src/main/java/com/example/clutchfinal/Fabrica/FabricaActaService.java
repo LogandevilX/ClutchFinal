@@ -16,6 +16,7 @@ public class FabricaActaService {
                 acta.getPartido().getId(),
                 acta.getJugador().getId(),
                 acta.getEquipo().getId(),
+                acta.getDorsal(),
                 acta.getMinutosJugados(),
                 acta.getPuntos(),
                 acta.getTlTirados(),

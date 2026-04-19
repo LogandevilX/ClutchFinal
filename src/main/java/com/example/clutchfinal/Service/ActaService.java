@@ -1,6 +1,7 @@
 package com.example.clutchfinal.Service;
 
 import com.example.clutchfinal.DTO.ActaDTO;
+import com.example.clutchfinal.DTO.ActaConvocadoDTO;
 import com.example.clutchfinal.DTO.HistorialPartidoDTO;
 import com.example.clutchfinal.Fabrica.FabricaActaService;
 import com.example.clutchfinal.Model.*;
@@ -8,9 +9,9 @@ import com.example.clutchfinal.Repository.ActaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -27,6 +28,26 @@ public class ActaService {
         for (Jugador jugador : equipo.getJugadores()) {
             actaRepository.findByPartidoIdAndJugadorId(partido.getId(), jugador.getId())
                     .orElseGet(() -> actaRepository.save(crearActa(partido, equipo, jugador)));
+        }
+    }
+
+    public void inicializarActasConvocados(Partido partido,
+                                           List<ActaConvocadoDTO> convocados,
+                                           Map<Long, Equipo> equiposPorId,
+                                           Map<Long, Jugador> jugadoresPorId) {
+        for (ActaConvocadoDTO convocado : convocados) {
+            Equipo equipo = equiposPorId.get(convocado.getEquipoId());
+            Jugador jugador = jugadoresPorId.get(convocado.getJugadorId());
+            actaRepository.findByPartidoIdAndJugadorId(partido.getId(), convocado.getJugadorId())
+                    .map(acta -> {
+                        acta.setDorsal(convocado.getDorsal());
+                        return actaRepository.save(acta);
+                    })
+                    .orElseGet(() -> {
+                        Acta acta = crearActa(partido, equipo, jugador);
+                        acta.setDorsal(convocado.getDorsal());
+                        return actaRepository.save(acta);
+                    });
         }
     }
 
