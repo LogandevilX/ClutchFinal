@@ -289,6 +289,7 @@ public class PartidoService {
             registrarDerrota(equipoLocal);
         }
 
+        registrarSalidasPendientes(partido);
         partido.setFechaHoraFin(LocalDateTime.now());
 
         equipoRepository.save(equipoLocal);
@@ -415,6 +416,75 @@ public class PartidoService {
 
         historialPartidoService.registrarEvento(eventoDTO, partido, actaTitular.getEquipo(), actaTitular.getJugador(), null);
         actaService.aplicarEventoEstadistico(partido, actaTitular.getEquipo(), actaTitular.getJugador(), eventoDTO);
+    }
+
+    private void registrarSalidasPendientes(Partido partido) {
+        List<Acta> actasPartido = actaRepository.findAllByPartidoId(partido.getId());
+        Integer[] tiempoFinPartido = obtenerTiempoFinalPartido(partido.getId());
+        int periodoFin = tiempoFinPartido[0];
+        int minutoFin = tiempoFinPartido[1];
+
+        for (Acta acta : actasPartido) {
+            Jugador jugador = acta.getJugador();
+            if (jugador == null) {
+                continue;
+            }
+
+            List<HistorialPartido> eventosJugador =
+                    historialPartidoService.findEventosByPartidoAndJugador(partido.getId(), jugador.getId());
+
+            if (!jugadorEnJuego(eventosJugador)) {
+                continue;
+            }
+
+            HistorialPartidoDTO salidaDTO = new HistorialPartidoDTO(
+                    null,
+                    partido.getId(),
+                    acta.getEquipo().getId(),
+                    jugador.getId(),
+                    null,
+                    EventoPartido.SALIDA,
+                    null,
+                    periodoFin,
+                    minutoFin,
+                    null
+            );
+
+            historialPartidoService.registrarEvento(salidaDTO, partido, acta.getEquipo(), jugador, null);
+            actaService.aplicarEventoEstadistico(partido, acta.getEquipo(), jugador, salidaDTO);
+        }
+    }
+
+    private Integer[] obtenerTiempoFinalPartido(Long partidoId) {
+        List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
+        int periodo = 4;
+        int minuto = 10;
+
+        for (HistorialPartidoDTO evento : historial) {
+            Integer periodoEvento = evento.getPeriodo();
+            Integer minutoEvento = evento.getMinuto();
+            if (periodoEvento == null || minutoEvento == null) {
+                continue;
+            }
+
+            if (periodoEvento > periodo || (periodoEvento.equals(periodo) && minutoEvento > minuto)) {
+                periodo = periodoEvento;
+                minuto = minutoEvento;
+            }
+        }
+        return new Integer[]{periodo, minuto};
+    }
+
+    private boolean jugadorEnJuego(List<HistorialPartido> eventosJugador) {
+        boolean enJuego = false;
+        for (HistorialPartido evento : eventosJugador) {
+            if (evento.getTipoEvento() == EventoPartido.ENTRADA) {
+                enJuego = true;
+            } else if (evento.getTipoEvento() == EventoPartido.SALIDA) {
+                enJuego = false;
+            }
+        }
+        return enJuego;
     }
 
     private void validarTitularesPorEquipo(List<ActaConvocadoDTO> convocados, Long equipoLocalId, Long equipoVisitanteId) {
