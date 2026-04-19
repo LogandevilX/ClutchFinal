@@ -187,13 +187,15 @@ public class PartidoService {
             validarTitularesPeriodo(titulares, equipoLocalId, equipoVisitanteId);
         }
 
+        final List<TitularPeriodoDTO> titularesFinal = titulares;
+
         List<Acta> titularesLocal = actasPartido.stream()
-                .filter(acta -> titulares.stream().anyMatch(titular ->
+                .filter(acta -> titularesFinal.stream().anyMatch(titular ->
                         Objects.equals(titular.getEquipoId(), equipoLocalId)
                                 && Objects.equals(titular.getJugadorId(), acta.getJugador().getId())))
                 .toList();
         List<Acta> titularesVisitante = actasPartido.stream()
-                .filter(acta -> titulares.stream().anyMatch(titular ->
+                .filter(acta -> titularesFinal.stream().anyMatch(titular ->
                         Objects.equals(titular.getEquipoId(), equipoVisitanteId)
                                 && Objects.equals(titular.getJugadorId(), acta.getJugador().getId())))
                 .toList();
