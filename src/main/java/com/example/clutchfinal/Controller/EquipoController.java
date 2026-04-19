@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.clutchfinal.DTO.EquipoDTO;
+import com.example.clutchfinal.DTO.EquipoDetalleDTO;
 import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.Service.EquipoService;
 
@@ -23,8 +24,8 @@ public class EquipoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EquipoResponseDTO> findById(@PathVariable Long id){
-        EquipoResponseDTO equipoDTO = equipoService.findById(id);
+    public ResponseEntity<EquipoDetalleDTO> findById(@PathVariable Long id){
+        EquipoDetalleDTO equipoDTO = equipoService.findById(id);
         if (equipoDTO == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
