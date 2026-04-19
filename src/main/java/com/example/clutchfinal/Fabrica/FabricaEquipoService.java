@@ -2,7 +2,10 @@ package com.example.clutchfinal.Fabrica;
 
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EquipoDTO;
+import com.example.clutchfinal.DTO.EquipoDetalleDTO;
 import com.example.clutchfinal.DTO.EquipoResponseDTO;
+import com.example.clutchfinal.DTO.EntrenadorDTO;
+import com.example.clutchfinal.DTO.JugadorResponseDTO;
 import com.example.clutchfinal.Model.Equipo;
 
 import java.math.BigDecimal;
@@ -115,6 +118,28 @@ public class FabricaEquipoService {
             dto.setUrlEscudo("/escudos/" + escudo);
 
         dto.setDireccion(pabellonDireccion);
+        return dto;
+    }
+
+
+    public EquipoDetalleDTO createEquipoDetalleDTO(Equipo equipo, String escudo, String pabellonDireccion,
+                                                   List<EntrenadorDTO> entrenadores, List<JugadorResponseDTO> jugadores){
+        EquipoDetalleDTO dto = new EquipoDetalleDTO();
+        dto.setId(equipo.getId());
+        dto.setNombreEquipo(equipo.getNombreEquipo());
+        dto.setPartidosGanados(equipo.getPartidosGanados());
+        dto.setPartidosPerdidos(equipo.getPartidosPerdidos());
+        dto.setPuntos(equipo.getPuntos());
+        dto.setPosicion(equipo.getPosicion());
+        dto.setPuntosAFavor(equipo.getPuntosAFavor());
+        dto.setPuntosEnContra(equipo.getPuntosEnContra());
+
+        if(escudo != null)
+            dto.setUrlEscudo("/escudos/" + escudo);
+
+        dto.setDireccion(pabellonDireccion);
+        dto.setEntrenadores(entrenadores);
+        dto.setJugadores(jugadores);
         return dto;
     }
 

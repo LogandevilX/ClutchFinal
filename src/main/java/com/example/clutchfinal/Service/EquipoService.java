@@ -3,8 +3,13 @@ package com.example.clutchfinal.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EquipoDTO;
+import com.example.clutchfinal.DTO.EquipoDetalleDTO;
 import com.example.clutchfinal.DTO.EquipoResponseDTO;
+import com.example.clutchfinal.DTO.EntrenadorDTO;
+import com.example.clutchfinal.DTO.JugadorResponseDTO;
+import com.example.clutchfinal.Fabrica.FabricaEntrenadorService;
 import com.example.clutchfinal.Fabrica.FabricaEquipoService;
+import com.example.clutchfinal.Fabrica.FabricaJugadorService;
 import com.example.clutchfinal.Model.*;
 import com.example.clutchfinal.Repository.CategoriaRepository;
 import com.example.clutchfinal.Repository.ClubRepository;
@@ -29,6 +34,10 @@ public class EquipoService {
     private CategoriaRepository categoriaRepository;
     @Autowired
     private EntrenadorRepository entrenadorRepository;
+    @Autowired
+    private FabricaEntrenadorService fabricaEntrenadorService;
+    @Autowired
+    private FabricaJugadorService fabricaJugadorService;
 
     public EquipoDTO save(EquipoDTO dto){
         Equipo equipo = fabricaEquipoService.createEquipo(dto);
@@ -60,9 +69,9 @@ public class EquipoService {
         return fabricaEquipoService.createEquipoDTO(equipoGuardado);
     }
 
-    public EquipoResponseDTO findById(Long id){
+    public EquipoDetalleDTO findById(Long id){
         return equipoRepository.findById(id)
-                .map(this::createEquipoResponse)
+                .map(this::createEquipoDetalle)
                 .orElse(null);
     }
 
@@ -70,6 +79,22 @@ public class EquipoService {
         return equipoRepository.findAll().stream()
                 .map(this::createEquipoResponse)
                 .toList();
+    }
+
+
+    private EquipoDetalleDTO createEquipoDetalle(Equipo equipo) {
+        String escudo = equipoRepository.getEscudo(equipo.getId());
+        String pabellon = equipoRepository.getPabellon(equipo.getId());
+
+        List<EntrenadorDTO> entrenadores = equipo.getEntrenadores().stream()
+                .map(fabricaEntrenadorService::createEntrenadorDTO)
+                .toList();
+
+        List<JugadorResponseDTO> jugadores = equipo.getJugadores().stream()
+                .map(fabricaJugadorService::createResponseDTO)
+                .toList();
+
+        return fabricaEquipoService.createEquipoDetalleDTO(equipo, escudo, pabellon, entrenadores, jugadores);
     }
 
     private EquipoResponseDTO createEquipoResponse(Equipo equipo) {
