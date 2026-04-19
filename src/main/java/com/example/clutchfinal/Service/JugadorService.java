@@ -34,7 +34,6 @@ public class JugadorService {
 
     public JugadorDTO save(JugadorDTO dto) {
         Jugador jugador = fabricaJugadorService.createJugador(dto);
-
         // Comprobamos que el jpg introducido exista en el directorio correcto
         if(dto.getFoto() != null && !dto.getFoto().isEmpty()){
             Path ruta = Paths.get("upload/perfiles/", dto.getFoto());

@@ -53,7 +53,7 @@ public class FabricaJugadorService {
         dto.setSegundoApellido(jugador.getSegundoApellido());
         // Nos aseguramos de que la respuesta contenga la ruta relativa de la foto
         if(dto.getPathFoto() != null)
-            dto.setPathFoto("/escudos/" +dto.getPathFoto());
+            dto.setPathFoto("/escudos/" + jugador.getFoto());
 
         if (jugador.getClub() != null) {
             dto.setClubId(jugador.getClub().getId());
