@@ -32,18 +32,18 @@ public class JugadorController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody JugadorDTO dto){
+    public ResponseEntity<JugadorDTO> save(@RequestBody JugadorDTO dto){
         try {
             dto.setId(null);
             JugadorDTO nuevoJugador = jugadorService.save(dto);
             return new ResponseEntity<>(nuevoJugador, HttpStatus.CREATED);
         } catch (NoSuchElementException | IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(dto, HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody JugadorDTO dto){
+    public ResponseEntity<JugadorDTO> update(@PathVariable Long id, @RequestBody JugadorDTO dto){
         if (jugadorService.findById(id) == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -53,7 +53,7 @@ public class JugadorController {
             JugadorDTO jugadorActualizado = jugadorService.save(dto);
             return new ResponseEntity<>(jugadorActualizado, HttpStatus.OK);
         } catch (NoSuchElementException | IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(dto, HttpStatus.BAD_REQUEST);
         }
     }
 

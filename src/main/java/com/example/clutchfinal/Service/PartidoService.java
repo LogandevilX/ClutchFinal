@@ -65,7 +65,11 @@ public class PartidoService {
         partido.setFechaHoraFin(dto.getFechaHoraFin());
         partido.setPuntosLocal(dto.getPuntosLocal() != null ? dto.getPuntosLocal() : 0);
         partido.setPuntosVisitante(dto.getPuntosVisitante() != null ? dto.getPuntosVisitante() : 0);
-        partido.setPabellonDeJuego(dto.getPabellonDeJuego());
+        String pabellonDeJuego = equipoRepository.getPabellon(inscripcionLocal.getEquipo().getId());
+        if (pabellonDeJuego == null || pabellonDeJuego.isBlank()) {
+            throw new IllegalStateException("No se encontró dirección de pabellón para el equipo local.");
+        }
+        partido.setPabellonDeJuego(pabellonDeJuego);
 
         return toPartidoDTO(partidoRepository.save(partido));
     }
