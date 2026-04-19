@@ -75,11 +75,6 @@ public class PartidoService {
         Partido partido = partidoRepository.findById(partidoId)
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + partidoId));
 
-        LocalDateTime limiteInicializacion = partido.getFechaHoraInicio().minusMinutes(5);
-        if (LocalDateTime.now().isBefore(limiteInicializacion)) {
-            throw new IllegalStateException("Las actas solo se pueden inicializar cuando faltan 5 minutos o menos para el inicio.");
-        }
-
         Equipo equipoLocal = partido.getInscripcionLocal().getEquipo();
         Equipo equipoVisitante = partido.getInscripcionVisitante().getEquipo();
 
