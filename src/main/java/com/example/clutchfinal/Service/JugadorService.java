@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.JugadorDTO;
 import com.example.clutchfinal.DTO.JugadorResponseDTO;
 import com.example.clutchfinal.Fabrica.FabricaJugadorService;
+import com.example.clutchfinal.Model.Club;
 import com.example.clutchfinal.Model.Equipo;
 import com.example.clutchfinal.Model.Jugador;
 import com.example.clutchfinal.Repository.ClubRepository;
@@ -27,6 +28,8 @@ public class JugadorService {
     @Autowired
     private JugadorRepository jugadorRepository;
     @Autowired
+    private ClubRepository clubRepository;
+    @Autowired
     private EquipoRepository equipoRepository;
 
     public JugadorDTO save(JugadorDTO dto) {
@@ -38,6 +41,12 @@ public class JugadorService {
                 throw new RuntimeException("La foto no existe en la carpeta uploads/perfiles");
             }
         }
+
+        Optional<Club> clubOpt = clubRepository.findById(dto.getClubId());
+        if (clubOpt.isEmpty()) {
+            throw new NoSuchElementException("Club no encontrado con ID: " + dto.getClubId());
+        }
+        jugador.setClub(clubOpt.get());
 
         int edad = Period.between(dto.getFechaNacimiento(), LocalDate.now()).getYears();
         if(edad < 14){

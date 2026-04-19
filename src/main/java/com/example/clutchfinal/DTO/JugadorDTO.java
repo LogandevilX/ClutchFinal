@@ -17,5 +17,6 @@ public class JugadorDTO {
     private LocalDate fechaNacimiento;
     private String genero;
     private String foto;
+    private Long clubId;
     private Set<Long> equipoIds;
 }
