@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -41,11 +40,13 @@ public class ActaService {
             actaRepository.findByPartidoIdAndJugadorId(partido.getId(), convocado.getJugadorId())
                     .map(acta -> {
                         acta.setDorsal(convocado.getDorsal());
+                        acta.setTitular(Boolean.TRUE.equals(convocado.getTitular()));
                         return actaRepository.save(acta);
                     })
                     .orElseGet(() -> {
                         Acta acta = crearActa(partido, equipo, jugador);
                         acta.setDorsal(convocado.getDorsal());
+                        acta.setTitular(Boolean.TRUE.equals(convocado.getTitular()));
                         return actaRepository.save(acta);
                     });
         }
@@ -73,35 +74,40 @@ public class ActaService {
     }
 
     private void aplicarEvento(Partido partido, Equipo equipo, Acta acta, HistorialPartidoDTO eventoDTO) {
-        String tipoEvento = eventoDTO.getTipoEvento() == null ? "" : eventoDTO.getTipoEvento().toUpperCase(Locale.ROOT);
+        EventoPartido tipoEvento = eventoDTO.getTipoEvento();
         boolean acierto = eventoDTO.getAcierto() != null && eventoDTO.getAcierto().equalsIgnoreCase("SI");
+        if (tipoEvento == null) {
+            recalcularValoracion(acta);
+            return;
+        }
 
         switch (tipoEvento) {
-            case "TL" -> {
+            case TL -> {
                 acta.setTlTirados(acta.getTlTirados() + 1);
                 if (acierto) {
                     acta.setTlAnotados(acta.getTlAnotados() + 1);
                     sumarPuntos(acta, partido, equipo, 1);
                 }
             }
-            case "T2" -> {
+            case T2 -> {
                 acta.setT2Tirados(acta.getT2Tirados() + 1);
                 if (acierto) {
                     acta.setT2Anotados(acta.getT2Anotados() + 1);
                     sumarPuntos(acta, partido, equipo, 2);
                 }
             }
-            case "TRIPLE" -> {
+            case T3 -> {
                 acta.setTriplesTirados(acta.getTriplesTirados() + 1);
                 if (acierto) {
                     acta.setTriplesAnotados(acta.getTriplesAnotados() + 1);
                     sumarPuntos(acta, partido, equipo, 3);
                 }
             }
-            case "REBOTE" -> acta.setRebotes(acta.getRebotes() + 1);
-            case "TAPON" -> acta.setTapones(acta.getTapones() + 1);
-            case "ROBO" -> acta.setRobos(acta.getRobos() + 1);
-            case "PERDIDA" -> acta.setPerdida(acta.getPerdida() + 1);
+            case REBOTE -> acta.setRebotes(acta.getRebotes() + 1);
+            case TAPON -> acta.setTapones(acta.getTapones() + 1);
+            case ROBO -> acta.setRobos(acta.getRobos() + 1);
+            case PERDIDA -> acta.setPerdida(acta.getPerdida() + 1);
+            case FALTA -> acta.setFalta(acta.getFalta() + 1);
             default -> {
                 // Eventos no estadísticos.
             }
@@ -138,11 +144,11 @@ public class ActaService {
         int total = 0;
         Integer inicio = null;
         for (HistorialPartido evento : eventos) {
-            String tipo = evento.getTipoEvento() == null ? "" : evento.getTipoEvento().toUpperCase(Locale.ROOT);
-            if (tipo.equals("ENTRADA")) {
+            EventoPartido tipo = evento.getTipoEvento();
+            if (tipo == EventoPartido.ENTRADA) {
                 inicio = convertirAMinutoAbsoluto(evento.getPeriodo(), evento.getMinuto());
             }
-            if (tipo.equals("SALIDA") && inicio != null) {
+            if (tipo == EventoPartido.SALIDA && inicio != null) {
                 int fin = convertirAMinutoAbsoluto(evento.getPeriodo(), evento.getMinuto());
                 total += Math.max(fin - inicio, 0);
                 inicio = null;

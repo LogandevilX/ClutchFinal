@@ -1,5 +1,6 @@
 package com.example.clutchfinal.DTO;
 
+import com.example.clutchfinal.Model.EventoPartido;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ public class HistorialPartidoDTO {
     private Long equipoId;
     private Long jugadorId;
     private Long entrenadorId;
-    private String tipoEvento;
+    private EventoPartido tipoEvento;
     private String acierto;
     private Integer periodo;
     private Integer minuto;

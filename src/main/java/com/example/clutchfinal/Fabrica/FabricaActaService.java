@@ -29,6 +29,7 @@ public class FabricaActaService {
                 acta.getTapones(),
                 acta.getRobos(),
                 acta.getPerdida(),
+                acta.getFalta(),
                 acta.getValoracion(),
                 acta.getPlusMinus()
         );

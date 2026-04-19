@@ -2,6 +2,7 @@ package com.example.clutchfinal.Controller;
 
 import com.example.clutchfinal.DTO.EstadoPartidoDTO;
 import com.example.clutchfinal.DTO.HistorialPartidoDTO;
+import com.example.clutchfinal.DTO.IniciarPeriodoDTO;
 import com.example.clutchfinal.DTO.InicializarActasDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
 import com.example.clutchfinal.DTO.PartidosResponseDTO;
@@ -85,6 +86,17 @@ public class PartidoController {
         try {
             return new ResponseEntity<>(partidoService.registrarEvento(eventoDTO), HttpStatus.OK);
         } catch (NoSuchElementException | IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/{id}/iniciar-periodo")
+    public ResponseEntity<EstadoPartidoDTO> iniciarPeriodo(@PathVariable Long id, @RequestBody IniciarPeriodoDTO dto) {
+        try {
+            return new ResponseEntity<>(partidoService.iniciarPeriodo(id, dto), HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

@@ -32,8 +32,9 @@ public class HistorialPartido {
     @JoinColumn(name = "id_entrenador")
     private Entrenador entrenador;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_evento", nullable = false)
-    private String tipoEvento;
+    private EventoPartido tipoEvento;
 
     @Column(name = "acierto")
     private String acierto;
