@@ -93,12 +93,12 @@ public class FabricaEquipoService {
         dto.setEntrenadorIds(
                 equipo.getEntrenadores().stream()
                         .map(entrenador -> entrenador.getId())
-                        .toList()
+                        .collect(Collectors.toSet())
         );
         dto.setJugadorIds(
                 equipo.getJugadores().stream()
                         .map(jugador -> jugador.getId())
-                        .toList()
+                        .collect(Collectors.toSet())
         );
         return dto;
     }

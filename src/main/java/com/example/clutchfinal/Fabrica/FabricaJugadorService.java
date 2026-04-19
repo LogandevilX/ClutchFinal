@@ -39,7 +39,7 @@ public class FabricaJugadorService {
         dto.setEquipoIds(
                 jugador.getEquipos().stream()
                         .map(equipo -> equipo.getId())
-                        .toList()
+                        .collect(Collectors.toSet())
         );
         return dto;
     }

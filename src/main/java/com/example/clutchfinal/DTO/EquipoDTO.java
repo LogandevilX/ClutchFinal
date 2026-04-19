@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -18,6 +18,6 @@ public class EquipoDTO {
     private BigDecimal puntosAFavor;
     private BigDecimal puntosEnContra;
     private Long clubId;
-    private List<Long> entrenadorIds;
-    private List<Long> jugadorIds;
+    private Set<Long> entrenadorIds;
+    private Set<Long> jugadorIds;
 }
