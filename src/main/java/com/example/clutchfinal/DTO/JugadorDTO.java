@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -18,5 +18,5 @@ public class JugadorDTO {
     private String genero;
     private String foto;
     private Long clubId;
-    private List<Long> equipoIds;
+    private Set<Long> equipoIds;
 }
