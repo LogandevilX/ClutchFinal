@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "Actas")
 @Data
@@ -32,6 +30,9 @@ public class Acta {
 
     @Column(name = "dorsal", nullable = false)
     private Integer dorsal = 0;
+
+    @Column(name = "titular", nullable = false)
+    private Boolean titular = false;
 
     @Column(name = "minutos_jugados", nullable = false)
     private Integer minutosJugados = 0;
@@ -68,6 +69,9 @@ public class Acta {
 
     @Column(name = "perdida", nullable = false)
     private Integer perdida = 0;
+
+    @Column(name = "falta", nullable = false)
+    private Integer falta = 0;
 
     @Column(name = "valoracion", nullable = false)
     private Integer valoracion = 0;

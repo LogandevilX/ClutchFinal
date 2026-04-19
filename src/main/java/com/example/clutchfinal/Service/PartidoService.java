@@ -32,6 +32,8 @@ public class PartidoService {
     @Autowired
     private EntrenadorRepository entrenadorRepository;
     @Autowired
+    private ActaRepository actaRepository;
+    @Autowired
     private ActaService actaService;
     @Autowired
     private HistorialPartidoService historialPartidoService;
@@ -92,8 +94,9 @@ public class PartidoService {
         List<Long> jugadoresVisitante = equipoVisitante.getJugadores().stream().map(Jugador::getId).toList();
 
         for (ActaConvocadoDTO convocado : convocados) {
-            if (convocado.getEquipoId() == null || convocado.getJugadorId() == null || convocado.getDorsal() == null) {
-                throw new IllegalArgumentException("Cada convocado debe incluir equipoId, jugadorId y dorsal.");
+            if (convocado.getEquipoId() == null || convocado.getJugadorId() == null
+                    || convocado.getDorsal() == null || convocado.getTitular() == null) {
+                throw new IllegalArgumentException("Cada convocado debe incluir equipoId, jugadorId, dorsal y titular.");
             }
             if (convocado.getDorsal() < 0) {
                 throw new IllegalArgumentException("El dorsal no puede ser negativo.");
@@ -123,7 +126,70 @@ public class PartidoService {
                                 .orElseThrow(() -> new NoSuchElementException("Jugador no encontrado con ID: " + jugadorId))
                 ));
 
+        validarDorsalesUnicosPorEquipo(convocados, equipoLocal.getId(), equipoVisitante.getId());
+        validarTitularesPorEquipo(convocados, equipoLocal.getId(), equipoVisitante.getId());
         actaService.inicializarActasConvocados(partido, convocados, equiposPorId, jugadoresPorId);
+    }
+
+    @Transactional
+    @CachePut(value = "estadoPartido", key = "#partidoId")
+    public EstadoPartidoDTO iniciarPeriodo(Long partidoId, IniciarPeriodoDTO iniciarPeriodoDTO) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + partidoId));
+
+        if (iniciarPeriodoDTO == null || iniciarPeriodoDTO.getPeriodo() == null) {
+            throw new IllegalArgumentException("Debe indicar el periodo a iniciar.");
+        }
+        if (iniciarPeriodoDTO.getPeriodo() <= 0) {
+            throw new IllegalArgumentException("El periodo debe ser mayor que 0.");
+        }
+
+        int minuto = iniciarPeriodoDTO.getMinuto() == null ? 0 : iniciarPeriodoDTO.getMinuto();
+        if (minuto < 0 || minuto > 10) {
+            throw new IllegalArgumentException("El minuto debe estar entre 0 y 10.");
+        }
+        if (iniciarPeriodoDTO.getTitulares() == null || iniciarPeriodoDTO.getTitulares().isEmpty()) {
+            throw new IllegalArgumentException("Debe enviar los titulares que inician el periodo.");
+        }
+
+        Long equipoLocalId = partido.getInscripcionLocal().getEquipo().getId();
+        Long equipoVisitanteId = partido.getInscripcionVisitante().getEquipo().getId();
+
+        List<Acta> actasPartido = actaRepository.findAllByPartidoId(partidoId);
+        List<TitularPeriodoDTO> titulares = iniciarPeriodoDTO.getTitulares();
+        validarTitularesPeriodo(titulares, equipoLocalId, equipoVisitanteId);
+
+        List<Acta> titularesLocal = actasPartido.stream()
+                .filter(acta -> titulares.stream().anyMatch(titular ->
+                        Objects.equals(titular.getEquipoId(), equipoLocalId)
+                                && Objects.equals(titular.getJugadorId(), acta.getJugador().getId())))
+                .toList();
+        List<Acta> titularesVisitante = actasPartido.stream()
+                .filter(acta -> titulares.stream().anyMatch(titular ->
+                        Objects.equals(titular.getEquipoId(), equipoVisitanteId)
+                                && Objects.equals(titular.getJugadorId(), acta.getJugador().getId())))
+                .toList();
+
+        if (titularesLocal.size() != 5 || titularesVisitante.size() != 5) {
+            throw new IllegalStateException("Los titulares enviados deben estar en el acta del partido.");
+        }
+
+        for (Acta acta : actasPartido) {
+            acta.setTitular(false);
+        }
+        for (Acta actaTitular : titularesLocal) {
+            actaTitular.setTitular(true);
+            registrarEntradaTitular(partido, actaTitular, iniciarPeriodoDTO.getPeriodo(), minuto);
+        }
+
+        for (Acta actaTitular : titularesVisitante) {
+            actaTitular.setTitular(true);
+            registrarEntradaTitular(partido, actaTitular, iniciarPeriodoDTO.getPeriodo(), minuto);
+        }
+
+        actaRepository.saveAll(actasPartido);
+        partidoRepository.save(partido);
+        return construirEstadoPartido(partidoId);
     }
 
     @Transactional
@@ -301,6 +367,92 @@ public class PartidoService {
         int ganados = equipo.getPartidosGanados() != null ? equipo.getPartidosGanados() : 0;
         int perdidos = equipo.getPartidosPerdidos() != null ? equipo.getPartidosPerdidos() : 0;
         return ganados + perdidos;
+    }
+
+    private void registrarEntradaTitular(Partido partido, Acta actaTitular, Integer periodo, Integer minuto) {
+        HistorialPartidoDTO eventoDTO = new HistorialPartidoDTO(
+                null,
+                partido.getId(),
+                actaTitular.getEquipo().getId(),
+                actaTitular.getJugador().getId(),
+                null,
+                EventoPartido.ENTRADA,
+                null,
+                periodo,
+                minuto,
+                null
+        );
+
+        historialPartidoService.registrarEvento(eventoDTO, partido, actaTitular.getEquipo(), actaTitular.getJugador(), null);
+        actaService.aplicarEventoEstadistico(partido, actaTitular.getEquipo(), actaTitular.getJugador(), eventoDTO);
+    }
+
+    private void validarTitularesPorEquipo(List<ActaConvocadoDTO> convocados, Long equipoLocalId, Long equipoVisitanteId) {
+        long titularesLocal = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoLocalId))
+                .filter(convocado -> Boolean.TRUE.equals(convocado.getTitular()))
+                .count();
+
+        long titularesVisitante = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoVisitanteId))
+                .filter(convocado -> Boolean.TRUE.equals(convocado.getTitular()))
+                .count();
+
+        if (titularesLocal != 5 || titularesVisitante != 5) {
+            throw new IllegalArgumentException("Cada equipo debe tener exactamente 5 titulares.");
+        }
+    }
+
+    private void validarDorsalesUnicosPorEquipo(List<ActaConvocadoDTO> convocados, Long equipoLocalId, Long equipoVisitanteId) {
+        long dorsalesUnicosLocal = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoLocalId))
+                .map(ActaConvocadoDTO::getDorsal)
+                .distinct()
+                .count();
+        long totalLocal = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoLocalId))
+                .count();
+
+        long dorsalesUnicosVisitante = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoVisitanteId))
+                .map(ActaConvocadoDTO::getDorsal)
+                .distinct()
+                .count();
+        long totalVisitante = convocados.stream()
+                .filter(convocado -> Objects.equals(convocado.getEquipoId(), equipoVisitanteId))
+                .count();
+
+        if (dorsalesUnicosLocal != totalLocal || dorsalesUnicosVisitante != totalVisitante) {
+            throw new IllegalArgumentException("No puede haber dorsales duplicados dentro del mismo equipo.");
+        }
+    }
+
+    private void validarTitularesPeriodo(List<TitularPeriodoDTO> titulares, Long equipoLocalId, Long equipoVisitanteId) {
+        boolean incompletos = titulares.stream()
+                .anyMatch(titular -> titular.getEquipoId() == null || titular.getJugadorId() == null);
+        if (incompletos) {
+            throw new IllegalArgumentException("Cada titular del periodo debe incluir equipoId y jugadorId.");
+        }
+
+        long unicos = titulares.stream()
+                .map(titular -> titular.getEquipoId() + "-" + titular.getJugadorId())
+                .distinct()
+                .count();
+        if (unicos != titulares.size()) {
+            throw new IllegalArgumentException("No puede haber titulares repetidos en el inicio de periodo.");
+        }
+
+        long titularesLocal = titulares.stream()
+                .filter(titular -> Objects.equals(titular.getEquipoId(), equipoLocalId))
+                .count();
+
+        long titularesVisitante = titulares.stream()
+                .filter(titular -> Objects.equals(titular.getEquipoId(), equipoVisitanteId))
+                .count();
+
+        if (titularesLocal != 5 || titularesVisitante != 5) {
+            throw new IllegalArgumentException("Debe enviar 5 titulares por equipo para iniciar el periodo.");
+        }
     }
 
     private void registrarVictoria(Equipo equipo) {

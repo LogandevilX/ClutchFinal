@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +25,7 @@ public class ActaDTO {
     private Integer tapones;
     private Integer robos;
     private Integer perdida;
+    private Integer falta;
     private Integer valoracion;
     private Integer plusMinus;
 }

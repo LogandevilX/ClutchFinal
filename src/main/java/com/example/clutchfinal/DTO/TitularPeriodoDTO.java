@@ -5,9 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ActaConvocadoDTO {
+public class TitularPeriodoDTO {
     private Long equipoId;
     private Long jugadorId;
-    private Integer dorsal;
-    private Boolean titular;
 }
