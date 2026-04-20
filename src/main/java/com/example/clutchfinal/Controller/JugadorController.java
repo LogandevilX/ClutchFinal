@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.clutchfinal.DTO.ActaDTO;
 import com.example.clutchfinal.DTO.JugadorDTO;
 import com.example.clutchfinal.DTO.JugadorResponseDTO;
+import com.example.clutchfinal.Service.ActaService;
 import com.example.clutchfinal.Service.JugadorService;
 
 import java.util.List;
@@ -16,6 +18,8 @@ import java.util.NoSuchElementException;
 public class JugadorController {
     @Autowired
     private JugadorService jugadorService;
+    @Autowired
+    private ActaService actaService;
 
     @GetMapping
     public ResponseEntity<List<JugadorResponseDTO>> findAll(){
@@ -29,6 +33,14 @@ public class JugadorController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(jugadorDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/actas")
+    public ResponseEntity<List<ActaDTO>> findActasByJugadorId(@PathVariable Long id) {
+        if (jugadorService.findById(id) == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(actaService.findActasByJugadorId(id), HttpStatus.OK);
     }
 
     @PostMapping
