@@ -1,7 +1,6 @@
 package com.example.clutchfinal.Service;
 
 import com.example.clutchfinal.DTO.*;
-import com.example.clutchfinal.Fabrica.FabricaPartidoService;
 import com.example.clutchfinal.Model.*;
 import com.example.clutchfinal.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +39,6 @@ public class PartidoService {
     private ActaService actaService;
     @Autowired
     private HistorialPartidoService historialPartidoService;
-    @Autowired
-    private FabricaPartidoService fabricaPartidoService;
 
     @Transactional
     public PartidoDTO savePartido(PartidoDTO dto) {
@@ -90,7 +87,7 @@ public class PartidoService {
         }
         partido.setPabellonDeJuego(pabellonDeJuego);
 
-        return fabricaPartidoService.toPartidoDTO(partidoRepository.save(partido));
+        return toPartidoDTO(partidoRepository.save(partido));
     }
 
     @Transactional
@@ -321,15 +318,15 @@ public class PartidoService {
         List<ActaDTO> actas = actaService.findActasByPartidoId(partidoId);
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
 
-        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTO(partido), actas, historial);
+        return new EstadoPartidoDTO(toPartidosResponseDTO(partido), actas, historial);
     }
 
     public PartidosResponseDTO findPartidoById(Long id) {
-        return partidoRepository.findById(id).map(fabricaPartidoService::toPartidoResponseDTO).orElse(null);
+        return partidoRepository.findById(id).map(this::toPartidosResponseDTO).orElse(null);
     }
 
     public List<PartidosResponseDTO> findAllPartidos() {
-        return partidoRepository.findAll().stream().map(fabricaPartidoService::toPartidoResponseDTO).toList();
+        return partidoRepository.findAll().stream().map(this::toPartidosResponseDTO).toList();
     }
 
     @Transactional
@@ -337,6 +334,58 @@ public class PartidoService {
         Partido partido = partidoRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + id));
         partidoRepository.delete(partido);
+    }
+
+    private PartidoDTO toPartidoDTO(Partido p) {
+        return new PartidoDTO(
+                p.getId(),
+                p.getGrupo().getId(),
+                p.getInscripcionLocal().getId(),
+                p.getInscripcionVisitante().getId(),
+                p.getUsuario().getId(),
+                p.getFechaHoraInicio(),
+                p.getFechaHoraFin(),
+                p.getPuntosLocal(),
+                p.getPuntosVisitante(),
+                p.getPabellonDeJuego()
+        );
+    }
+
+
+    private PartidosResponseDTO toPartidosResponseDTO(Partido p) {
+        return new PartidosResponseDTO(
+                p.getId(),
+                p.getGrupo().getId(),
+                toEquipoResponseDTO(p.getInscripcionLocal().getEquipo()),
+                toEquipoResponseDTO(p.getInscripcionVisitante().getEquipo()),
+                p.getFechaHoraInicio(),
+                p.getFechaHoraFin(),
+                p.getPuntosLocal(),
+                p.getPuntosVisitante(),
+                p.getPabellonDeJuego()
+        );
+    }
+
+    private EquipoResponseDTO toEquipoResponseDTO(Equipo equipo) {
+        EquipoResponseDTO dto = new EquipoResponseDTO();
+        dto.setId(equipo.getId());
+        dto.setNombreEquipo(equipo.getNombreEquipo());
+        dto.setPartidosGanados(equipo.getPartidosGanados());
+        dto.setPartidosPerdidos(equipo.getPartidosPerdidos());
+        dto.setPuntos(equipo.getPuntos());
+        dto.setPosicion(equipo.getPosicion());
+        dto.setPuntosAFavor(equipo.getPuntosAFavor());
+        dto.setPuntosEnContra(equipo.getPuntosEnContra());
+
+        if (equipo.getClub() != null) {
+            dto.setUrlEscudo(equipo.getClub().getEscudo() != null ? "/escudos/" + equipo.getClub().getEscudo() : null);
+            dto.setDireccion(equipo.getClub().getPabellones().stream()
+                    .findFirst()
+                    .map(Pabellon::getDireccion)
+                    .orElse(null));
+        }
+
+        return dto;
     }
 
     private void actualizarMediasPuntos(Equipo equipo, int puntosAnotados, int puntosRecibidos) {

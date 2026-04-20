@@ -96,3 +96,26 @@ Post:
     "nombrePabellon": "Polideportivo El Val"
 }
 
+### PARTIDOS ###
+POST /partidos (crear partido)
+{
+    "grupoId": 2,
+    "inscripcionLocalId": 1,
+    "inscripcionVisitanteId": 2,
+    "fechaHoraInicio": "2026-04-19T21:30:00Z"
+}
+
+POST: /partidos/{id}/actas/inicializar (inicializar acta)
+{
+  "convocados": [
+    { "equipoId": 1, "jugadorId": 101, "dorsal": 4 },
+    { "equipoId": 1, "jugadorId": 102, "dorsal": 7 },
+    { "equipoId": 1, "jugadorId": 103, "dorsal": 9 },
+
+    { "equipoId": 2, "jugadorId": 201, "dorsal": 5 },
+    { "equipoId": 2, "jugadorId": 202, "dorsal": 8 },
+    { "equipoId": 2, "jugadorId": 203, "dorsal": 11 }
+  ]
+}
+
+GET: /partidos/{id}/estado (estado del partido)
