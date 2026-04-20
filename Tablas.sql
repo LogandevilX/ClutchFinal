@@ -177,6 +177,7 @@ CREATE TABLE `Partidos` (
 `id_grupo` int(11) NOT NULL,
 `id_inscripcion_local` int(11) NOT NULL,
 `id_inscripcion_visitante` int(11) NOT NULL,
+`id_usuario` int(11) NOT NULL,
 `fecha_hora_inicio` datetime NOT NULL,
 `fecha_hora_fin` datetime NULL,
 `puntos_local` int(11) NOT NULL DEFAULT 0,
@@ -186,6 +187,7 @@ PRIMARY KEY (`id_partido`),
 KEY `fk_part_grupo` (`id_grupo`),
 KEY `fk_part_ins_loc` (`id_inscripcion_local`),
 KEY `fk_part_ins_vis` (`id_inscripcion_visitante`),
+KEY `fk_part_usuario` (`id_usuario`),
 CONSTRAINT `fk_part_grupo` FOREIGN KEY (`id_grupo`) REFERENCES `Grupos` (`id_grupo`),
 CONSTRAINT `fk_part_ins_loc` FOREIGN KEY (`id_inscripcion_local`) REFERENCES `Inscripciones` (`id_inscripcion`),
 CONSTRAINT `fk_part_ins_vis` FOREIGN KEY (`id_inscripcion_visitante`) REFERENCES `Inscripciones` (`id_inscripcion`),
@@ -251,23 +253,15 @@ CREATE TABLE `Usuarios` (
                             `id_usuario` int(11) NOT NULL AUTO_INCREMENT,
                             `email` varchar(100) NOT NULL,
                             `password` varchar(255) NOT NULL,
-                            `apodo` varchar(50) NOT NULL,
-                            `rol` varchar(20) NOT NULL,
+                            `apodo` varchar(50) DEFAULT NULL,
+                            `rol` enum('ADMIN','ESPECTADOR','ANOTADOR') NOT NULL,
                             `fecha_registro` datetime NOT NULL DEFAULT current_timestamp(),
                             PRIMARY KEY (`id_usuario`),
                             UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- clutch.Empleados definition
-CREATE TABLE `Empleados` (
-                             `id_empleado` int(11) NOT NULL,
-                             `nombre` varchar(100) NOT NULL,
-                             `apellidos` varchar(100) NOT NULL,
-                             `DNI` varchar(15) NOT NULL,
-                             PRIMARY KEY (`id_empleado`),
-                             UNIQUE KEY `DNI` (`DNI`),
-                             CONSTRAINT `fk_emp_usuario` FOREIGN KEY (`id_empleado`) REFERENCES `Usuarios` (`id_usuario`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE `Partidos`
+    ADD CONSTRAINT `fk_part_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `Usuarios` (`id_usuario`);
 
 -- clutch.Favoritos definition
 CREATE TABLE `Favoritos` (
@@ -282,5 +276,9 @@ CREATE TABLE `Favoritos` (
                              KEY `fk_fav_jugador` (`id_jugador`),
                              CONSTRAINT `fk_fav_equipo` FOREIGN KEY (`id_equipo`) REFERENCES `Equipos` (`id_equipo`) ON DELETE CASCADE,
                              CONSTRAINT `fk_fav_jugador` FOREIGN KEY (`id_jugador`) REFERENCES `Jugadores` (`id_jugador`) ON DELETE CASCADE,
-                             CONSTRAINT `fk_fav_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `Usuarios` (`id_usuario`) ON DELETE CASCADE
+                             CONSTRAINT `fk_fav_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `Usuarios` (`id_usuario`) ON DELETE CASCADE,
+                             CONSTRAINT `chk_fav_objetivo` CHECK (
+                                 (`id_equipo` IS NOT NULL AND `id_jugador` IS NULL) OR
+                                 (`id_equipo` IS NULL AND `id_jugador` IS NOT NULL)
+                             )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
