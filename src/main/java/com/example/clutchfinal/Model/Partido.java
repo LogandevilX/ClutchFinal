@@ -30,6 +30,10 @@ public class Partido {
     @JoinColumn(name = "id_inscripcion_visitante", nullable = false)
     private Inscripcion inscripcionVisitante;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
+
     @Column(name = "fecha_hora_inicio", nullable = false)
     private LocalDateTime fechaHoraInicio;
 

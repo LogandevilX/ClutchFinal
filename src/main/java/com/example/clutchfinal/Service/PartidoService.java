@@ -26,6 +26,8 @@ public class PartidoService {
     @Autowired
     private InscripcionRepository inscripcionRepository;
     @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
     private EquipoRepository equipoRepository;
     @Autowired
     private JugadorRepository jugadorRepository;
@@ -56,6 +58,17 @@ public class PartidoService {
         Inscripcion inscripcionVisitante = inscripcionRepository.findById(dto.getInscripcionVisitanteId())
                 .orElseThrow(() -> new NoSuchElementException("Inscripción visitante no encontrada."));
 
+        if (dto.getUsuarioId() == null) {
+            throw new IllegalArgumentException("Debe indicar usuarioId para el partido.");
+        }
+
+        Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con ID: " + dto.getUsuarioId()));
+
+        if (usuario.getRol() != RolUsuario.ANOTADOR) {
+            throw new IllegalArgumentException("Solo un usuario con rol ANOTADOR puede asignarse a un partido.");
+        }
+
         if (Objects.equals(inscripcionLocal.getId(), inscripcionVisitante.getId())) {
             throw new IllegalArgumentException("El equipo local y visitante no pueden ser el mismo.");
         }
@@ -63,6 +76,7 @@ public class PartidoService {
         partido.setGrupo(grupo);
         partido.setInscripcionLocal(inscripcionLocal);
         partido.setInscripcionVisitante(inscripcionVisitante);
+        partido.setUsuario(usuario);
         partido.setFechaHoraInicio(dto.getFechaHoraInicio() != null ? dto.getFechaHoraInicio() : LocalDateTime.now());
         partido.setFechaHoraFin(dto.getFechaHoraFin());
         partido.setPuntosLocal(dto.getPuntosLocal() != null ? dto.getPuntosLocal() : 0);
@@ -328,6 +342,7 @@ public class PartidoService {
                 p.getGrupo().getId(),
                 p.getInscripcionLocal().getId(),
                 p.getInscripcionVisitante().getId(),
+                p.getUsuario().getId(),
                 p.getFechaHoraInicio(),
                 p.getFechaHoraFin(),
                 p.getPuntosLocal(),

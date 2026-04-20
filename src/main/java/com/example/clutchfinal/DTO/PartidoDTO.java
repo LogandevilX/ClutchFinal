@@ -14,6 +14,7 @@ public class PartidoDTO {
     private Long grupoId;
     private Long inscripcionLocalId;
     private Long inscripcionVisitanteId;
+    private Long usuarioId;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private Integer puntosLocal;
