@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface ActaRepository extends JpaRepository<Acta, Long> {
     Optional<Acta> findByPartidoIdAndJugadorId(Long partidoId, Long jugadorId);
     List<Acta> findAllByPartidoId(Long partidoId);
+    List<Acta> findAllByJugadorId(Long jugadorId);
 }

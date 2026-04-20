@@ -65,6 +65,10 @@ public class ActaService {
         return fabricaActaService.createActasDTO(actaRepository.findAllByPartidoId(partidoId));
     }
 
+    public List<ActaDTO> findActasByJugadorId(Long jugadorId) {
+        return fabricaActaService.createActasDTO(actaRepository.findAllByJugadorId(jugadorId));
+    }
+
     private Acta crearActa(Partido partido, Equipo equipo, Jugador jugador) {
         Acta acta = new Acta();
         acta.setPartido(partido);
