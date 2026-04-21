@@ -3,6 +3,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,15 +11,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { registrarEspectador } from '../services/authService';
 
-export default function RegistroUsuarioScreen() {
-  const [nombre, setNombre] = useState('');
+export default function RegistroUsuarioScreen({ onGoLogin }) {
+  const [apodo, setApodo] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmacion, setConfirmacion] = useState('');
 
-  const onRegistro = () => {
-    if (!nombre || !email || !password || !confirmacion) {
+  const onRegistro = async () => {
+    if (!apodo || !email || !password || !confirmacion) {
       Alert.alert('Campos incompletos', 'Completa todos los campos para continuar.');
       return;
     }
@@ -28,7 +30,27 @@ export default function RegistroUsuarioScreen() {
       return;
     }
 
-    Alert.alert('Registro simulado', 'El usuario será creado con rol ESPECTADOR.');
+    try {
+      const response = await registrarEspectador({
+        apodo: apodo.trim(),
+        email: email.trim(),
+        password,
+      });
+
+      if (!response.ok) {
+        Alert.alert('Registro fallido', 'No se pudo crear el usuario. Revisa los datos.');
+        return;
+      }
+
+      Alert.alert('Registro completado', 'Usuario creado con rol ESPECTADOR.', [
+        {
+          text: 'Ir a login',
+          onPress: onGoLogin,
+        },
+      ]);
+    } catch (error) {
+      Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
+    }
   };
 
   return (
@@ -38,6 +60,10 @@ export default function RegistroUsuarioScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
+          <Pressable onPress={onGoLogin}>
+            <Text style={styles.backText}>← Volver a Login</Text>
+          </Pressable>
+
           <Text style={styles.title}>Registro de Usuario</Text>
           <Text style={styles.subtitle}>
             Todos los usuarios creados desde esta pantalla tendrán rol{' '}
@@ -46,10 +72,10 @@ export default function RegistroUsuarioScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Nombre completo"
+            placeholder="Apodo"
             placeholderTextColor="#7A7A7A"
-            value={nombre}
-            onChangeText={setNombre}
+            value={apodo}
+            onChangeText={setApodo}
             autoCapitalize="words"
           />
 
@@ -109,6 +135,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 5,
+  },
+  backText: {
+    color: '#1B263B',
+    fontSize: 15,
+    marginBottom: 12,
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,

@@ -45,6 +45,24 @@ public class UsuarioService {
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));
     }
 
+    public UsuarioDTO login(String email, String password) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Debes indicar el email del usuario.");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Debes indicar la contraseña del usuario.");
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("Credenciales inválidas."));
+
+        if (!usuario.getPassword().equals(password)) {
+            throw new NoSuchElementException("Credenciales inválidas.");
+        }
+
+        return fabricaUsuarioService.createUsuarioDTO(usuario);
+    }
+
     public UsuarioDTO findById(Long id) {
         return usuarioRepository.findById(id)
                 .map(fabricaUsuarioService::createUsuarioDTO)

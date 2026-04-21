@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   ImageBackground,
   Pressable,
@@ -9,20 +10,42 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { loginUsuario } from '../services/authService';
 
 const backgroundImage = {
   uri: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1400&q=80',
 };
 
-export default function LoginScreen() {
+export default function LoginScreen({ onGoRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const onLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Campos incompletos', 'Introduce email y contraseña.');
+      return;
+    }
+
+    try {
+      const response = await loginUsuario(email.trim(), password);
+
+      if (!response.ok) {
+        Alert.alert('Error de acceso', 'Credenciales inválidas o servidor no disponible.');
+        return;
+      }
+
+      const usuario = response.data;
+      Alert.alert('Login correcto', `Bienvenido ${usuario.apodo || usuario.email} (${usuario.rol}).`);
+    } catch (error) {
+      Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
+    }
+  };
 
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.overlayCard}>
-          <Pressable style={styles.registerLink}>
+          <Pressable style={styles.registerLink} onPress={onGoRegister}>
             <Text style={styles.registerText}>Registrarse</Text>
           </Pressable>
 
@@ -52,11 +75,11 @@ export default function LoginScreen() {
               onChangeText={setPassword}
             />
 
-            <Pressable style={styles.loginButton}>
+            <Pressable style={styles.loginButton} onPress={onLogin}>
               <Text style={styles.loginButtonText}>Entrar</Text>
             </Pressable>
 
-            <Pressable>
+            <Pressable onPress={onLogin}>
               <Text style={styles.adminText}>Entrar como Administrador</Text>
             </Pressable>
           </View>
