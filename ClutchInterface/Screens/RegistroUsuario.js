@@ -4,7 +4,6 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   SafeAreaView,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { registrarEspectador } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
@@ -52,10 +52,14 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
         return;
       }
 
-      Alert.alert('Registro completado', 'Usuario creado con rol ESPECTADOR.');
-      onGoLogin();
+      Alert.alert('Registro completado, BIENVENIDO', [
+        {
+          text: 'Ir a login',
+          onPress: onGoLogin,
+        },
+      ]);
     } catch (error) {
-      Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
+      Alert.alert('Error de conexión', 'No se pudo conectar con la API');
     }
   };
 
@@ -131,8 +135,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
-  keyboardContainer: {
+  centerContainer: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  keyboardContainer: {
+    width: '100%',
   },
   scrollContent: {
     flexGrow: 1,
@@ -144,11 +152,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingVertical: 40,
   },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 26,
+    // Nuevos estilos para hacer que parezca un botón real
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Fondo semitransparente
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20, // Forma de píldora
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)', // Borde sutil
+  },
   backText: {
     color: '#FFFFFF',
-    fontSize: 19,
-    marginBottom: 22,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700', // Un poco más grueso para que destaque
+    marginLeft: 8, // Separación ajustada entre el icono y el texto
   },
   title: {
     fontSize: 34,

@@ -28,14 +28,14 @@ export default function LoginScreen({ onGoRegister, onGoBackHome }) {
       const response = await loginUsuario(email.trim(), password);
 
       if (!response.ok) {
-        Alert.alert('Error de acceso', 'Credenciales inválidas o servidor no disponible.');
+        Alert.alert('Error de acceso');
         return;
       }
 
       const usuario = response.data;
-      Alert.alert('Login correcto', `Bienvenido ${usuario.apodo || usuario.email} (${usuario.rol}).`);
+      Alert.alert('Login correcto', `Bienvenido ${usuario.apodo || usuario.email}`);
     } catch (error) {
-      Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
+      Alert.alert('Error de conexión', 'No se pudo conectar con la API');
     }
   };
 
