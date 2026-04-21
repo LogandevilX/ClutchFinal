@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7, 18, 35, 0.65)',
     borderRadius: 36,
     paddingHorizontal: 24,
-    justifyContent: 'center', // <-- Alineación vertical centrada añadida
-    // Se han eliminado paddingTop y paddingBottom para que el centro sea exacto
+    justifyContent: 'center',
+    paddingTop: 10,
+    paddingBottom: 10
   },
   backText: {
     color: '#FFFFFF',

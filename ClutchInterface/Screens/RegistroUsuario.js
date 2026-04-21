@@ -73,7 +73,7 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
         >
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.card}>
-              <Pressable onPress={onGoBackHome}>
+              <Pressable onPress={onGoBackHome} style={styles.backButton}>
                 <Text style={styles.backText}>← Volver al inicio</Text>
               </Pressable>
 
@@ -154,25 +154,19 @@ const styles = StyleSheet.create({
       paddingHorizontal: 28,
       paddingVertical: 40,
     },
-    backButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      marginBottom: 26,
-      // Nuevos estilos para hacer que parezca un botón real
-      backgroundColor: 'rgba(255, 255, 255, 0.15)', // Fondo semitransparente
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 20, // Forma de píldora
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.3)', // Borde sutil
-    },
     backText: {
-      color: '#FFFFFF',
-      fontSize: 18,
-      fontWeight: '700', // Un poco más grueso para que destaque
-      marginLeft: 8, // Separación ajustada entre el icono y el texto
-    },
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: '700',
+      },
+  backButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#7E1F26',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
     title: {
       fontSize: 34,
       fontWeight: '800',
