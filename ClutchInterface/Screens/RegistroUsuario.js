@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -128,79 +129,77 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
 
 const styles = StyleSheet.create({
   background: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: 22,
-    paddingVertical: 14,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  keyboardContainer: {
-    width: '100%',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: 'rgba(7, 18, 35, 0.65)',
-    borderRadius: 36,
-    paddingHorizontal: 28,
-    paddingVertical: 40,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    marginBottom: 26,
-    // Nuevos estilos para hacer que parezca un botón real
-    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Fondo semitransparente
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20, // Forma de píldora
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)', // Borde sutil
-  },
-  backText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700', // Un poco más grueso para que destaque
-    marginLeft: 8, // Separación ajustada entre el icono y el texto
-  },
-  title: {
-    fontSize: 34,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    height: 58,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    marginBottom: 16,
-    paddingHorizontal: 22,
-    fontSize: 20,
-    color: '#1A1A1A',
-    fontWeight: '700',
-  },
-  button: {
-    marginTop: 14,
-    backgroundColor: 'rgba(159, 124, 255, 0.26)',
-    borderColor: '#9F7CFF',
-    borderWidth: 1.5,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '700',
-  },
+      flex: 1,
+    },
+    safeArea: {
+      flex: 1,
+      paddingHorizontal: 22,
+      paddingVertical: 14,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    keyboardContainer: {
+      width: '100%',
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    card: {
+      backgroundColor: 'rgba(7, 18, 35, 0.65)',
+      borderRadius: 36,
+      paddingHorizontal: 28,
+      paddingVertical: 40,
+    },
+    backButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      marginBottom: 26,
+      // Nuevos estilos para hacer que parezca un botón real
+      backgroundColor: 'rgba(255, 255, 255, 0.15)', // Fondo semitransparente
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20, // Forma de píldora
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.3)', // Borde sutil
+    },
+    backText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: '700', // Un poco más grueso para que destaque
+      marginLeft: 8, // Separación ajustada entre el icono y el texto
+    },
+    title: {
+      fontSize: 34,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    input: {
+      width: '100%',
+      height: 58,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 24,
+      marginBottom: 16,
+      paddingHorizontal: 22,
+      fontSize: 20,
+      color: '#1A1A1A',
+      fontWeight: '700',
+    },
+    button: {
+      marginTop: 14,
+      backgroundColor: '#7E1F26',
+      borderRadius: 30,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: '#FFFFFF',
+      fontSize: 26,
+      fontWeight: '700',
+    },
 });

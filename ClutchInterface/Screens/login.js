@@ -111,9 +111,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(93, 244, 255, 0.16)',
-    borderColor: '#64F2FF',
-    borderWidth: 1,
+    backgroundColor: '#7E1F26',
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -158,9 +156,7 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 20,
-    backgroundColor: 'rgba(93, 244, 255, 0.22)',
-    borderColor: '#64F2FF',
-    borderWidth: 1.5,
+    backgroundColor: '#7E1F26',
     borderRadius: 30,
     width: 230,
     height: 68,

@@ -29,7 +29,7 @@ export default function App() {
           onGoLogin={() => setScreen('login')}
           onGoBackHome={() => setScreen('inicio')}
         />
-      )}
+      ) : null}
     </>
   );
 }

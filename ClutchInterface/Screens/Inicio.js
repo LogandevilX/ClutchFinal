@@ -1,22 +1,27 @@
 import { Image, ImageBackground, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-const backgroundImage = require('../assets/Fondo_Inicio.png');
+const backgroundImage = require('../assets/Fondo_HomePage.png');
 
 export default function InicioScreen({ onGoLogin, onGoRegister }) {
+  // Estos valores se ajustan con los controles interactivos de abajo
+  const logoCircleSize = 140;
+  const logoSize = 120;
+  const buttonFontSize = 24;
+
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.overlayCard}>
-          <View style={styles.logoCircle}>
-            <Image source={require('../assets/LogoClutch.png')} style={styles.logo} resizeMode="contain" />
+        <View style={styles.mainContainer}>
+          <View style={[styles.logoCircle, { width: logoCircleSize, height: logoCircleSize, borderRadius: logoCircleSize / 2 }]}>
+            <Image source={require('../assets/LogoClutch.png')} style={[styles.logo, { width: logoSize, height: logoSize }]} resizeMode="contain" />
           </View>
 
-          <Pressable style={[styles.button, styles.loginButton]} onPress={onGoLogin}>
-            <Text style={styles.buttonText}>Iniciar sesión</Text>
+          <Pressable style={[styles.button, styles.electricBlackButton]} onPress={onGoLogin}>
+            <Text style={[styles.buttonText, { fontSize: buttonFontSize }]}>Iniciar sesión</Text>
           </Pressable>
 
-          <Pressable style={[styles.button, styles.registerButton]} onPress={onGoRegister}>
-            <Text style={styles.buttonText}>Registrarte</Text>
+          <Pressable style={[styles.button, styles.electricBlackButton]} onPress={onGoRegister}>
+            <Text style={[styles.buttonText, { fontSize: buttonFontSize }]}>Registrarte</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -33,18 +38,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
-  overlayCard: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: 'rgba(7, 18, 35, 0.58)',
-    borderRadius: 36,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    paddingBottom: 40,
   },
   logoCircle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -52,28 +53,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logo: {
-    width: 170,
-    height: 170,
+    // El tamaño se controla mediante props en el componente
   },
   button: {
     width: '100%',
     borderRadius: 30,
-    paddingVertical: 16,
+    paddingVertical: 16, // Aumentado el padding vertical
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1.5,
   },
-  loginButton: {
-    backgroundColor: 'rgba(93, 244, 255, 0.22)',
-    borderColor: '#64F2FF',
-  },
-  registerButton: {
-    backgroundColor: 'rgba(138, 93, 255, 0.26)',
-    borderColor: '#9F7CFF',
+  // --- Modificación: Botones Negro Eléctrico ---
+  electricBlackButton: {
+    // Un negro muy oscuro como base
+    backgroundColor: '#050505',
+    // Un borde muy sutil y oscuro para definición
+    borderColor: '#111111',
+    // Podrías añadir sombreado sutil para el efecto eléctrico si usas librerías externas
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 28,
+    // El tamaño se controla mediante props en el componente
     fontWeight: '700',
   },
 });
