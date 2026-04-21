@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import {
   Alert,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
+  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -12,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import { registrarEspectador } from '../services/authService';
+
+const backgroundImage = require('../assets/Fondo_Inicio.png');
 
 export default function RegistroUsuarioScreen({ onGoLogin }) {
   const [apodo, setApodo] = useState('');
@@ -30,10 +34,16 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
       return;
     }
 
+    const emailNormalizado = email.trim().toLowerCase();
+    if (!emailNormalizado.includes('@') || !emailNormalizado.includes('.com')) {
+      Alert.alert('Correo inválido', 'El correo debe incluir "@" y un dominio como ".com".');
+      return;
+    }
+
     try {
       const response = await registrarEspectador({
         apodo: apodo.trim(),
-        email: email.trim(),
+        email: emailNormalizado,
         password,
       });
 
@@ -54,121 +64,124 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardContainer}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.card}>
-          <Pressable onPress={onGoLogin}>
-            <Text style={styles.backText}>← Volver a Login</Text>
-          </Pressable>
+    <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            <View style={styles.card}>
+              <Pressable onPress={onGoLogin}>
+                <Text style={styles.backText}>← Volver a Login</Text>
+              </Pressable>
 
-          <Text style={styles.title}>Registro de Usuario</Text>
+              <Text style={styles.title}>Registro de Usuario</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Apodo"
-            placeholderTextColor="#7A7A7A"
-            value={apodo}
-            onChangeText={setApodo}
-            autoCapitalize="words"
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Apodo"
+                placeholderTextColor="#666"
+                value={apodo}
+                onChangeText={setApodo}
+                autoCapitalize="words"
+              />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Correo electrónico"
-            placeholderTextColor="#7A7A7A"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Correo electrónico"
+                placeholderTextColor="#666"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Contraseña"
-            placeholderTextColor="#7A7A7A"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                placeholderTextColor="#666"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmar contraseña"
-            placeholderTextColor="#7A7A7A"
-            value={confirmacion}
-            onChangeText={setConfirmacion}
-            secureTextEntry
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="#666"
+                value={confirmacion}
+                onChangeText={setConfirmacion}
+                secureTextEntry
+              />
 
-          <TouchableOpacity style={styles.button} onPress={onRegistro}>
-            <Text style={styles.buttonText}>Crear cuenta</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <TouchableOpacity style={styles.button} onPress={onRegistro}>
+                <Text style={styles.buttonText}>Crear cuenta</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: 22,
+    paddingVertical: 14,
+  },
   keyboardContainer: {
     flex: 1,
-    backgroundColor: '#0D1B2A',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: 'rgba(7, 18, 35, 0.65)',
+    borderRadius: 36,
+    paddingHorizontal: 28,
+    paddingVertical: 40,
   },
   backText: {
-    color: '#1B263B',
-    fontSize: 15,
-    marginBottom: 12,
+    color: '#FFFFFF',
+    fontSize: 19,
+    marginBottom: 22,
     fontWeight: '600',
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0D1B2A',
-    marginBottom: 8,
-  },
-  highlight: {
-    color: '#E85D04',
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#D6D6D6',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-    fontSize: 16,
-    color: '#0D1B2A',
-    backgroundColor: '#FAFAFA',
+    width: '100%',
+    height: 58,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginBottom: 16,
+    paddingHorizontal: 22,
+    fontSize: 20,
+    color: '#1A1A1A',
+    fontWeight: '700',
   },
   button: {
-    marginTop: 8,
-    backgroundColor: '#1B263B',
-    borderRadius: 10,
-    paddingVertical: 14,
+    marginTop: 14,
+    backgroundColor: '#7E1F26',
+    borderRadius: 30,
+    paddingVertical: 16,
     alignItems: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 26,
     fontWeight: '700',
   },
 });
