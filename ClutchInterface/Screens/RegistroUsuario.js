@@ -17,7 +17,7 @@ import { registrarEspectador } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
 
-export default function RegistroUsuarioScreen({ onGoLogin }) {
+export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
   const [apodo, setApodo] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,12 +52,8 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
         return;
       }
 
-      Alert.alert('Registro completado', 'Usuario creado con rol ESPECTADOR.', [
-        {
-          text: 'Ir a login',
-          onPress: onGoLogin,
-        },
-      ]);
+      Alert.alert('Registro completado', 'Usuario creado con rol ESPECTADOR.');
+      onGoLogin();
     } catch (error) {
       Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
     }
@@ -72,8 +68,8 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
         >
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.card}>
-              <Pressable onPress={onGoLogin}>
-                <Text style={styles.backText}>← Volver a Login</Text>
+              <Pressable onPress={onGoBackHome}>
+                <Text style={styles.backText}>← Volver al inicio</Text>
               </Pressable>
 
               <Text style={styles.title}>Registro de Usuario</Text>
@@ -174,7 +170,9 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 14,
-    backgroundColor: '#7E1F26',
+    backgroundColor: 'rgba(159, 124, 255, 0.26)',
+    borderColor: '#9F7CFF',
+    borderWidth: 1.5,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',

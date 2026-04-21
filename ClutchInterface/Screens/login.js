@@ -14,7 +14,7 @@ import { loginUsuario } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
 
-export default function LoginScreen({ onGoRegister }) {
+export default function LoginScreen({ onGoRegister, onGoBackHome }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -43,6 +43,9 @@ export default function LoginScreen({ onGoRegister }) {
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.overlayCard}>
+          <Pressable style={styles.backButton} onPress={onGoBackHome}>
+            <Text style={styles.backText}>← Volver al inicio</Text>
+          </Pressable>
 
           <View style={styles.logoCircle}>
             <Image source={require('../assets/LogoClutch.png')} style={styles.logo} resizeMode="contain" />
@@ -101,6 +104,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // <-- Alineación vertical centrada añadida
     // Se han eliminado paddingTop y paddingBottom para que el centro sea exacto
   },
+  backText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(93, 244, 255, 0.16)',
+    borderColor: '#64F2FF',
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
   logoCircle: {
     width: 180,
     height: 180,
@@ -140,7 +158,9 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 20,
-    backgroundColor: '#7E1F26',
+    backgroundColor: 'rgba(93, 244, 255, 0.22)',
+    borderColor: '#64F2FF',
+    borderWidth: 1.5,
     borderRadius: 30,
     width: 230,
     height: 68,
@@ -149,7 +169,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '700',
   },
   bottomRegisterText: {
