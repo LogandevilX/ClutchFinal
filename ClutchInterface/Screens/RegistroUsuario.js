@@ -4,7 +4,6 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   SafeAreaView,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { registrarEspectador } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
@@ -66,61 +66,70 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            <View style={styles.card}>
-              <Pressable onPress={onGoLogin}>
-                <Text style={styles.backText}>← Volver a Login</Text>
-              </Pressable>
+        <View style={styles.centerContainer}>
+          <KeyboardAvoidingView
+            style={styles.keyboardContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+              <View style={styles.card}>
 
-              <Text style={styles.title}>Registro de Usuario</Text>
+                {/* Convertido a TouchableOpacity con forma de píldora */}
+                <TouchableOpacity
+                  onPress={onGoLogin}
+                  style={styles.backButton}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                  <Text style={styles.backText}>Volver</Text>
+                </TouchableOpacity>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Apodo"
-                placeholderTextColor="#666"
-                value={apodo}
-                onChangeText={setApodo}
-                autoCapitalize="words"
-              />
+                <Text style={styles.title}>Registro de Usuario</Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Correo electrónico"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Apodo"
+                  placeholderTextColor="#666"
+                  value={apodo}
+                  onChangeText={setApodo}
+                  autoCapitalize="words"
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Correo electrónico"
+                  placeholderTextColor="#666"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Confirmar contraseña"
-                placeholderTextColor="#666"
-                value={confirmacion}
-                onChangeText={setConfirmacion}
-                secureTextEntry
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contraseña"
+                  placeholderTextColor="#666"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
 
-              <TouchableOpacity style={styles.button} onPress={onRegistro}>
-                <Text style={styles.buttonText}>Crear cuenta</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirmar contraseña"
+                  placeholderTextColor="#666"
+                  value={confirmacion}
+                  onChangeText={setConfirmacion}
+                  secureTextEntry
+                />
+
+                <TouchableOpacity style={styles.button} onPress={onRegistro}>
+                  <Text style={styles.buttonText}>Crear cuenta</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -135,8 +144,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
-  keyboardContainer: {
+  centerContainer: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  keyboardContainer: {
+    width: '100%',
   },
   scrollContent: {
     flexGrow: 1,
@@ -148,11 +161,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingVertical: 40,
   },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 26,
+    // Nuevos estilos para hacer que parezca un botón real
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Fondo semitransparente
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20, // Forma de píldora
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)', // Borde sutil
+  },
   backText: {
     color: '#FFFFFF',
-    fontSize: 19,
-    marginBottom: 22,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700', // Un poco más grueso para que destaque
+    marginLeft: 8, // Separación ajustada entre el icono y el texto
   },
   title: {
     fontSize: 34,
