@@ -17,7 +17,7 @@ import { registrarEspectador } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
 
-export default function RegistroUsuarioScreen({ onGoLogin }) {
+export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
   const [apodo, setApodo] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,70 +66,61 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centerContainer}>
-          <KeyboardAvoidingView
-            style={styles.keyboardContainer}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
-            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-              <View style={styles.card}>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            <View style={styles.card}>
+              <Pressable onPress={onGoBackHome}>
+                <Text style={styles.backText}>← Volver al inicio</Text>
+              </Pressable>
 
-                {/* Convertido a TouchableOpacity con forma de píldora */}
-                <TouchableOpacity
-                  onPress={onGoLogin}
-                  style={styles.backButton}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-                  <Text style={styles.backText}>Volver</Text>
-                </TouchableOpacity>
+              <Text style={styles.title}>Registro de Usuario</Text>
 
-                <Text style={styles.title}>Registro de Usuario</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Apodo"
+                placeholderTextColor="#666"
+                value={apodo}
+                onChangeText={setApodo}
+                autoCapitalize="words"
+              />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Apodo"
-                  placeholderTextColor="#666"
-                  value={apodo}
-                  onChangeText={setApodo}
-                  autoCapitalize="words"
-                />
+              <TextInput
+                style={styles.input}
+                placeholder="Correo electrónico"
+                placeholderTextColor="#666"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Correo electrónico"
-                  placeholderTextColor="#666"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                placeholderTextColor="#666"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Contraseña"
-                  placeholderTextColor="#666"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="#666"
+                value={confirmacion}
+                onChangeText={setConfirmacion}
+                secureTextEntry
+              />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirmar contraseña"
-                  placeholderTextColor="#666"
-                  value={confirmacion}
-                  onChangeText={setConfirmacion}
-                  secureTextEntry
-                />
-
-                <TouchableOpacity style={styles.button} onPress={onRegistro}>
-                  <Text style={styles.buttonText}>Crear cuenta</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </View>
+              <TouchableOpacity style={styles.button} onPress={onRegistro}>
+                <Text style={styles.buttonText}>Crear cuenta</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -200,7 +191,9 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 14,
-    backgroundColor: '#7E1F26',
+    backgroundColor: 'rgba(159, 124, 255, 0.26)',
+    borderColor: '#9F7CFF',
+    borderWidth: 1.5,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
