@@ -3,8 +3,11 @@ import {
   Alert,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -42,46 +45,58 @@ export default function LoginScreen({ onGoRegister, onGoBackHome }) {
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.overlayCard}>
-          <Pressable style={styles.backButton} onPress={onGoBackHome}>
-            <Text style={styles.backText}>← Volver al inicio</Text>
-          </Pressable>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 10}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.overlayCard}>
+              <Pressable style={styles.backButton} onPress={onGoBackHome}>
+                <Text style={styles.backText}>← Volver al inicio</Text>
+              </Pressable>
 
-          <View style={styles.logoCircle}>
-            <Image source={require('../assets/LogoClutch.png')} style={styles.logo} resizeMode="contain" />
-          </View>
+              <View style={styles.logoCircle}>
+                <Image source={require('../assets/LogoClutch.png')} style={styles.logo} resizeMode="contain" />
+              </View>
 
-          <Text style={styles.title}>¡Bienvenido!</Text>
+              <Text style={styles.title}>¡Bienvenido!</Text>
 
-          <View style={styles.formBlock}>
-            <TextInput
-              style={styles.input}
-              placeholder="E-Mail"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+              <View style={styles.formBlock}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="E-Mail"
+                  placeholderTextColor="#666"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor="#666"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contraseña"
+                  placeholderTextColor="#666"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
 
-            <Pressable style={styles.loginButton} onPress={onLogin}>
-              <Text style={styles.loginButtonText}>Entrar</Text>
-            </Pressable>
+                <Pressable style={styles.loginButton} onPress={onLogin}>
+                  <Text style={styles.loginButtonText}>Entrar</Text>
+                </Pressable>
 
-            <Pressable onPress={onGoRegister}>
-              <Text style={styles.bottomRegisterText}>Registrarse</Text>
-            </Pressable>
-          </View>
-        </View>
+                <Pressable onPress={onGoRegister}>
+                  <Text style={styles.bottomRegisterText}>Registrarse</Text>
+                </Pressable>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -96,8 +111,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
-  overlayCard: {
+  keyboardContainer: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  overlayCard: {
     backgroundColor: 'rgba(7, 18, 35, 0.65)',
     borderRadius: 36,
     paddingHorizontal: 24,

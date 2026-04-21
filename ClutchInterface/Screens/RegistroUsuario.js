@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { registrarEspectador } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
@@ -69,7 +68,8 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.keyboardContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 10}
         >
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.card}>
@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     keyboardContainer: {
+      flex: 1,
       width: '100%',
     },
     scrollContent: {
