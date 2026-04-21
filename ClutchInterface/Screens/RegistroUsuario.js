@@ -52,13 +52,15 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
         return;
       }
 
-      Alert.alert('Registro completado, BIENVENIDO', [
+      Alert.alert('Registro completado', `Gracias por unirte`, [
         {
           text: 'Ir a login',
           onPress: onGoLogin,
         },
       ]);
     } catch (error) {
+      console.log('Error detectado en el registro:', error);
+      console.log('Mensaje de error:', error.message);
       Alert.alert('Error de conexión', 'No se pudo conectar con la API');
     }
   };
