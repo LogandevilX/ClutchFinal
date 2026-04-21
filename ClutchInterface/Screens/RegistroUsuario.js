@@ -52,14 +52,14 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
         return;
       }
 
-      Alert.alert('Registro completado', 'Usuario creado con rol ESPECTADOR.', [
+      Alert.alert('Registro completado, BIENVENIDO', [
         {
           text: 'Ir a login',
           onPress: onGoLogin,
         },
       ]);
     } catch (error) {
-      Alert.alert('Error de conexión', 'No se pudo conectar con la API de ClutchFinal.');
+      Alert.alert('Error de conexión', 'No se pudo conectar con la API');
     }
   };
 

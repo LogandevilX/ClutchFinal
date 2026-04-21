@@ -9,7 +9,7 @@ const API_HOST_BY_PLATFORM = {
 const API_PORT = '8080';
 
 const host = API_HOST_BY_PLATFORM[Platform.OS] || API_HOST_BY_PLATFORM.default;
-const BASE_URL = `http://${host}:${API_PORT}/clutch/usuarios`;
+const USERS_URL = `http://192.168.1.74:8080/clutch/usuarios`;
 
 const parseResponse = async (response) => {
   let payload = null;
@@ -24,7 +24,7 @@ const parseResponse = async (response) => {
 };
 
 export async function loginUsuario(email, password) {
-  const response = await fetch(`${BASE_URL}/login`, {
+  const response = await fetch(`${USERS_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export async function loginUsuario(email, password) {
 }
 
 export async function registrarEspectador({ email, password, apodo }) {
-  const response = await fetch(BASE_URL, {
+  const response = await fetch(USERS_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
