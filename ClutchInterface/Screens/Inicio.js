@@ -52,28 +52,20 @@ const styles = StyleSheet.create({
     marginBottom: 34,
     overflow: 'hidden',
   },
-  logo: {
-    // El tamaño se controla mediante props en el componente
-  },
   button: {
     width: '100%',
     borderRadius: 30,
-    paddingVertical: 16, // Aumentado el padding vertical
+    paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1.5,
   },
-  // --- Modificación: Botones Negro Eléctrico ---
   electricBlackButton: {
-    // Un negro muy oscuro como base
     backgroundColor: '#050505',
-    // Un borde muy sutil y oscuro para definición
     borderColor: '#111111',
-    // Podrías añadir sombreado sutil para el efecto eléctrico si usas librerías externas
   },
   buttonText: {
     color: '#FFFFFF',
-    // El tamaño se controla mediante props en el componente
     fontWeight: '700',
   },
 });
