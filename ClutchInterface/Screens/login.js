@@ -12,9 +12,7 @@ import {
 } from 'react-native';
 import { loginUsuario } from '../services/authService';
 
-const backgroundImage = {
-  uri: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1400&q=80',
-};
+const backgroundImage = require('../assets/Fondo_Inicio.png');
 
 export default function LoginScreen({ onGoRegister }) {
   const [email, setEmail] = useState('');
@@ -45,12 +43,9 @@ export default function LoginScreen({ onGoRegister }) {
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.overlayCard}>
-          <Pressable style={styles.registerLink} onPress={onGoRegister}>
-            <Text style={styles.registerText}>Registrarse</Text>
-          </Pressable>
 
           <View style={styles.logoCircle}>
-            <Image source={require('../assets/icon.png')} style={styles.logo} resizeMode="contain" />
+            <Image source={require('../assets/LogoClutch.png')} style={styles.logo} resizeMode="contain" />
           </View>
 
           <Text style={styles.title}>¡Bienvenido!</Text>
@@ -79,8 +74,8 @@ export default function LoginScreen({ onGoRegister }) {
               <Text style={styles.loginButtonText}>Entrar</Text>
             </Pressable>
 
-            <Pressable onPress={onLogin}>
-              <Text style={styles.adminText}>Entrar como Administrador</Text>
+            <Pressable onPress={onGoRegister}>
+              <Text style={styles.bottomRegisterText}>Registrarse</Text>
             </Pressable>
           </View>
         </View>
@@ -103,42 +98,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7, 18, 35, 0.65)',
     borderRadius: 36,
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  registerLink: {
-    alignSelf: 'flex-end',
-    paddingVertical: 4,
-  },
-  registerText: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '300',
+    justifyContent: 'center', // <-- Alineación vertical centrada añadida
+    // Se han eliminado paddingTop y paddingBottom para que el centro sea exacto
   },
   logoCircle: {
-    width: 210,
-    height: 210,
-    borderRadius: 105,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     backgroundColor: '#FFFFFF',
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    marginBottom: 30,
+    marginBottom: 15, // Se ha eliminado el marginTop para equilibrar visualmente con el título
+    overflow: 'hidden',
   },
   logo: {
-    width: 116,
-    height: 116,
+    width: 170,
+    height: 170,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 48,
+    fontSize: 40,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 70,
+    marginBottom: 25,
   },
   formBlock: {
-    marginTop: 10,
+    width: '100%', // <-- Añadido para garantizar que los inputs ocupen todo el ancho disponible
     alignItems: 'center',
   },
   input: {
@@ -166,7 +152,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: '700',
   },
-  adminText: {
+  bottomRegisterText: {
     color: '#FFFFFF',
     marginTop: 18,
     textDecorationLine: 'underline',

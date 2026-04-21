@@ -65,10 +65,6 @@ export default function RegistroUsuarioScreen({ onGoLogin }) {
           </Pressable>
 
           <Text style={styles.title}>Registro de Usuario</Text>
-          <Text style={styles.subtitle}>
-            Todos los usuarios creados desde esta pantalla tendrán rol{' '}
-            <Text style={styles.highlight}>ESPECTADOR</Text>.
-          </Text>
 
           <TextInput
             style={styles.input}
@@ -147,12 +143,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0D1B2A',
     marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#3D4A5A',
-    marginBottom: 20,
-    lineHeight: 20,
   },
   highlight: {
     color: '#E85D04',
