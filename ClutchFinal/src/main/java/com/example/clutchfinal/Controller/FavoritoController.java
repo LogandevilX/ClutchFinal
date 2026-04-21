@@ -1,5 +1,4 @@
 package com.example.clutchfinal.Controller;
-
 import com.example.clutchfinal.DTO.FavoritoDTO;
 import com.example.clutchfinal.Service.FavoritoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/clutch/favoritos")
 public class FavoritoController {
 

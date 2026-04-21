@@ -1,5 +1,4 @@
 package com.example.clutchfinal.Controller;
-
 import com.example.clutchfinal.DTO.EstadoPartidoDTO;
 import com.example.clutchfinal.DTO.HistorialPartidoDTO;
 import com.example.clutchfinal.DTO.IniciarPeriodoDTO;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/clutch/partidos")
 public class PartidoController {
 

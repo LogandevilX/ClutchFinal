@@ -1,5 +1,5 @@
 package com.example.clutchfinal.Controller;
-
+import com.example.clutchfinal.DTO.LoginRequestDTO;
 import com.example.clutchfinal.DTO.UsuarioDTO;
 import com.example.clutchfinal.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/clutch/usuarios")
 public class UsuarioController {
 
@@ -29,6 +30,17 @@ public class UsuarioController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(usuario, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequestDTO dto) {
+        try {
+            return new ResponseEntity<>(usuarioService.login(dto.getEmail(), dto.getPassword()), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @PostMapping

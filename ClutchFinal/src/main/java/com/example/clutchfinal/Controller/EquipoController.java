@@ -1,5 +1,4 @@
 package com.example.clutchfinal.Controller;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/clutch/equipos")
 public class EquipoController {
     @Autowired
