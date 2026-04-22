@@ -3,9 +3,11 @@ import { StatusBar } from 'expo-status-bar';
 import InicioScreen from './Screens/Inicio';
 import LoginScreen from './Screens/login';
 import RegistroUsuarioScreen from './Screens/RegistroUsuario';
+import HomeScreen from './Screens/Home';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
+  const [loggedUser, setLoggedUser] = useState(null);
 
   return (
     <>
@@ -21,6 +23,10 @@ export default function App() {
         <LoginScreen
           onGoRegister={() => setScreen('registro')}
           onGoBackHome={() => setScreen('inicio')}
+          onLoginSuccess={(user) => {
+            setLoggedUser(user);
+            setScreen('home');
+          }}
         />
       ) : null}
 
@@ -30,6 +36,17 @@ export default function App() {
           onGoBackHome={() => setScreen('inicio')}
         />
       ) : null}
+      {screen === 'home' ? (
+        <HomeScreen
+          user={loggedUser}
+          onLogout={() => {
+            setLoggedUser(null);
+            setScreen('inicio');
+          }}
+        />
+      ) : null}
+
     </>
   );
 }
+

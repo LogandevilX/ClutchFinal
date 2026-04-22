@@ -17,7 +17,7 @@ import { loginUsuario } from '../services/authService';
 
 const backgroundImage = require('../assets/Fondo_Inicio.png');
 
-export default function LoginScreen({ onGoRegister, onGoBackHome }) {
+export default function LoginScreen({ onGoRegister, onGoBackHome, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -37,6 +37,7 @@ export default function LoginScreen({ onGoRegister, onGoBackHome }) {
 
       const usuario = response.data;
       Alert.alert('Login correcto', `Bienvenido ${usuario.apodo || usuario.email}`);
+      onLoginSuccess?.(usuario);
     } catch (error) {
       Alert.alert('Error de conexión', 'No se pudo conectar con la API');
     }
