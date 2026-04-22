@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.clutchfinal.DTO.InscripcionDTO;
+import com.example.clutchfinal.DTO.InscripcionesResponseDTO;
 import com.example.clutchfinal.Service.InscripcionService;
 
 import java.util.List;
@@ -17,13 +18,13 @@ public class InscripcionController {
     private InscripcionService inscripcionService;
 
     @GetMapping
-    public ResponseEntity<List<InscripcionDTO>> findAll(){
+    public ResponseEntity<List<InscripcionesResponseDTO>> findAll(){
         return new ResponseEntity<>(inscripcionService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<InscripcionDTO> findById(@PathVariable Long id){
-        InscripcionDTO inscripcionDTO = inscripcionService.findById(id);
+    public ResponseEntity<InscripcionesResponseDTO> findById(@PathVariable Long id){
+        InscripcionesResponseDTO inscripcionDTO = inscripcionService.findById(id);
         if (inscripcionDTO == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

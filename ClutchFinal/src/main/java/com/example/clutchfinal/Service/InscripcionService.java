@@ -3,6 +3,7 @@ package com.example.clutchfinal.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.InscripcionDTO;
+import com.example.clutchfinal.DTO.InscripcionesResponseDTO;
 import com.example.clutchfinal.Fabrica.FabricaInscripcionService;
 import com.example.clutchfinal.Model.Equipo;
 import com.example.clutchfinal.Model.Fase;
@@ -59,14 +60,14 @@ public class InscripcionService {
         return fabricaInscripcionService.createInscripcionDTO(inscripcionRepository.save(inscripcion));
     }
 
-    public InscripcionDTO findById(Long id){
+    public InscripcionesResponseDTO findById(Long id){
         return inscripcionRepository.findById(id)
-                .map(fabricaInscripcionService::createInscripcionDTO)
+                .map(fabricaInscripcionService::createInscripcionResponseDTO)
                 .orElse(null);
     }
 
-    public List<InscripcionDTO> findAll(){
-        return fabricaInscripcionService.createInscripcionesDTO(inscripcionRepository.findAll());
+    public List<InscripcionesResponseDTO> findAll(){
+        return fabricaInscripcionService.createInscripcionesResponseDTO(inscripcionRepository.findAll());
     }
 
     public void deleteById(Long id){
