@@ -2,6 +2,7 @@ package com.example.clutchfinal.Fabrica;
 
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.InscripcionDTO;
+import com.example.clutchfinal.DTO.InscripcionesResponseDTO;
 import com.example.clutchfinal.Model.Inscripcion;
 
 import java.util.List;
@@ -34,5 +35,33 @@ public class FabricaInscripcionService {
 
     public List<InscripcionDTO> createInscripcionesDTO(List<Inscripcion> lista){
         return lista.stream().map(this::createInscripcionDTO).collect(Collectors.toList());
+    }
+
+    public InscripcionesResponseDTO createInscripcionResponseDTO(Inscripcion inscripcion) {
+        InscripcionesResponseDTO dto = new InscripcionesResponseDTO();
+        dto.setId(inscripcion.getId());
+        dto.setFechaInscripcion(inscripcion.getFechaInscripcion());
+
+        if (inscripcion.getFase() != null) {
+            dto.setFaseId(inscripcion.getFase().getId());
+            if (inscripcion.getFase().getDivision() != null) {
+                dto.setNombreDivision(inscripcion.getFase().getDivision().getNombreDivision());
+            }
+        }
+
+        if (inscripcion.getGrupo() != null) {
+            dto.setGrupoId(inscripcion.getGrupo().getId());
+            dto.setNombreGrupo(inscripcion.getGrupo().getNombreGrupo());
+        }
+
+        if (inscripcion.getEquipo() != null) {
+            dto.setEquipoId(inscripcion.getEquipo().getId());
+        }
+
+        return dto;
+    }
+
+    public List<InscripcionesResponseDTO> createInscripcionesResponseDTO(List<Inscripcion> lista) {
+        return lista.stream().map(this::createInscripcionResponseDTO).collect(Collectors.toList());
     }
 }
