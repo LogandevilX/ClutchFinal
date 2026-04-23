@@ -16,6 +16,7 @@ import com.example.clutchfinal.Repository.ClubRepository;
 import com.example.clutchfinal.Repository.EntrenadorRepository;
 import com.example.clutchfinal.Repository.EquipoRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -40,33 +41,59 @@ public class EquipoService {
     private FabricaJugadorService fabricaJugadorService;
 
     public EquipoDTO save(EquipoDTO dto){
+        if (dto.getId() != null) {
+            throw new IllegalArgumentException("Para crear un equipo no debes enviar ID.");
+        }
         Equipo equipo = fabricaEquipoService.createEquipo(dto);
+        aplicarDatosComunes(dto, equipo);
+        Equipo equipoGuardado = equipoRepository.save(equipo);
+        aplicarEntrenadores(dto);
+        return fabricaEquipoService.createEquipoDTO(equipoGuardado);
+    }
+
+    public EquipoDTO update(Long id, EquipoDTO dto){
+        Equipo equipo = equipoRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + id));
+        aplicarDatosComunes(dto, equipo);
+        Equipo equipoGuardado = equipoRepository.save(equipo);
+        aplicarEntrenadores(dto);
+        return fabricaEquipoService.createEquipoDTO(equipoGuardado);
+    }
+
+    private void aplicarDatosComunes(EquipoDTO dto, Equipo equipo) {
+        equipo.setNombreEquipo(dto.getNombreEquipo());
+        equipo.setPartidosGanados(dto.getPartidosGanados() != null ? dto.getPartidosGanados() : 0);
+        equipo.setPartidosPerdidos(dto.getPartidosPerdidos() != null ? dto.getPartidosPerdidos() : 0);
+        equipo.setPuntos(dto.getPuntos() != null ? dto.getPuntos() : 0);
+        equipo.setPosicion(dto.getPosicion());
+        equipo.setPuntosAFavor(dto.getPuntosAFavor() != null ? dto.getPuntosAFavor() : BigDecimal.ZERO);
+        equipo.setPuntosEnContra(dto.getPuntosEnContra() != null ? dto.getPuntosEnContra() : BigDecimal.ZERO);
 
         Optional<Club> clubOpt = clubRepository.findById(dto.getClubId());
         if (clubOpt.isEmpty()) {
             throw new NoSuchElementException("Club no encontrado con ID: " + dto.getClubId());
         }
         equipo.setClub(clubOpt.get());
+    }
 
-        Equipo equipoGuardado = equipoRepository.save(equipo);
-
-        if (dto.getEntrenadorIds() != null && !dto.getEntrenadorIds().isEmpty()) {
-            Set<Long> idsSinDuplicados = dto.getEntrenadorIds().stream().collect(Collectors.toSet());
-            if (idsSinDuplicados.size() != dto.getEntrenadorIds().size()) {
-                throw new IllegalArgumentException("No se permiten IDs de entrenadores duplicados en el mismo equipo.");
-            }
-            if (idsSinDuplicados.size() > 2) {
-                throw new IllegalArgumentException("Un equipo solo puede tener 2 entrenadores.");
-            }
-
-            List<Entrenador> entrenadores = dto.getEntrenadorIds().stream()
-                    .map(id -> entrenadorRepository.findById(id)
-                            .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id)))
-                    .toList();
-            entrenadorRepository.saveAll(entrenadores);
+    private void aplicarEntrenadores(EquipoDTO dto) {
+        if (dto.getEntrenadorIds() == null || dto.getEntrenadorIds().isEmpty()) {
+            return;
         }
 
-        return fabricaEquipoService.createEquipoDTO(equipoGuardado);
+        Set<Long> idsSinDuplicados = dto.getEntrenadorIds().stream().collect(Collectors.toSet());
+        if (idsSinDuplicados.size() != dto.getEntrenadorIds().size()) {
+            throw new IllegalArgumentException("No se permiten IDs de entrenadores duplicados en el mismo equipo.");
+        }
+        if (idsSinDuplicados.size() > 2) {
+            throw new IllegalArgumentException("Un equipo solo puede tener 2 entrenadores.");
+        }
+
+        List<Entrenador> entrenadores = dto.getEntrenadorIds().stream()
+                .map(id -> entrenadorRepository.findById(id)
+                        .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id)))
+                .toList();
+        entrenadorRepository.saveAll(entrenadores);
     }
 
     public EquipoDetalleDTO findById(Long id){

@@ -37,7 +37,7 @@ public class ClubController {
             dto.setId(null);
             ClubDTO nuevoClub = clubService.save(dto);
             return new ResponseEntity<>(nuevoClub, HttpStatus.CREATED);
-        } catch (NoSuchElementException e) {
+        } catch (NoSuchElementException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -48,10 +48,9 @@ public class ClubController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         try {
-            dto.setId(id);
-            ClubDTO clubActualizado = clubService.save(dto);
+            ClubDTO clubActualizado = clubService.update(id, dto);
             return new ResponseEntity<>(clubActualizado, HttpStatus.OK);
-        } catch (NoSuchElementException e) {
+        } catch (NoSuchElementException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
