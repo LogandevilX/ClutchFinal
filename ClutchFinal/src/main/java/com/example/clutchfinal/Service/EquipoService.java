@@ -16,6 +16,7 @@ import com.example.clutchfinal.Repository.ClubRepository;
 import com.example.clutchfinal.Repository.EntrenadorRepository;
 import com.example.clutchfinal.Repository.EquipoRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -40,7 +41,20 @@ public class EquipoService {
     private FabricaJugadorService fabricaJugadorService;
 
     public EquipoDTO save(EquipoDTO dto){
-        Equipo equipo = fabricaEquipoService.createEquipo(dto);
+        Equipo equipo;
+        if (dto.getId() == null) {
+            equipo = fabricaEquipoService.createEquipo(dto);
+        } else {
+            equipo = equipoRepository.findById(dto.getId())
+                    .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado con ID: " + dto.getId()));
+            equipo.setNombreEquipo(dto.getNombreEquipo());
+            equipo.setPartidosGanados(dto.getPartidosGanados() != null ? dto.getPartidosGanados() : 0);
+            equipo.setPartidosPerdidos(dto.getPartidosPerdidos() != null ? dto.getPartidosPerdidos() : 0);
+            equipo.setPuntos(dto.getPuntos() != null ? dto.getPuntos() : 0);
+            equipo.setPosicion(dto.getPosicion());
+            equipo.setPuntosAFavor(dto.getPuntosAFavor() != null ? dto.getPuntosAFavor() : BigDecimal.ZERO);
+            equipo.setPuntosEnContra(dto.getPuntosEnContra() != null ? dto.getPuntosEnContra() : BigDecimal.ZERO);
+        }
 
         Optional<Club> clubOpt = clubRepository.findById(dto.getClubId());
         if (clubOpt.isEmpty()) {

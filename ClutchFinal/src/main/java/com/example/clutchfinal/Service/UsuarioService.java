@@ -20,8 +20,6 @@ public class UsuarioService {
     private FabricaUsuarioService fabricaUsuarioService;
 
     public UsuarioDTO save(UsuarioDTO dto) {
-        Usuario usuario = fabricaUsuarioService.createUsuario(dto);
-
         if (dto.getRol() == null) {
             throw new IllegalArgumentException("Debes indicar el rol del usuario.");
         }
@@ -38,8 +36,19 @@ public class UsuarioService {
                     throw new IllegalArgumentException("Ya existe un usuario con ese email.");
                 });
 
-        if (dto.getId() == null || usuario.getFechaRegistro() == null) {
-            usuario.setFechaRegistro(LocalDateTime.now());
+        Usuario usuario;
+        if (dto.getId() == null) {
+            usuario = fabricaUsuarioService.createUsuario(dto);
+            if (usuario.getFechaRegistro() == null) {
+                usuario.setFechaRegistro(LocalDateTime.now());
+            }
+        } else {
+            usuario = usuarioRepository.findById(dto.getId())
+                    .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con ID: " + dto.getId()));
+            usuario.setEmail(dto.getEmail());
+            usuario.setPassword(dto.getPassword());
+            usuario.setApodo(dto.getApodo());
+            usuario.setRol(dto.getRol());
         }
 
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));

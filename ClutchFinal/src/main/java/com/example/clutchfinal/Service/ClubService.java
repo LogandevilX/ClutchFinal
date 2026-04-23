@@ -28,7 +28,18 @@ public class ClubService {
     private PabellonRepository pabellonRepository;
 
     public ClubDTO save(ClubDTO dto){
-        Club club = fabricaClubService.createClub(dto);
+        Club club;
+        if (dto.getId() == null) {
+            club = fabricaClubService.createClub(dto);
+        } else {
+            club = clubRepository.findById(dto.getId())
+                    .orElseThrow(() -> new NoSuchElementException("Club no encontrado con ID: " + dto.getId()));
+            club.setNombreClub(dto.getNombreClub());
+            club.setCif(dto.getCif());
+            club.setTelefono(dto.getTelefono());
+            club.setDirectorTecnico(dto.getDirectorTecnico());
+            club.setEscudo(dto.getEscudo());
+        }
 
         // Comprobamos que el jpg introducido existo en el direcorio correcto
         if(dto.getEscudo() != null && !dto.getEscudo().isEmpty()){
@@ -38,7 +49,7 @@ public class ClubService {
             }
         }
 
-        if (dto.getPabellonIds() != null && !dto.getPabellonIds().isEmpty()) {
+        if (dto.getPabellonIds() != null) {
             Set<Pabellon> pabellones = dto.getPabellonIds().stream()
                     .map(id -> pabellonRepository.findById(id)
                             .orElseThrow(() -> new NoSuchElementException("Pabellon no encontrado con ID: " + id)))
