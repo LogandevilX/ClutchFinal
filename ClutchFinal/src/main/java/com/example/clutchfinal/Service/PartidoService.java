@@ -172,6 +172,7 @@ public class PartidoService {
 
         partido.setPeriodoActual(iniciarPeriodoDTO.getPeriodo());
         partido.setEstado(EstadoPartido.EN_CURSO);
+        partido.getParcialActual();
 
         int minuto = iniciarPeriodoDTO.getMinuto() == null ? 0 : iniciarPeriodoDTO.getMinuto();
         if (minuto < 0 || minuto > 10) {
@@ -252,8 +253,32 @@ public class PartidoService {
     }
 
     @Transactional
+    @CachePut(value = "estadoPartido", key = "#partidoId")
+    public EstadoPartidoDTO finalizarPeriodo(Long partidoId) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + partidoId));
+
+        if (partido.getEstado() != EstadoPartido.EN_CURSO) {
+            throw new IllegalStateException("El partido debe estar en curso para finalizar un periodo.");
+        }
+
+        Integer periodoActual = partido.getPeriodoActual();
+        if (periodoActual == null || periodoActual <= 0) {
+            throw new IllegalStateException("No hay un periodo en curso para finalizar.");
+        }
+
+        int segundoFin = obtenerSegundoFinPeriodo(partidoId, periodoActual);
+        registrarSalidasPendientes(partido, periodoActual, segundoFin);
+        partidoRepository.save(partido);
+
+        return construirEstadoPartido(partidoId);
+    }
+
+    @Transactional
     @CachePut(value = "estadoPartido", key = "#eventoDTO.partidoId")
     public EstadoPartidoDTO registrarEvento(HistorialPartidoDTO eventoDTO) {
+        normalizarTiempoEvento(eventoDTO);
+
         Partido partido = partidoRepository.findById(eventoDTO.getPartidoId())
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado."));
 
@@ -318,7 +343,8 @@ public class PartidoService {
             registrarDerrota(equipoLocal);
         }
 
-        registrarSalidasPendientes(partido);
+        Integer[] tiempoFinPartido = obtenerTiempoFinalPartido(partido.getId());
+        registrarSalidasPendientes(partido, tiempoFinPartido[0], tiempoFinPartido[1]);
         partido.setFechaHoraFin(LocalDateTime.now());
         partido.setEstado(EstadoPartido.FINALIZADO);
 
@@ -446,6 +472,7 @@ public class PartidoService {
     }
 
     private void registrarEntradaTitular(Partido partido, Acta actaTitular, Integer periodo, Integer minuto) {
+        int segundo = minuto != null ? minuto * 60 : 0;
         HistorialPartidoDTO eventoDTO = new HistorialPartidoDTO(
                 null,
                 partido.getId(),
@@ -456,6 +483,7 @@ public class PartidoService {
                 null,
                 periodo,
                 minuto,
+                segundo,
                 null
         );
 
@@ -463,11 +491,8 @@ public class PartidoService {
         actaService.aplicarEventoEstadistico(partido, actaTitular.getEquipo(), actaTitular.getJugador(), eventoDTO);
     }
 
-    private void registrarSalidasPendientes(Partido partido) {
+    private void registrarSalidasPendientes(Partido partido, int periodoFin, int segundoFin) {
         List<Acta> actasPartido = actaRepository.findAllByPartidoId(partido.getId());
-        Integer[] tiempoFinPartido = obtenerTiempoFinalPartido(partido.getId());
-        int periodoFin = tiempoFinPartido[0];
-        int minutoFin = tiempoFinPartido[1];
 
         for (Acta acta : actasPartido) {
             Jugador jugador = acta.getJugador();
@@ -491,7 +516,8 @@ public class PartidoService {
                     EventoPartido.SALIDA,
                     null,
                     periodoFin,
-                    minutoFin,
+                    segundoFin / 60,
+                    segundoFin,
                     null
             );
 
@@ -501,23 +527,68 @@ public class PartidoService {
     }
 
     private Integer[] obtenerTiempoFinalPartido(Long partidoId) {
+        Partido partido = partidoRepository.findById(partidoId)
+                .orElseThrow(() -> new NoSuchElementException("Partido no encontrado."));
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
-        int periodo = 4;
-        int minuto = 10;
+        int periodo = (partido.getPeriodoActual() != null && partido.getPeriodoActual() > 0) ? partido.getPeriodoActual() : 1;
+        int segundo = 600;
 
         for (HistorialPartidoDTO evento : historial) {
             Integer periodoEvento = evento.getPeriodo();
-            Integer minutoEvento = evento.getMinuto();
-            if (periodoEvento == null || minutoEvento == null) {
+            Integer segundoEvento = evento.getSegundo() != null
+                    ? evento.getSegundo()
+                    : (evento.getMinuto() != null ? evento.getMinuto() * 60 : null);
+            if (periodoEvento == null || segundoEvento == null) {
                 continue;
             }
 
-            if (periodoEvento > periodo || (periodoEvento.equals(periodo) && minutoEvento > minuto)) {
+            if (periodoEvento > periodo || (periodoEvento.equals(periodo) && segundoEvento > segundo)) {
                 periodo = periodoEvento;
-                minuto = minutoEvento;
+                segundo = segundoEvento;
             }
         }
-        return new Integer[]{periodo, minuto};
+        return new Integer[]{periodo, segundo};
+    }
+
+    private int obtenerSegundoFinPeriodo(Long partidoId, int periodo) {
+        List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
+        int segundoMaximoRegistrado = -1;
+
+        for (HistorialPartidoDTO evento : historial) {
+            Integer periodoEvento = evento.getPeriodo();
+            Integer segundoEvento = evento.getSegundo();
+            if (periodoEvento == null) {
+                continue;
+            }
+            if (periodoEvento == periodo) {
+                if (segundoEvento != null) {
+                    segundoMaximoRegistrado = Math.max(segundoMaximoRegistrado, segundoEvento);
+                } else if (evento.getMinuto() != null) {
+                    segundoMaximoRegistrado = Math.max(segundoMaximoRegistrado, evento.getMinuto() * 60);
+                }
+            }
+        }
+        return segundoMaximoRegistrado >= 0 ? segundoMaximoRegistrado : 600;
+    }
+
+    private void normalizarTiempoEvento(HistorialPartidoDTO eventoDTO) {
+        if (eventoDTO == null || eventoDTO.getPeriodo() == null) {
+            throw new IllegalArgumentException("Debe indicar periodo del evento.");
+        }
+
+        if (eventoDTO.getSegundo() == null && eventoDTO.getMinuto() == null) {
+            throw new IllegalArgumentException("Debe indicar el tiempo del evento en segundos o minutos.");
+        }
+
+        if (eventoDTO.getSegundo() == null) {
+            eventoDTO.setSegundo(eventoDTO.getMinuto() * 60);
+        }
+
+        if (eventoDTO.getSegundo() < 0 || eventoDTO.getSegundo() > 600) {
+            throw new IllegalArgumentException("El segundo del evento debe estar entre 0 y 600.");
+        }
+
+        eventoDTO.setMinuto(eventoDTO.getSegundo() / 60);
     }
 
     private boolean jugadorEnJuego(List<HistorialPartido> eventosJugador) {

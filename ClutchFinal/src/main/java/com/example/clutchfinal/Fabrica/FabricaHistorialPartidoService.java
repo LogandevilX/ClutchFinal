@@ -25,6 +25,7 @@ public class FabricaHistorialPartidoService {
         historialPartido.setAcierto(dto.getAcierto());
         historialPartido.setPeriodo(dto.getPeriodo());
         historialPartido.setMinuto(dto.getMinuto());
+        historialPartido.setSegundo(dto.getSegundo());
         historialPartido.setPosicion(dto.getPosicion());
         return historialPartido;
     }
@@ -40,6 +41,7 @@ public class FabricaHistorialPartidoService {
                 historialPartido.getAcierto(),
                 historialPartido.getPeriodo(),
                 historialPartido.getMinuto(),
+                historialPartido.getSegundo(),
                 historialPartido.getPosicion()
         );
     }

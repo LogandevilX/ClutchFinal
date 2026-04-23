@@ -45,6 +45,9 @@ public class HistorialPartido {
     @Column(name = "minuto", nullable = false)
     private Integer minuto;
 
+    @Column(name = "segundo", nullable = false)
+    private Integer segundo;
+
     @Column(name = "posicion")
     private String posicion;
 }

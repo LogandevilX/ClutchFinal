@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class ActaService {
@@ -152,29 +154,41 @@ public class ActaService {
         acta.setValoracion(valoracion);
     }
 
-    private int calcularMinutosJugados(Long partidoId, Long jugadorId) {
+    private double calcularMinutosJugados(Long partidoId, Long jugadorId) {
         List<HistorialPartido> eventos = historialPartidoService.findEventosByPartidoAndJugador(partidoId, jugadorId);
 
-        int total = 0;
+        int totalSegundos = 0;
         Integer inicio = null;
         for (HistorialPartido evento : eventos) {
             EventoPartido tipo = evento.getTipoEvento();
             if (tipo == EventoPartido.ENTRADA) {
-                inicio = convertirAMinutoAbsoluto(evento.getPeriodo(), evento.getMinuto());
+                inicio = convertirASegundoAbsoluto(evento.getPeriodo(), evento.getSegundo(), evento.getMinuto());
             }
             if (tipo == EventoPartido.SALIDA && inicio != null) {
-                int fin = convertirAMinutoAbsoluto(evento.getPeriodo(), evento.getMinuto());
-                total += Math.max(fin - inicio, 0);
+                int fin = convertirASegundoAbsoluto(evento.getPeriodo(), evento.getSegundo(), evento.getMinuto());
+                totalSegundos += Math.max(fin - inicio, 0);
                 inicio = null;
             }
         }
-        return total;
+        return BigDecimal.valueOf(totalSegundos)
+                .divide(BigDecimal.valueOf(60), 1, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
-    private int convertirAMinutoAbsoluto(Integer periodo, Integer minuto) {
-        if (periodo == null || minuto == null) {
+    private int convertirASegundoAbsoluto(Integer periodo, Integer segundo, Integer minutoLegacy) {
+        if (periodo == null) {
             return 0;
         }
-        return (periodo - 1) * 10 + minuto;
+
+        int segundoEnPeriodo;
+        if (segundo != null) {
+            segundoEnPeriodo = segundo;
+        } else if (minutoLegacy != null) {
+            segundoEnPeriodo = minutoLegacy * 60;
+        } else {
+            segundoEnPeriodo = 0;
+        }
+
+        return (periodo - 1) * 600 + segundoEnPeriodo;
     }
 }

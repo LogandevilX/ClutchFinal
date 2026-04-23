@@ -101,6 +101,17 @@ public class PartidoController {
         }
     }
 
+    @PostMapping("/{id}/fin-periodo")
+    public ResponseEntity<EstadoPartidoDTO> finalizarPeriodo(@PathVariable Long id) {
+        try {
+            return new ResponseEntity<>(partidoService.finalizarPeriodo(id), HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("/{id}/estado")
     public ResponseEntity<EstadoPartidoDTO> obtenerEstado(@PathVariable Long id) {
         try {

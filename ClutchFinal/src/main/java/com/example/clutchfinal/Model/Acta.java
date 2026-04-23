@@ -35,7 +35,7 @@ public class Acta {
     private Boolean titular = false;
 
     @Column(name = "minutos_jugados", nullable = false)
-    private Integer minutosJugados = 0;
+    private Double minutosJugados = 0.0;
 
     @Column(name = "puntos", nullable = false)
     private Integer puntos = 0;
