@@ -10,9 +10,10 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
-import { fetchHomeData } from '../services/homeService';
+import { addFavorite, fetchHomeData, fetchSearchData } from '../services/homeService';
 
 const backgroundImage = require('../assets/Fondo_Cancha.png');
 const appLogo = require('../assets/LogoClutch.png');
@@ -62,9 +63,6 @@ function TeamLogo({ uri }) {
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ');
 
-const getPlayerCategory = (player) =>
-  [player?.categoria, player?.subcategoria, player?.nivel].filter(Boolean).join(' - ');
-
 export default function HomeScreen({ user, onGoProfile }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -72,6 +70,11 @@ export default function HomeScreen({ user, onGoProfile }) {
   const [followedTeams, setFollowedTeams] = useState([]);
   const [followedPlayers, setFollowedPlayers] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [searchText, setSearchText] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [teamSearchResults, setTeamSearchResults] = useState([]);
+  const [playerSearchResults, setPlayerSearchResults] = useState([]);
 
   const userId = user?.id;
 
@@ -123,6 +126,56 @@ export default function HomeScreen({ user, onGoProfile }) {
     [followedTeams, followedPlayers]
   );
 
+  const teamNamesById = useMemo(
+    () => new Map(followedTeams.map((team) => [team.id, team.nombreEquipo])),
+    [followedTeams]
+  );
+
+  const onSearch = async () => {
+    if (!userId) {
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError('');
+
+    try {
+      const data = await fetchSearchData(userId, searchText);
+      setTeamSearchResults(data.teamResults);
+      setPlayerSearchResults(data.playerResults);
+    } catch (error) {
+      setSearchError('No se pudo realizar la búsqueda.');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const onAddFavorite = async (item) => {
+    if (item.isFavorite) {
+      return;
+    }
+
+    const payload =
+      item.type === 'team'
+        ? { usuarioId: userId, equipoId: item.id, jugadorId: null }
+        : { usuarioId: userId, equipoId: null, jugadorId: item.id };
+
+    const response = await addFavorite(payload);
+
+    if (!response.ok) {
+      setSearchError('No se pudo añadir a favoritos.');
+      return;
+    }
+
+    setReloadKey((prev) => prev + 1);
+    setTeamSearchResults((prev) =>
+      prev.map((entry) => (entry.type === item.type && entry.id === item.id ? { ...entry, isFavorite: true } : entry))
+    );
+    setPlayerSearchResults((prev) =>
+      prev.map((entry) => (entry.id === item.id ? { ...entry, isFavorite: true } : entry))
+    );
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
@@ -131,9 +184,20 @@ export default function HomeScreen({ user, onGoProfile }) {
             <Image source={appLogo} style={styles.appLogo} />
             <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
           </Pressable>
-          <Pressable style={styles.searchButton}>
+          <Pressable style={styles.searchButton} onPress={onSearch}>
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
+        </View>
+        <View style={styles.searchRow}>
+          <TextInput
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Buscar equipo o jugador"
+            placeholderTextColor="#8ea4c0"
+            style={styles.searchInput}
+            onSubmitEditing={onSearch}
+            returnKeyType="search"
+          />
         </View>
 
         {loading ? (
@@ -154,6 +218,42 @@ export default function HomeScreen({ user, onGoProfile }) {
 
         {!loading && !errorMessage ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Búsqueda</Text>
+            </View>
+
+            {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
+            {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+
+            {teamSearchResults.map((team) => (
+              <View key={team.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <TeamLogo uri={team.logoUrl} />
+                  <View style={styles.searchTextWrap}>
+                    <Text style={styles.favoriteName}>{team.nombreEquipo}</Text>
+                    <Text style={styles.favoriteEnrollment}>{team.division || 'Sin división'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(team)}>
+                  <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
+            {playerSearchResults.map((player) => (
+              <View key={player.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <View style={styles.playerSearchTextWrap}>
+                    <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
+                    <Text style={styles.favoriteEnrollment}>{player.equipoNombre || 'Sin equipo'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(player)}>
+                  <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Partidos en directo</Text>
               <Pressable style={styles.seeAllButton}>
@@ -234,7 +334,7 @@ export default function HomeScreen({ user, onGoProfile }) {
                     />
                     <View style={styles.playerIdentity}>
                       <Text style={styles.playerName}>{getPlayerFullName(item.player) || 'Jugador'}</Text>
-                      <Text style={styles.playerCategory}>{getPlayerCategory(item.player) || 'Sin categoría'}</Text>
+                      <Text style={styles.playerCategory}>{teamNamesById.get(item.player.teamId) || 'Sin equipo'}</Text>
                     </View>
                   </View>
                   <View style={styles.playerStatsRow}>
@@ -300,6 +400,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchIcon: { fontSize: 18 },
+  searchRow: {
+    marginBottom: 10,
+  },
+  searchInput: {
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 14,
+    color: '#0d203d',
+    fontWeight: '600',
+  },
   scrollContent: { paddingBottom: 30 },
   sectionHeader: {
     marginTop: 10,
@@ -333,6 +444,22 @@ const styles = StyleSheet.create({
   teamAbbrRow: { marginTop: 8, gap: 8, flexDirection: 'row', justifyContent: 'space-between' },
   teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
+  searchCard: {
+    marginTop: 10,
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  searchMainInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  searchTextWrap: { marginLeft: 10, flexShrink: 1 },
+  playerSearchTextWrap: { flexShrink: 1 },
+  starIcon: { fontSize: 28, marginLeft: 10 },
 
   // --- CONTENEDOR DEL EQUIPO ACTUALIZADO ---
   favoriteCard: {
