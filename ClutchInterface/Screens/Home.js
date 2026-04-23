@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -74,8 +74,11 @@ export default function HomeScreen({ user, onGoProfile }) {
   const [searchText, setSearchText] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [teamSearchResults, setTeamSearchResults] = useState([]);
   const [playerSearchResults, setPlayerSearchResults] = useState([]);
+  const searchInputRef = useRef(null);
+  const latestSearchRequestRef = useRef(0);
 
   const userId = user?.id;
 
@@ -132,24 +135,79 @@ export default function HomeScreen({ user, onGoProfile }) {
     [followedTeams]
   );
 
-  const onSearch = async () => {
+  const onSearch = useCallback(async (value) => {
     if (!userId) {
+      return;
+    }
+
+    const query = typeof value === 'string' ? value : searchText;
+    const normalizedQuery = query.trim();
+
+    if (!normalizedQuery) {
+      setTeamSearchResults([]);
+      setPlayerSearchResults([]);
+      setSearchLoading(false);
+      setSearchError('');
       return;
     }
 
     setSearchLoading(true);
     setSearchError('');
+    const requestId = latestSearchRequestRef.current + 1;
+    latestSearchRequestRef.current = requestId;
 
     try {
-      const data = await fetchSearchData(userId, searchText);
+      const data = await fetchSearchData(userId, normalizedQuery);
+      if (latestSearchRequestRef.current !== requestId) {
+        return;
+      }
       setTeamSearchResults(data.teamResults);
       setPlayerSearchResults(data.playerResults);
     } catch (error) {
+      if (latestSearchRequestRef.current !== requestId) {
+        return;
+      }
       setSearchError('No se pudo realizar la búsqueda.');
     } finally {
-      setSearchLoading(false);
+      if (latestSearchRequestRef.current === requestId) {
+        setSearchLoading(false);
+      }
     }
+  }, [searchText, userId]);
+
+  useEffect(() => {
+    if (!isSearchOverlayOpen) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => {
+      onSearch(searchText);
+    }, 250);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchText, isSearchOverlayOpen, onSearch]);
+
+  const openSearchOverlay = () => {
+    setIsSearchOverlayOpen(true);
+    setSearchError('');
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
   };
+
+  const closeSearchOverlay = () => {
+    latestSearchRequestRef.current += 1;
+    setIsSearchOverlayOpen(false);
+    setSearchLoading(false);
+    setSearchError('');
+    setSearchText('');
+    setTeamSearchResults([]);
+    setPlayerSearchResults([]);
+    Keyboard.dismiss();
+  };
+
+  const hasSearchResults = teamSearchResults.length > 0 || playerSearchResults.length > 0;
 
   const onAddFavorite = async (item) => {
     if (item.isFavorite) {
@@ -185,7 +243,7 @@ export default function HomeScreen({ user, onGoProfile }) {
             <Image source={appLogo} style={styles.appLogo} />
             <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
           </Pressable>
-          <Pressable style={styles.searchButton} onPress={onSearch}>
+          <Pressable style={styles.searchButton} onPress={openSearchOverlay}>
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
         </View>
@@ -401,6 +459,9 @@ export default function HomeScreen({ user, onGoProfile }) {
                 ) : null}
                 {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
                 {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+                {!searchLoading && !searchError && searchText.trim() && !hasSearchResults ? (
+                  <Text style={styles.emptyText}>No se encontraron resultados.</Text>
+                ) : null}
 
                 {teamSearchResults.map((team) => (
                   <View key={team.key} style={styles.searchCard}>
@@ -465,8 +526,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchIcon: { fontSize: 18 },
+  overlayRoot: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 12,
+  },
+  overlayBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  overlayPanel: {
+    width: '94%',
+    maxHeight: '78%',
+    backgroundColor: 'rgba(5, 15, 29, 0.98)',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 14,
+  },
+  overlayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  overlayTitle: { color: '#fff', fontSize: 24, fontWeight: '800' },
+  overlayClose: { color: '#fff', fontSize: 26, fontWeight: '700', paddingHorizontal: 6 },
+  overlayResults: { marginTop: 6 },
   searchRow: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   searchInput: {
     height: 44,
