@@ -65,7 +65,7 @@ const getPlayerFullName = (player) =>
 const getPlayerCategory = (player) =>
   [player?.categoria, player?.subcategoria, player?.nivel].filter(Boolean).join(' - ');
 
-export default function HomeScreen({ user }) {
+export default function HomeScreen({ user, onGoProfile }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [liveMatches, setLiveMatches] = useState([]);
@@ -127,10 +127,10 @@ export default function HomeScreen({ user }) {
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
+          <Pressable style={styles.headerLeft} onPress={onGoProfile}>
             <Image source={appLogo} style={styles.appLogo} />
             <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
-          </View>
+          </Pressable>
           <Pressable style={styles.searchButton}>
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
@@ -334,17 +334,15 @@ const styles = StyleSheet.create({
   teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
 
-  // --- CONTENEDOR DEL EQUIPO ACTUALIZADO ---
   favoriteCard: {
     marginTop: 10,
-    backgroundColor: 'rgba(5, 15, 29, 0.92)', // Añadido: fondo idéntico al resto
-    borderRadius: 16, // Ajustado de 18 a 16 para mantener el mismo radio
-    borderWidth: 4, // Añadido: borde idéntico
-    borderColor: '#ffffff', // Añadido: color del borde
-    paddingHorizontal: 14, // Añadido: padding lateral interno
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    borderRadius: 16,
+    borderWidth: 4,
+    borderColor: '#ffffff',
+    paddingHorizontal: 14,
     paddingVertical: 14,
   },
-  // -----------------------------------------
 
   favoriteTop: { flexDirection: 'row', alignItems: 'center' },
   favoriteInfo: { marginLeft: 10, flexShrink: 1 },

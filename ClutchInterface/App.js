@@ -4,6 +4,7 @@ import InicioScreen from './Screens/Inicio';
 import LoginScreen from './Screens/login';
 import RegistroUsuarioScreen from './Screens/RegistroUsuario';
 import HomeScreen from './Screens/Home';
+import PerfilScreen from './Screens/Perfil';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -39,14 +40,18 @@ export default function App() {
       {screen === 'home' ? (
         <HomeScreen
           user={loggedUser}
-          onLogout={() => {
-            setLoggedUser(null);
-            setScreen('inicio');
-          }}
+          onGoProfile={() => setScreen('perfil')}
+        />
+      ) : null}
+
+      {screen === 'perfil' ? (
+        <PerfilScreen
+          user={loggedUser}
+          onUserUpdate={(updatedUser) => setLoggedUser(updatedUser)}
+          onGoHome={() => setScreen('home')}
         />
       ) : null}
 
     </>
   );
 }
-
