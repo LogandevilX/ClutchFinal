@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   ImageBackground,
   Platform,
   Pressable,
+  Keyboard,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -368,6 +369,70 @@ export default function HomeScreen({ user, onGoProfile }) {
               );
             })}
           </ScrollView>
+        ) : null}
+
+        {isSearchOverlayOpen ? (
+          <View style={styles.overlayRoot}>
+            <Pressable style={styles.overlayBackdrop} onPress={closeSearchOverlay} />
+            <View style={styles.overlayPanel}>
+              <View style={styles.overlayHeader}>
+                <Text style={styles.overlayTitle}>Buscar</Text>
+                <Pressable onPress={closeSearchOverlay}>
+                  <Text style={styles.overlayClose}>✕</Text>
+                </Pressable>
+              </View>
+              <View style={styles.searchRow}>
+                <TextInput
+                  ref={searchInputRef}
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  placeholder="Buscar equipo o jugador"
+                  placeholderTextColor="#8ea4c0"
+                  style={styles.searchInput}
+                  onSubmitEditing={() => onSearch(searchText)}
+                  returnKeyType="search"
+                  autoFocus
+                />
+              </View>
+
+              <ScrollView style={styles.overlayResults} keyboardShouldPersistTaps="handled">
+                {!searchText.trim() ? (
+                  <Text style={styles.emptyText}>Escribe para ver resultados.</Text>
+                ) : null}
+                {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
+                {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+
+                {teamSearchResults.map((team) => (
+                  <View key={team.key} style={styles.searchCard}>
+                    <View style={styles.searchMainInfo}>
+                      <TeamLogo uri={team.logoUrl} />
+                      <View style={styles.searchTextWrap}>
+                        <Text style={styles.favoriteName}>{team.nombreEquipo}</Text>
+                        <Text style={styles.favoriteEnrollment}>{team.division || 'Sin división'}</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => onAddFavorite(team)}>
+                      <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                    </Pressable>
+                  </View>
+                ))}
+
+                {playerSearchResults.map((player) => (
+                  <View key={player.key} style={styles.searchCard}>
+                    <View style={styles.searchMainInfo}>
+                      <View style={styles.playerSearchTextWrap}>
+                        <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
+                        <Text style={styles.favoriteEnrollment}>{player.equipoNombre || 'Sin equipo'}</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => onAddFavorite(player)}>
+                      <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
         ) : null}
       </SafeAreaView>
     </ImageBackground>
