@@ -1,10 +1,14 @@
 package com.example.clutchfinal.Fabrica;
 
+import com.example.clutchfinal.DTO.ParcialPartidoDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
 import com.example.clutchfinal.DTO.PartidosResponseDTO;
 import com.example.clutchfinal.Model.Partido;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FabricaPartidoService {
@@ -23,7 +27,8 @@ public class FabricaPartidoService {
                 partido.getFechaHoraFin(),
                 partido.getPuntosLocal(),
                 partido.getPuntosVisitante(),
-                partido.getPabellonDeJuego()
+                partido.getPabellonDeJuego(),
+                partido.getEstado()
         );
     }
 
@@ -48,6 +53,12 @@ public class FabricaPartidoService {
                 .orElse(null)
                 : null;
 
+        List<ParcialPartidoDTO> parcialesDTO = partido.getParciales() != null
+                ? partido.getParciales().stream()
+                .map(parcial -> new ParcialPartidoDTO(parcial.getPeriodo(), parcial.getPuntosLocal(), parcial.getPuntosVisitante()))
+                .toList()
+                : new ArrayList<>();
+
         return new PartidosResponseDTO(
                 partido.getId(),
                 partido.getGrupo().getId(),
@@ -57,7 +68,10 @@ public class FabricaPartidoService {
                 partido.getFechaHoraFin(),
                 partido.getPuntosLocal(),
                 partido.getPuntosVisitante(),
-                partido.getPabellonDeJuego()
+                partido.getPabellonDeJuego(),
+                partido.getPeriodoActual(),
+                parcialesDTO,
+                partido.getEstado()
         );
     }
 }

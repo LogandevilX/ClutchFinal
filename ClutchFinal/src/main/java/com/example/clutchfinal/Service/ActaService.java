@@ -121,12 +121,22 @@ public class ActaService {
     }
 
     private void sumarPuntos(Acta acta, Partido partido, Equipo equipo, int puntos) {
-        acta.setPuntos(puntos);
+        int puntosActualesActa = acta.getPuntos() != null ? acta.getPuntos() : 0;
+        acta.setPuntos(puntosActualesActa + puntos);
+
+        ParcialPartido parcial = partido.getParcialActual();
+
+        int puntosLocalPartido = partido.getPuntosLocal() != null ? partido.getPuntosLocal() : 0;
+        int puntosVisitantePartido = partido.getPuntosVisitante() != null ? partido.getPuntosVisitante() : 0;
+        int puntosLocalParcial = parcial.getPuntosLocal() != null ? parcial.getPuntosLocal() : 0;
+        int puntosVisitanteParcial = parcial.getPuntosVisitante() != null ? parcial.getPuntosVisitante() : 0;
 
         if (Objects.equals(partido.getInscripcionLocal().getEquipo().getId(), equipo.getId())) {
-            partido.setPuntosLocal(partido.getPuntosLocal() + puntos);
+            partido.setPuntosLocal(puntosLocalPartido + puntos);
+            parcial.setPuntosLocal(puntosLocalParcial + puntos);
         } else if (Objects.equals(partido.getInscripcionVisitante().getEquipo().getId(), equipo.getId())) {
-            partido.setPuntosVisitante(partido.getPuntosVisitante() + puntos);
+            partido.setPuntosVisitante(puntosVisitantePartido + puntos);
+            parcial.setPuntosVisitante(puntosVisitanteParcial + puntos);
         }
     }
 
