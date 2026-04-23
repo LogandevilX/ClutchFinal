@@ -74,10 +74,8 @@ export default function HomeScreen({ user, onGoProfile }) {
   const [searchText, setSearchText] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [teamSearchResults, setTeamSearchResults] = useState([]);
   const [playerSearchResults, setPlayerSearchResults] = useState([]);
-  const searchInputRef = useRef(null);
 
   const userId = user?.id;
 
@@ -134,19 +132,8 @@ export default function HomeScreen({ user, onGoProfile }) {
     [followedTeams]
   );
 
-  const onSearch = async (value) => {
+  const onSearch = async () => {
     if (!userId) {
-      return;
-    }
-
-    const query = typeof value === 'string' ? value : searchText;
-    const normalizedQuery = query.trim();
-
-    if (!normalizedQuery) {
-      setTeamSearchResults([]);
-      setPlayerSearchResults([]);
-      setSearchLoading(false);
-      setSearchError('');
       return;
     }
 
@@ -154,7 +141,7 @@ export default function HomeScreen({ user, onGoProfile }) {
     setSearchError('');
 
     try {
-      const data = await fetchSearchData(userId, normalizedQuery);
+      const data = await fetchSearchData(userId, searchText);
       setTeamSearchResults(data.teamResults);
       setPlayerSearchResults(data.playerResults);
     } catch (error) {
@@ -162,37 +149,6 @@ export default function HomeScreen({ user, onGoProfile }) {
     } finally {
       setSearchLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (!isSearchOverlayOpen) {
-      return undefined;
-    }
-
-    const timeoutId = setTimeout(() => {
-      onSearch(searchText);
-    }, 250);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchText, isSearchOverlayOpen]);
-
-  const openSearchOverlay = () => {
-    setIsSearchOverlayOpen(true);
-    setSearchError('');
-
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 50);
-  };
-
-  const closeSearchOverlay = () => {
-    setIsSearchOverlayOpen(false);
-    setSearchLoading(false);
-    setSearchError('');
-    setSearchText('');
-    setTeamSearchResults([]);
-    setPlayerSearchResults([]);
-    Keyboard.dismiss();
   };
 
   const onAddFavorite = async (item) => {
@@ -229,9 +185,20 @@ export default function HomeScreen({ user, onGoProfile }) {
             <Image source={appLogo} style={styles.appLogo} />
             <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
           </Pressable>
-          <Pressable style={styles.searchButton} onPress={openSearchOverlay}>
+          <Pressable style={styles.searchButton} onPress={onSearch}>
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
+        </View>
+        <View style={styles.searchRow}>
+          <TextInput
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Buscar equipo o jugador"
+            placeholderTextColor="#8ea4c0"
+            style={styles.searchInput}
+            onSubmitEditing={onSearch}
+            returnKeyType="search"
+          />
         </View>
 
         {loading ? (
@@ -252,6 +219,42 @@ export default function HomeScreen({ user, onGoProfile }) {
 
         {!loading && !errorMessage ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Búsqueda</Text>
+            </View>
+
+            {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
+            {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+
+            {teamSearchResults.map((team) => (
+              <View key={team.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <TeamLogo uri={team.logoUrl} />
+                  <View style={styles.searchTextWrap}>
+                    <Text style={styles.favoriteName}>{team.nombreEquipo}</Text>
+                    <Text style={styles.favoriteEnrollment}>{team.division || 'Sin división'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(team)}>
+                  <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
+            {playerSearchResults.map((player) => (
+              <View key={player.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <View style={styles.playerSearchTextWrap}>
+                    <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
+                    <Text style={styles.favoriteEnrollment}>{player.equipoNombre || 'Sin equipo'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(player)}>
+                  <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Partidos en directo</Text>
               <Pressable style={styles.seeAllButton}>
@@ -462,36 +465,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchIcon: { fontSize: 18 },
-  overlayRoot: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 12,
-  },
-  overlayBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  overlayPanel: {
-    width: '94%',
-    maxHeight: '78%',
-    backgroundColor: 'rgba(5, 15, 29, 0.98)',
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    padding: 14,
-  },
-  overlayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  overlayTitle: { color: '#fff', fontSize: 24, fontWeight: '800' },
-  overlayClose: { color: '#fff', fontSize: 26, fontWeight: '700', paddingHorizontal: 6 },
-  overlayResults: { marginTop: 6 },
   searchRow: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   searchInput: {
     height: 44,
