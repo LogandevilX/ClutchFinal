@@ -6,11 +6,10 @@ const API_HOST_BY_PLATFORM = {
   default: 'localhost',
 };
 
-const API_PORT = '8080';
-const API_HOST = API_HOST_BY_PLATFORM[Platform.OS] || API_HOST_BY_PLATFORM.default;
+const API = '192.168.1.74:8080';
 
-export const API_BASE_URL = `http://${API_HOST}:${API_PORT}/clutch`;
-export const API_ASSETS_BASE_URL = `http://${API_HOST}:${API_PORT}`;
+export const API_BASE_URL = `http://${API}/clutch`;
+export const API_ASSETS_BASE_URL = `http://${API}`;
 
 export const parseResponse = async (response) => {
   let payload = null;

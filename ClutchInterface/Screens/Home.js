@@ -3,16 +3,18 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { fetchHomeData } from '../services/homeService';
 
-const backgroundImage = require('../assets/Fondo_Home.png');
+const backgroundImage = require('../assets/Fondo_Cancha.png');
 const appLogo = require('../assets/LogoClutch.png');
 
 function buildFavoritesSections(teams, players) {
@@ -70,7 +72,6 @@ export default function HomeScreen({ user }) {
   const [followedTeams, setFollowedTeams] = useState([]);
   const [followedPlayers, setFollowedPlayers] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
-  const [isNextMatch, setIsNextMatch] = useState(false);
 
   const userId = user?.id;
 
@@ -121,30 +122,6 @@ export default function HomeScreen({ user }) {
     () => buildFavoritesSections(followedTeams, followedPlayers),
     [followedTeams, followedPlayers]
   );
-
-  const buildTeamMatchData = (team) => {
-    const localMatch = liveMatches.find(
-      (match) => match?.equipoLocal?.id === team.id || match?.equipoVisitante?.id === team.id
-    );
-    const rivalTeam =
-      localMatch?.equipoLocal?.id === team.id ? localMatch?.equipoVisitante : localMatch?.equipoLocal;
-
-    const homeTeam = {
-      name: team?.nombreEquipo || 'Equipo local',
-      logo: team?.shieldUrl || null,
-      quarters: [12, 17, 16, 8],
-      total: 53,
-    };
-
-    const awayTeam = {
-      name: rivalTeam?.nombreEquipo || 'Rival',
-      logo: rivalTeam?.urlEscudo || null,
-      quarters: [10, 14, 8, 16],
-      total: 48,
-    };
-
-    return { homeTeam, awayTeam };
-  };
 
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
@@ -244,110 +221,6 @@ export default function HomeScreen({ user }) {
                         <Text style={styles.statsValueText}>{item.team.puntosEnContra || 0}</Text>
                       </View>
                     </View>
-                    <View style={styles.matchSwitcherWrapper}>
-                      {!isNextMatch ? (
-                        <>
-                          <View style={styles.matchHeader}>
-                            <Text style={styles.matchHeaderTitle}>Último Partido</Text>
-                            <Pressable style={styles.matchArrowButton} onPress={() => setIsNextMatch(true)}>
-                              <Text style={styles.matchArrowIcon}>→</Text>
-                            </Pressable>
-                          </View>
-                          <View style={styles.matchCard}>
-                            <View style={styles.quartersHeader}>
-                              <Text style={styles.quartersLabel}>P1</Text>
-                              <Text style={styles.quartersLabel}>P2</Text>
-                              <Text style={styles.quartersLabel}>P3</Text>
-                              <Text style={styles.quartersLabel}>P4</Text>
-                              <Text style={styles.quartersTotalLabel}>T</Text>
-                            </View>
-
-                            {(() => {
-                              const { homeTeam, awayTeam } = buildTeamMatchData(item.team);
-
-                              return [homeTeam, awayTeam].map((teamData, index) => {
-                                const rivalData = index === 0 ? awayTeam : homeTeam;
-                                return (
-                                  <View key={`${item.id}-last-${teamData.name}-${index}`} style={styles.matchTeamRow}>
-                                    <Image
-                                      source={teamData.logo ? { uri: teamData.logo } : appLogo}
-                                      style={styles.matchTeamLogo}
-                                    />
-                                    <Text numberOfLines={1} style={styles.matchTeamName}>
-                                      {index + 1}. {teamData.name}
-                                    </Text>
-                                    {teamData.quarters.map((value, quarterIndex) => (
-                                      <Text
-                                        key={`${item.id}-q-${quarterIndex}-${index}`}
-                                        style={[
-                                          styles.quarterValue,
-                                          value >= rivalData.quarters[quarterIndex]
-                                            ? styles.valueWinner
-                                            : styles.valueLoser,
-                                        ]}
-                                      >
-                                        {value}
-                                      </Text>
-                                    ))}
-                                    <Text
-                                      style={[
-                                        styles.totalValue,
-                                        teamData.total >= rivalData.total ? styles.valueWinner : styles.valueLoser,
-                                      ]}
-                                    >
-                                      {teamData.total}
-                                    </Text>
-                                  </View>
-                                );
-                              });
-                            })()}
-                          </View>
-                        </>
-                      ) : (
-                        <>
-                          <View style={styles.matchHeaderReverse}>
-                            <Pressable style={styles.matchArrowButton} onPress={() => setIsNextMatch(false)}>
-                              <Text style={styles.matchArrowIcon}>←</Text>
-                            </Pressable>
-                            <Text style={styles.matchHeaderTitle}>Próximo Partido</Text>
-                          </View>
-                          <View style={styles.matchCard}>
-                            <View style={styles.nextMatchContent}>
-                              <View style={styles.nextMatchTeamsColumn}>
-                                <View style={styles.nextMatchTeamRow}>
-                                  <Image
-                                    source={item.team.shieldUrl ? { uri: item.team.shieldUrl } : appLogo}
-                                    style={styles.matchTeamLogo}
-                                  />
-                                  <Text style={styles.nextMatchTeamName}>{item.team.nombreEquipo}</Text>
-                                </View>
-                                <View style={styles.nextMatchTeamRow}>
-                                  <Image
-                                    source={
-                                      liveMatches[0]?.equipoVisitante?.urlEscudo
-                                        ? { uri: liveMatches[0].equipoVisitante.urlEscudo }
-                                        : appLogo
-                                    }
-                                    style={styles.matchTeamLogo}
-                                  />
-                                  <Text style={styles.nextMatchTeamName}>
-                                    {liveMatches[0]?.equipoVisitante?.nombreEquipo || 'Rival por confirmar'}
-                                  </Text>
-                                </View>
-                              </View>
-                              <View style={styles.nextMatchInfoColumn}>
-                                <Text style={styles.nextMatchDay}>Domingo</Text>
-                                <Text style={styles.nextMatchDate}>11/04/26 - 16:00</Text>
-                                <View style={styles.nextMatchMap} />
-                                <Text style={styles.nextMatchAddress}>
-                                  Pabellón Europa, Calle de la Canasta 22, Madrid
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-                        </>
-                      )}
-                    </View>
                   </View>
                 );
               }
@@ -403,26 +276,30 @@ export default function HomeScreen({ user }) {
 
 const styles = StyleSheet.create({
   background: { flex: 1 },
-  safeArea: { flex: 1, paddingHorizontal: 18, paddingVertical: 12 },
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 20,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  appLogo: { width: 26, height: 26, borderRadius: 13 },
-  userName: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  appLogo: { width: 34, height: 34, borderRadius: 17 },
+  userName: { color: '#fff', fontSize: 22, fontWeight: '800' },
   searchButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.65)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchIcon: { fontSize: 16 },
+  searchIcon: { fontSize: 18 },
   scrollContent: { paddingBottom: 30 },
   sectionHeader: {
     marginTop: 10,
@@ -442,11 +319,12 @@ const styles = StyleSheet.create({
   seeAllText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   liveMatchesRow: { gap: 12 },
   liveCard: {
-    backgroundColor: 'rgba(14, 31, 55, 0.88)',
-    borderRadius: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 4,
+    borderColor: '#ffffff',
   },
   liveBadge: { color: '#ff5d5d', fontWeight: '800', marginBottom: 8 },
   teamRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
@@ -455,111 +333,57 @@ const styles = StyleSheet.create({
   teamAbbrRow: { marginTop: 8, gap: 8, flexDirection: 'row', justifyContent: 'space-between' },
   teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
+
+  // --- CONTENEDOR DEL EQUIPO ACTUALIZADO ---
   favoriteCard: {
     marginTop: 10,
-    borderRadius: 18,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(5, 15, 29, 0.92)', // Añadido: fondo idéntico al resto
+    borderRadius: 16, // Ajustado de 18 a 16 para mantener el mismo radio
+    borderWidth: 4, // Añadido: borde idéntico
+    borderColor: '#ffffff', // Añadido: color del borde
+    paddingHorizontal: 14, // Añadido: padding lateral interno
+    paddingVertical: 14,
   },
+  // -----------------------------------------
+
   favoriteTop: { flexDirection: 'row', alignItems: 'center' },
   favoriteInfo: { marginLeft: 10, flexShrink: 1 },
   favoriteName: { color: '#fff', fontWeight: '800', fontSize: 17 },
   favoriteEnrollment: { color: '#c7d4e5', fontSize: 12, marginTop: 2 },
-  statsGrid: { marginTop: 10 },
+  statsGrid: {
+    marginTop: 16,
+    width: '90%',
+    alignSelf: 'center',
+  },
   statsGridHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.6)',
-    paddingBottom: 3,
+    paddingBottom: 6,
   },
   statsGridValues: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
+    paddingTop: 6,
   },
-  statsHeaderText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  statsValueText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  statsDivider: {
-    color: 'rgba(255,255,255,0.75)',
-    marginHorizontal: 5,
-    fontWeight: '700',
-  },
-  matchSwitcherWrapper: { marginTop: 12 },
-  matchHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  matchHeaderReverse: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  matchHeaderTitle: {
-    color: '#f3f5f7',
-    fontSize: 19,
-    fontWeight: '800',
-  },
-  matchArrowButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: '#d8dee8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  matchArrowIcon: { color: '#0a1424', fontSize: 18, fontWeight: '900' },
-  matchCard: {
-    backgroundColor: '#1f2b3c',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 10,
-  },
-  quartersHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingRight: 2,
-    columnGap: 12,
-  },
-  quartersLabel: { color: '#ffffff', fontSize: 12, fontWeight: '800', width: 22, textAlign: 'center' },
-  quartersTotalLabel: { color: '#ffffff', fontSize: 12, fontWeight: '900', width: 26, textAlign: 'center' },
-  matchTeamRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  matchTeamLogo: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff' },
-  matchTeamName: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 13,
+  statsHeaderText: {
     flex: 1,
-    marginLeft: 8,
-    marginRight: 4,
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14
   },
-  quarterValue: { width: 22, textAlign: 'center', fontWeight: '800', marginHorizontal: 6 },
-  totalValue: { width: 26, textAlign: 'center', fontSize: 24, fontWeight: '900', marginLeft: 6 },
-  valueWinner: { color: '#ffffff' },
-  valueLoser: { color: '#93a0b4' },
-  nextMatchContent: { flexDirection: 'row', justifyContent: 'space-between' },
-  nextMatchTeamsColumn: { flex: 1, justifyContent: 'space-evenly', paddingRight: 10, rowGap: 12 },
-  nextMatchTeamRow: { flexDirection: 'row', alignItems: 'center' },
-  nextMatchTeamName: { color: '#fff', fontWeight: '800', fontSize: 13, marginLeft: 8, flexShrink: 1 },
-  nextMatchInfoColumn: { flex: 1.2, alignItems: 'flex-end' },
-  nextMatchDay: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  nextMatchDate: { color: '#fff', fontSize: 12, marginTop: 2, marginBottom: 8 },
-  nextMatchMap: {
-    width: '100%',
-    height: 70,
-    backgroundColor: '#566273',
+  statsValueText: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16
   },
-  nextMatchAddress: {
-    color: '#A0A0A0',
-    fontSize: 10,
-    marginTop: 6,
-    textAlign: 'right',
+  statsDivider: {
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '500',
+    fontSize: 16,
   },
   playerCard: {
     marginTop: 10,
@@ -573,12 +397,12 @@ const styles = StyleSheet.create({
   playerTop: { flexDirection: 'row', alignItems: 'center' },
   playerPhoto: { width: 84, height: 84, borderRadius: 14, backgroundColor: '#fff' },
   playerIdentity: { marginLeft: 12, flex: 1 },
-  playerName: { color: '#fff', fontWeight: '800', fontSize: 30 / 2 },
-  playerCategory: { color: '#b6c4d8', fontSize: 22 / 2, marginTop: 3, fontWeight: '600' },
+  playerName: { color: '#fff', fontWeight: '800', fontSize: 20 },
+  playerCategory: { color: '#b6c4d8', fontSize: 15, marginTop: 3, fontWeight: '600' },
   playerStatsRow: { marginTop: 16, flexDirection: 'row', alignItems: 'stretch' },
   playerStatsColumn: { justifyContent: 'space-between', rowGap: 8, minWidth: 58 },
-  playerStatsLabel: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
-  playerStatsValue: { color: '#ffffff', fontSize: 30 / 2, fontWeight: '700' },
+  playerStatsLabel: { color: '#ffffff', fontSize: 15, fontWeight: '800', alignSelf: 'center' },
+  playerStatsValue: { color: '#ffffff', fontSize: 16, fontWeight: '700', alignSelf: 'center' },
   playerVerticalDivider: {
     width: 1,
     backgroundColor: 'rgba(255,255,255,0.7)',
@@ -588,11 +412,16 @@ const styles = StyleSheet.create({
   playerLastMatchTitle: {
     color: '#fff',
     fontWeight: '800',
-    fontSize: 15,
+    fontSize: 17,
     textDecorationLine: 'underline',
-    marginBottom: 8,
+    marginBottom: 20,
+    alignSelf: 'center'
   },
-  playerLastMatchStats: { flexDirection: 'row', alignItems: 'stretch', justifyContent: 'space-between' },
+  playerLastMatchStats: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-between'
+  },
   centerMessageBox: {
     flex: 1,
     justifyContent: 'center',
@@ -609,15 +438,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     marginBottom: 14,
-  },
-  retryButton: {
-    backgroundColor: '#7E1F26',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
+  }
 });
