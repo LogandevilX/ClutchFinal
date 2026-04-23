@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -73,6 +74,14 @@ public class PartidoService {
             throw new IllegalArgumentException("El equipo local y visitante no pueden ser el mismo.");
         }
 
+        if (!Objects.equals(inscripcionLocal.getGrupo().getId(), inscripcionVisitante.getGrupo().getId())) {
+            throw new IllegalArgumentException("Las inscripciones local y visitante deben pertenecer al mismo grupo.");
+        }
+
+        if (!Objects.equals(inscripcionLocal.getGrupo().getId(), grupo.getId())) {
+            throw new IllegalArgumentException("Las inscripciones deben pertenecer al grupo del partido.");
+        }
+
         partido.setGrupo(grupo);
         partido.setInscripcionLocal(inscripcionLocal);
         partido.setInscripcionVisitante(inscripcionVisitante);
@@ -86,6 +95,9 @@ public class PartidoService {
             throw new IllegalStateException("No se encontró dirección de pabellón para el equipo local.");
         }
         partido.setPabellonDeJuego(pabellonDeJuego);
+        if (partido.getEstado() == null) {
+            partido.setEstado(EstadoPartido.PROGRAMADO);
+        }
 
         return toPartidoDTO(partidoRepository.save(partido));
     }
@@ -157,6 +169,9 @@ public class PartidoService {
         if (iniciarPeriodoDTO.getPeriodo() <= 0) {
             throw new IllegalArgumentException("El periodo debe ser mayor que 0.");
         }
+
+        partido.setPeriodoActual(iniciarPeriodoDTO.getPeriodo());
+        partido.setEstado(EstadoPartido.EN_CURSO);
 
         int minuto = iniciarPeriodoDTO.getMinuto() == null ? 0 : iniciarPeriodoDTO.getMinuto();
         if (minuto < 0 || minuto > 10) {
@@ -305,6 +320,7 @@ public class PartidoService {
 
         registrarSalidasPendientes(partido);
         partido.setFechaHoraFin(LocalDateTime.now());
+        partido.setEstado(EstadoPartido.FINALIZADO);
 
         equipoRepository.save(equipoLocal);
         equipoRepository.save(equipoVisitante);
@@ -347,12 +363,23 @@ public class PartidoService {
                 p.getFechaHoraFin(),
                 p.getPuntosLocal(),
                 p.getPuntosVisitante(),
-                p.getPabellonDeJuego()
+                p.getPabellonDeJuego(),
+                p.getEstado()
         );
     }
 
 
     private PartidosResponseDTO toPartidosResponseDTO(Partido p) {
+        List<ParcialPartidoDTO> parcialesDTO = p.getParciales() != null
+                ? p.getParciales().stream()
+                .map(parcial -> new ParcialPartidoDTO(
+                        parcial.getPeriodo(),
+                        parcial.getPuntosLocal(),
+                        parcial.getPuntosVisitante()
+                ))
+                .toList()
+                : new ArrayList<>();
+
         return new PartidosResponseDTO(
                 p.getId(),
                 p.getGrupo().getId(),
@@ -362,7 +389,10 @@ public class PartidoService {
                 p.getFechaHoraFin(),
                 p.getPuntosLocal(),
                 p.getPuntosVisitante(),
-                p.getPabellonDeJuego()
+                p.getPabellonDeJuego(),
+                p.getPeriodoActual(),
+                parcialesDTO,
+                p.getEstado()
         );
     }
 

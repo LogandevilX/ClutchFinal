@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -49,6 +51,19 @@ public class Partido {
     @Column(name = "pabellonDeJuego", nullable = false)
     private String pabellonDeJuego;
 
+    @Column(name = "periodo_actual")
+    private Integer periodoActual = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    private EstadoPartido estado = EstadoPartido.PROGRAMADO;
+
+    @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("periodo ASC")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<ParcialPartido> parciales = new ArrayList<>();
+
     @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -58,4 +73,23 @@ public class Partido {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<HistorialPartido> eventos = new HashSet<>();
+
+    public ParcialPartido getParcialActual() {
+        if (this.periodoActual == null || this.periodoActual == 0) {
+            this.periodoActual = 1;
+        }
+        if (this.parciales == null) {
+            this.parciales = new ArrayList<>();
+        }
+
+        return this.parciales.stream()
+                .filter(p -> p.getPeriodo().equals(this.periodoActual))
+                .findFirst()
+                .orElseGet(() -> {
+                    ParcialPartido nuevoParcial = new ParcialPartido(this, this.periodoActual);
+                    this.parciales.add(nuevoParcial);
+                    return nuevoParcial;
+                });
+    }
 }
+

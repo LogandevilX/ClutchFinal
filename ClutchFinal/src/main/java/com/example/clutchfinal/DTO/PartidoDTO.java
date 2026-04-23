@@ -1,5 +1,7 @@
 package com.example.clutchfinal.DTO;
 
+import com.example.clutchfinal.Model.EstadoPartido;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,4 +22,6 @@ public class PartidoDTO {
     private Integer puntosLocal;
     private Integer puntosVisitante;
     private String pabellonDeJuego;
+    private EstadoPartido estado;
 }
+
