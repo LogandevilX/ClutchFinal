@@ -70,7 +70,6 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
         email: nextEmail,
         password: user.password,
         rol: user.rol,
-        fechaRegistro: user.fechaRegistro,
       });
 
       if (!response.ok || !response.data) {
@@ -113,6 +112,7 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
         <Pressable
           style={styles.editButton}
           disabled={isSaving}
+          hitSlop={10}
           onPress={() => {
             if (isEditing) {
               updateProfileField(field);
@@ -122,7 +122,9 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
             setEditingField(field);
           }}
         >
-          <Text style={styles.editButtonText}>{isSaving ? '...' : isEditing ? 'Guardar' : 'Editar'}</Text>
+          <Text style={styles.editButtonText}>
+            {isSaving ? '⏳' : isEditing ? '✅' : '✏️'}
+          </Text>
         </Pressable>
       </View>
     );
@@ -156,13 +158,6 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
               <View style={styles.formBlock}>
                 {renderEditableRow({ label: 'Apodo', value: user?.apodo, field: 'apodo' })}
                 {renderEditableRow({ label: 'Correo', value: user?.email, field: 'email' })}
-
-                <View style={styles.profileRow}>
-                  <View style={styles.profileInfo}>
-                    <Text style={styles.profileLabel}>Fecha de registro</Text>
-                    <Text style={styles.profileValue}>{formatRegisterDate(user?.fechaRegistro)}</Text>
-                  </View>
-                </View>
               </View>
             </View>
           </ScrollView>
@@ -192,50 +187,57 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7, 18, 35, 0.65)',
     borderRadius: 36,
     paddingHorizontal: 24,
-    justifyContent: 'center',
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  backText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
+    paddingTop: 24,
+    paddingBottom: 30,
+    height: '95%',
+    width: '100%',
   },
   backButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#7E1F26',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 24,
+  },
+  backText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   logoCircle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: '#FFFFFF',
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
     overflow: 'hidden',
   },
   logo: {
-    width: 170,
-    height: 170,
+    width: 110,
+    height: 110,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 40,
+    fontSize: 36,
     fontWeight: '800',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   subtitle: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '500',
     textAlign: 'left',
-    marginBottom: 18,
+    marginBottom: 24,
+    opacity: 0.9,
   },
   formBlock: {
     width: '100%',
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginBottom: 16,
     paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -258,35 +260,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileLabel: {
-    color: '#555',
-    fontSize: 14,
-    marginBottom: 2,
+    color: '#777',
+    fontSize: 11,
+    marginBottom: 4,
     fontWeight: '700',
+    textTransform: 'uppercase',
   },
   profileValue: {
     color: '#1A1A1A',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '600',
   },
   profileInput: {
     color: '#1A1A1A',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '600',
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
-    paddingVertical: 0,
+    paddingVertical: 2,
   },
   editButton: {
-    backgroundColor: '#7E1F26',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    minWidth: 92,
+    padding: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   editButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
+    fontSize: 22,
   },
 });

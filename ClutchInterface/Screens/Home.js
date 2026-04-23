@@ -334,15 +334,17 @@ const styles = StyleSheet.create({
   teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
 
+  // --- CONTENEDOR DEL EQUIPO ACTUALIZADO ---
   favoriteCard: {
     marginTop: 10,
-    backgroundColor: 'rgba(5, 15, 29, 0.92)',
-    borderRadius: 16,
-    borderWidth: 4,
-    borderColor: '#ffffff',
-    paddingHorizontal: 14,
+    backgroundColor: 'rgba(5, 15, 29, 0.92)', // Añadido: fondo idéntico al resto
+    borderRadius: 16, // Ajustado de 18 a 16 para mantener el mismo radio
+    borderWidth: 4, // Añadido: borde idéntico
+    borderColor: '#ffffff', // Añadido: color del borde
+    paddingHorizontal: 14, // Añadido: padding lateral interno
     paddingVertical: 14,
   },
+  // -----------------------------------------
 
   favoriteTop: { flexDirection: 'row', alignItems: 'center' },
   favoriteInfo: { marginLeft: 10, flexShrink: 1 },
