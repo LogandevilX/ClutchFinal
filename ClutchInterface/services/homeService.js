@@ -5,6 +5,7 @@ const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
+const SEARCH_STATIC_TTL_MS = 5 * 60 * 1000;
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -32,6 +33,146 @@ const toSafeNumber = (value) => {
 };
 
 const roundToOneDecimal = (value) => Math.round(value * 10) / 10;
+
+const getPlayerFullName = (player) =>
+  [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ').trim();
+
+let searchStaticCache = {
+  expiresAt: 0,
+  teamResults: [],
+  playerResults: [],
+};
+
+async function getSearchStaticDataset() {
+  const now = Date.now();
+
+  if (searchStaticCache.expiresAt > now) {
+    return searchStaticCache;
+  }
+
+  const [equiposResponse, inscripcionesResponse] = await Promise.all([
+    fetchJson(EQUIPOS_URL),
+    fetchJson(INSCRIPCIONES_URL),
+  ]);
+
+  if (!equiposResponse.ok || !inscripcionesResponse.ok) {
+    throw new Error('No se pudieron cargar los datos base de búsqueda.');
+  }
+
+  const allTeams = safeArray(equiposResponse.data);
+  const allInscripciones = safeArray(inscripcionesResponse.data);
+  const divisionByTeamId = new Map(
+    allInscripciones
+      .filter((inscripcion) => typeof inscripcion?.equipoId === 'number')
+      .map((inscripcion) => [inscripcion.equipoId, inscripcion?.nombreDivision || ''])
+  );
+
+  const teamResults = allTeams.map((team) => ({
+    type: 'team',
+    key: `team-${team.id}`,
+    id: team.id,
+    nombreEquipo: team.nombreEquipo,
+    division: divisionByTeamId.get(team.id) || '',
+    logoUrl: buildAbsoluteAssetUrl(team.urlEscudo),
+  }));
+
+  const teamDetailResponses = await Promise.all(
+    allTeams
+      .filter((team) => typeof team?.id === 'number')
+      .map((team) => fetchJson(`${EQUIPOS_URL}/${team.id}`))
+  );
+
+  teamDetailResponses.forEach((response) => {
+    if (!response.ok) {
+      throw new Error('No se pudieron cargar los detalles de equipos para la búsqueda.');
+    }
+  });
+
+  const seenRows = new Set();
+  const playerResults = [];
+
+  teamDetailResponses.forEach((response) => {
+    const team = response.data;
+
+    safeArray(team?.jugadores).forEach((player) => {
+      const dedupeKey = `${player?.id}-${team?.id}`;
+
+      if (!player?.id || seenRows.has(dedupeKey)) {
+        return;
+      }
+
+      seenRows.add(dedupeKey);
+      playerResults.push({
+        type: 'player',
+        key: `player-${player.id}-team-${team.id}`,
+        id: player.id,
+        nombreCompleto: getPlayerFullName(player),
+        equipoId: team.id,
+        equipoNombre: team.nombreEquipo,
+      });
+    });
+  });
+
+  searchStaticCache = {
+    expiresAt: now + SEARCH_STATIC_TTL_MS,
+    teamResults,
+    playerResults,
+  };
+
+  return searchStaticCache;
+}
+
+export async function addFavorite({ usuarioId, equipoId = null, jugadorId = null }) {
+  const response = await fetch(FAVORITOS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuarioId, equipoId, jugadorId }),
+  });
+
+  return parseResponse(response);
+}
+
+export async function fetchSearchData(usuarioId, searchText) {
+  const query = String(searchText || '').trim().toLowerCase();
+
+  const [favoritosResponse, staticDataset] = await Promise.all([
+    fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`),
+    getSearchStaticDataset(),
+  ]);
+
+  if (!favoritosResponse.ok) {
+    throw new Error('No se pudieron cargar los favoritos para la búsqueda.');
+  }
+
+  const favoritos = safeArray(favoritosResponse.data);
+
+  const favoriteTeamIds = new Set(
+    favoritos.map((favorito) => favorito?.equipoId).filter((id) => typeof id === 'number')
+  );
+
+  const favoritePlayerIds = new Set(
+    favoritos.map((favorito) => favorito?.jugadorId).filter((id) => typeof id === 'number')
+  );
+
+  const teamResults = staticDataset.teamResults
+    .map((team) => ({
+      ...team,
+      isFavorite: favoriteTeamIds.has(team.id),
+    }))
+    .filter((team) => (query ? String(team.nombreEquipo || '').toLowerCase().includes(query) : true));
+
+  const playerResults = staticDataset.playerResults
+    .map((player) => ({
+      ...player,
+      isFavorite: favoritePlayerIds.has(player.id),
+    }))
+    .filter((player) => (query ? String(player.nombreCompleto || '').toLowerCase().includes(query) : true));
+
+  return {
+    teamResults,
+    playerResults,
+  };
+}
 
 export async function fetchHomeData(usuarioId) {
   const [favoritosResponse, partidosResponse, equiposResponse, inscripcionesResponse] = await Promise.all([
