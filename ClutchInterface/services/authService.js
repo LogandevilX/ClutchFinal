@@ -30,3 +30,21 @@ export async function registrarEspectador({ email, password, apodo }) {
 
   return parseResponse(response);
 }
+
+export async function actualizarUsuario(id, { email, password, apodo, rol, fechaRegistro }) {
+  const response = await fetch(`${USERS_URL}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      password,
+      apodo,
+      rol,
+      fechaRegistro,
+    }),
+  });
+
+  return parseResponse(response);
+}
