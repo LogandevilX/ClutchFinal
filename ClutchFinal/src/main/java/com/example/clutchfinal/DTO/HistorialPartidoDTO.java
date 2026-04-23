@@ -18,5 +18,6 @@ public class HistorialPartidoDTO {
     private String acierto;
     private Integer periodo;
     private Integer minuto;
+    private Integer segundo;
     private String posicion;
 }
