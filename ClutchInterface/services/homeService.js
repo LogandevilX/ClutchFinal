@@ -4,6 +4,7 @@ const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
+const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -26,10 +27,11 @@ async function fetchJson(url) {
 }
 
 export async function fetchHomeData(usuarioId) {
-  const [favoritosResponse, partidosResponse, equiposResponse] = await Promise.all([
+  const [favoritosResponse, partidosResponse, equiposResponse, inscripcionesResponse] = await Promise.all([
     fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`),
     fetchJson(PARTIDOS_URL),
     fetchJson(EQUIPOS_URL),
+    fetchJson(INSCRIPCIONES_URL),
   ]);
 
   if (!favoritosResponse.ok) {
@@ -44,9 +46,14 @@ export async function fetchHomeData(usuarioId) {
     throw new Error('No se pudieron cargar los equipos.');
   }
 
+  if (!inscripcionesResponse.ok) {
+    throw new Error('No se pudieron cargar las inscripciones.');
+  }
+
   const favoritos = safeArray(favoritosResponse.data);
   const allMatches = safeArray(partidosResponse.data);
   const allTeams = safeArray(equiposResponse.data);
+  const allInscripciones = safeArray(inscripcionesResponse.data);
 
   const followedTeamIds = new Set(
     favoritos.map((favorito) => favorito?.equipoId).filter((id) => typeof id === 'number')
@@ -94,10 +101,20 @@ export async function fetchHomeData(usuarioId) {
   const followedTeams = [...followedTeamIds]
     .map((teamId) => teamsById.get(teamId))
     .filter(Boolean)
-    .map((team) => ({
-      ...team,
-      shieldUrl: buildAbsoluteAssetUrl(team.urlEscudo),
-    }));
+    .map((team) => {
+      const teamInscripcion = allInscripciones.find((inscripcion) => inscripcion?.equipoId === team.id);
+      const nombreDivision = teamInscripcion?.nombreDivision || team?.division || '';
+      const nombreGrupo = teamInscripcion?.nombreGrupo || team?.grupo || '';
+
+      return {
+        ...team,
+        division: nombreDivision,
+        grupo: nombreGrupo,
+        inscripcionEquipo:
+          nombreDivision || nombreGrupo ? `${nombreDivision || '-'} · ${nombreGrupo || '-'}` : '',
+        shieldUrl: buildAbsoluteAssetUrl(team.urlEscudo),
+      };
+    });
 
   const liveMatches = allMatches
     .filter((match) => {
