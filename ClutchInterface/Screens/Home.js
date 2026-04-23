@@ -247,6 +247,17 @@ export default function HomeScreen({ user, onGoProfile }) {
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
         </View>
+        <View style={styles.searchRow}>
+          <TextInput
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Buscar equipo o jugador"
+            placeholderTextColor="#8ea4c0"
+            style={styles.searchInput}
+            onSubmitEditing={onSearch}
+            returnKeyType="search"
+          />
+        </View>
 
         {loading ? (
           <View style={styles.centerMessageBox}>
@@ -266,6 +277,42 @@ export default function HomeScreen({ user, onGoProfile }) {
 
         {!loading && !errorMessage ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Búsqueda</Text>
+            </View>
+
+            {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
+            {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+
+            {teamSearchResults.map((team) => (
+              <View key={team.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <TeamLogo uri={team.logoUrl} />
+                  <View style={styles.searchTextWrap}>
+                    <Text style={styles.favoriteName}>{team.nombreEquipo}</Text>
+                    <Text style={styles.favoriteEnrollment}>{team.division || 'Sin división'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(team)}>
+                  <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
+            {playerSearchResults.map((player) => (
+              <View key={player.key} style={styles.searchCard}>
+                <View style={styles.searchMainInfo}>
+                  <View style={styles.playerSearchTextWrap}>
+                    <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
+                    <Text style={styles.favoriteEnrollment}>{player.equipoNombre || 'Sin equipo'}</Text>
+                  </View>
+                </View>
+                <Pressable onPress={() => onAddFavorite(player)}>
+                  <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                </Pressable>
+              </View>
+            ))}
+
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Partidos en directo</Text>
               <Pressable style={styles.seeAllButton}>
