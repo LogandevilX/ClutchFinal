@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   ImageBackground,
   Platform,
   Pressable,
+  Keyboard,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
-import { fetchHomeData } from '../services/homeService';
+import { addFavorite, fetchHomeData, fetchSearchData } from '../services/homeService';
 
 const backgroundImage = require('../assets/Fondo_Cancha.png');
 const appLogo = require('../assets/LogoClutch.png');
@@ -62,9 +64,6 @@ function TeamLogo({ uri }) {
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ');
 
-const getPlayerCategory = (player) =>
-  [player?.categoria, player?.subcategoria, player?.nivel].filter(Boolean).join(' - ');
-
 export default function HomeScreen({ user, onGoProfile }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -72,6 +71,13 @@ export default function HomeScreen({ user, onGoProfile }) {
   const [followedTeams, setFollowedTeams] = useState([]);
   const [followedPlayers, setFollowedPlayers] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [searchText, setSearchText] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [teamSearchResults, setTeamSearchResults] = useState([]);
+  const [playerSearchResults, setPlayerSearchResults] = useState([]);
+  const searchInputRef = useRef(null);
 
   const userId = user?.id;
 
@@ -123,6 +129,98 @@ export default function HomeScreen({ user, onGoProfile }) {
     [followedTeams, followedPlayers]
   );
 
+  const teamNamesById = useMemo(
+    () => new Map(followedTeams.map((team) => [team.id, team.nombreEquipo])),
+    [followedTeams]
+  );
+
+  const onSearch = async (value) => {
+    if (!userId) {
+      return;
+    }
+
+    const query = typeof value === 'string' ? value : searchText;
+    const normalizedQuery = query.trim();
+
+    if (!normalizedQuery) {
+      setTeamSearchResults([]);
+      setPlayerSearchResults([]);
+      setSearchLoading(false);
+      setSearchError('');
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError('');
+
+    try {
+      const data = await fetchSearchData(userId, normalizedQuery);
+      setTeamSearchResults(data.teamResults);
+      setPlayerSearchResults(data.playerResults);
+    } catch (error) {
+      setSearchError('No se pudo realizar la búsqueda.');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isSearchOverlayOpen) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => {
+      onSearch(searchText);
+    }, 250);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchText, isSearchOverlayOpen]);
+
+  const openSearchOverlay = () => {
+    setIsSearchOverlayOpen(true);
+    setSearchError('');
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+  };
+
+  const closeSearchOverlay = () => {
+    setIsSearchOverlayOpen(false);
+    setSearchLoading(false);
+    setSearchError('');
+    setSearchText('');
+    setTeamSearchResults([]);
+    setPlayerSearchResults([]);
+    Keyboard.dismiss();
+  };
+
+  const onAddFavorite = async (item) => {
+    if (item.isFavorite) {
+      return;
+    }
+
+    const payload =
+      item.type === 'team'
+        ? { usuarioId: userId, equipoId: item.id, jugadorId: null }
+        : { usuarioId: userId, equipoId: null, jugadorId: item.id };
+
+    const response = await addFavorite(payload);
+
+    if (!response.ok) {
+      setSearchError('No se pudo añadir a favoritos.');
+      return;
+    }
+
+    setReloadKey((prev) => prev + 1);
+    setTeamSearchResults((prev) =>
+      prev.map((entry) => (entry.type === item.type && entry.id === item.id ? { ...entry, isFavorite: true } : entry))
+    );
+    setPlayerSearchResults((prev) =>
+      prev.map((entry) => (entry.id === item.id ? { ...entry, isFavorite: true } : entry))
+    );
+  };
+
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
@@ -131,7 +229,7 @@ export default function HomeScreen({ user, onGoProfile }) {
             <Image source={appLogo} style={styles.appLogo} />
             <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
           </Pressable>
-          <Pressable style={styles.searchButton}>
+          <Pressable style={styles.searchButton} onPress={openSearchOverlay}>
             <Text style={styles.searchIcon}>🔍</Text>
           </Pressable>
         </View>
@@ -234,7 +332,7 @@ export default function HomeScreen({ user, onGoProfile }) {
                     />
                     <View style={styles.playerIdentity}>
                       <Text style={styles.playerName}>{getPlayerFullName(item.player) || 'Jugador'}</Text>
-                      <Text style={styles.playerCategory}>{getPlayerCategory(item.player) || 'Sin categoría'}</Text>
+                      <Text style={styles.playerCategory}>{teamNamesById.get(item.player.teamId) || 'Sin equipo'}</Text>
                     </View>
                   </View>
                   <View style={styles.playerStatsRow}>
@@ -269,6 +367,70 @@ export default function HomeScreen({ user, onGoProfile }) {
             })}
           </ScrollView>
         ) : null}
+
+        {isSearchOverlayOpen ? (
+          <View style={styles.overlayRoot}>
+            <Pressable style={styles.overlayBackdrop} onPress={closeSearchOverlay} />
+            <View style={styles.overlayPanel}>
+              <View style={styles.overlayHeader}>
+                <Text style={styles.overlayTitle}>Buscar</Text>
+                <Pressable onPress={closeSearchOverlay}>
+                  <Text style={styles.overlayClose}>✕</Text>
+                </Pressable>
+              </View>
+              <View style={styles.searchRow}>
+                <TextInput
+                  ref={searchInputRef}
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  placeholder="Buscar equipo o jugador"
+                  placeholderTextColor="#8ea4c0"
+                  style={styles.searchInput}
+                  onSubmitEditing={() => onSearch(searchText)}
+                  returnKeyType="search"
+                  autoFocus
+                />
+              </View>
+
+              <ScrollView style={styles.overlayResults} keyboardShouldPersistTaps="handled">
+                {!searchText.trim() ? (
+                  <Text style={styles.emptyText}>Escribe para ver resultados.</Text>
+                ) : null}
+                {searchLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
+                {searchError ? <Text style={styles.emptyText}>{searchError}</Text> : null}
+
+                {teamSearchResults.map((team) => (
+                  <View key={team.key} style={styles.searchCard}>
+                    <View style={styles.searchMainInfo}>
+                      <TeamLogo uri={team.logoUrl} />
+                      <View style={styles.searchTextWrap}>
+                        <Text style={styles.favoriteName}>{team.nombreEquipo}</Text>
+                        <Text style={styles.favoriteEnrollment}>{team.division || 'Sin división'}</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => onAddFavorite(team)}>
+                      <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                    </Pressable>
+                  </View>
+                ))}
+
+                {playerSearchResults.map((player) => (
+                  <View key={player.key} style={styles.searchCard}>
+                    <View style={styles.searchMainInfo}>
+                      <View style={styles.playerSearchTextWrap}>
+                        <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
+                        <Text style={styles.favoriteEnrollment}>{player.equipoNombre || 'Sin equipo'}</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => onAddFavorite(player)}>
+                      <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        ) : null}
       </SafeAreaView>
     </ImageBackground>
   );
@@ -300,6 +462,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchIcon: { fontSize: 18 },
+  overlayRoot: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 12,
+  },
+  overlayBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  overlayPanel: {
+    width: '94%',
+    maxHeight: '78%',
+    backgroundColor: 'rgba(5, 15, 29, 0.98)',
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 14,
+  },
+  overlayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  overlayTitle: { color: '#fff', fontSize: 24, fontWeight: '800' },
+  overlayClose: { color: '#fff', fontSize: 26, fontWeight: '700', paddingHorizontal: 6 },
+  overlayResults: { marginTop: 6 },
+  searchRow: {
+    marginBottom: 8,
+  },
+  searchInput: {
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 14,
+    color: '#0d203d',
+    fontWeight: '600',
+  },
   scrollContent: { paddingBottom: 30 },
   sectionHeader: {
     marginTop: 10,
@@ -333,6 +534,22 @@ const styles = StyleSheet.create({
   teamAbbrRow: { marginTop: 8, gap: 8, flexDirection: 'row', justifyContent: 'space-between' },
   teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
+  searchCard: {
+    marginTop: 10,
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  searchMainInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  searchTextWrap: { marginLeft: 10, flexShrink: 1 },
+  playerSearchTextWrap: { flexShrink: 1 },
+  starIcon: { fontSize: 28, marginLeft: 10 },
 
   // --- CONTENEDOR DEL EQUIPO ACTUALIZADO ---
   favoriteCard: {
