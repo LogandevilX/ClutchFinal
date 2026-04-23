@@ -4,6 +4,7 @@ const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
+const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -25,11 +26,19 @@ async function fetchJson(url) {
   return parseResponse(response);
 }
 
+const toSafeNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const roundToOneDecimal = (value) => Math.round(value * 10) / 10;
+
 export async function fetchHomeData(usuarioId) {
-  const [favoritosResponse, partidosResponse, equiposResponse] = await Promise.all([
+  const [favoritosResponse, partidosResponse, equiposResponse, inscripcionesResponse] = await Promise.all([
     fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`),
     fetchJson(PARTIDOS_URL),
     fetchJson(EQUIPOS_URL),
+    fetchJson(INSCRIPCIONES_URL),
   ]);
 
   if (!favoritosResponse.ok) {
@@ -44,9 +53,14 @@ export async function fetchHomeData(usuarioId) {
     throw new Error('No se pudieron cargar los equipos.');
   }
 
+  if (!inscripcionesResponse.ok) {
+    throw new Error('No se pudieron cargar las inscripciones.');
+  }
+
   const favoritos = safeArray(favoritosResponse.data);
   const allMatches = safeArray(partidosResponse.data);
   const allTeams = safeArray(equiposResponse.data);
+  const allInscripciones = safeArray(inscripcionesResponse.data);
 
   const followedTeamIds = new Set(
     favoritos.map((favorito) => favorito?.equipoId).filter((id) => typeof id === 'number')
@@ -69,6 +83,11 @@ export async function fetchHomeData(usuarioId) {
   });
 
   const followedPlayers = playerResponses.map((response) => response.data);
+  const matchesById = new Map(
+    allMatches
+      .filter((match) => typeof match?.id === 'number')
+      .map((match) => [match.id, match])
+  );
 
   const teamDetailResponses = await Promise.all(
     [...followedTeamIds].map((teamId) => fetchJson(`${EQUIPOS_URL}/${teamId}`))
@@ -94,10 +113,20 @@ export async function fetchHomeData(usuarioId) {
   const followedTeams = [...followedTeamIds]
     .map((teamId) => teamsById.get(teamId))
     .filter(Boolean)
-    .map((team) => ({
-      ...team,
-      shieldUrl: buildAbsoluteAssetUrl(team.urlEscudo),
-    }));
+    .map((team) => {
+      const teamInscripcion = allInscripciones.find((inscripcion) => inscripcion?.equipoId === team.id);
+      const nombreDivision = teamInscripcion?.nombreDivision || team?.division || '';
+      const nombreGrupo = teamInscripcion?.nombreGrupo || team?.grupo || '';
+
+      return {
+        ...team,
+        division: nombreDivision,
+        grupo: nombreGrupo,
+        inscripcionEquipo:
+          nombreDivision || nombreGrupo ? `${nombreDivision || '-'} · ${nombreGrupo || '-'}` : '',
+        shieldUrl: buildAbsoluteAssetUrl(team.urlEscudo),
+      };
+    });
 
   const liveMatches = allMatches
     .filter((match) => {
@@ -128,9 +157,50 @@ export async function fetchHomeData(usuarioId) {
     photoUrl: buildAbsoluteAssetUrl(player.pathFoto),
   }));
 
+  const playerActaResponses = await Promise.all(
+    players.map((player) => fetchJson(`${JUGADORES_URL}/${player.id}/actas`))
+  );
+
+  playerActaResponses.forEach((response) => {
+    if (!response.ok) {
+      throw new Error('No se pudieron cargar las actas de todos los jugadores favoritos.');
+    }
+  });
+
+  const playersWithStats = players.map((player, playerIndex) => {
+    const actas = safeArray(playerActaResponses[playerIndex]?.data);
+    const partidosJugados = actas.length;
+    const minutosTotales = actas.reduce((sum, acta) => sum + toSafeNumber(acta?.minutosJugados), 0);
+    const puntosTotales = actas.reduce((sum, acta) => sum + toSafeNumber(acta?.puntos), 0);
+    const minutosPorPartido = partidosJugados ? roundToOneDecimal(minutosTotales / partidosJugados) : 0;
+    const puntosPorPartido = partidosJugados ? roundToOneDecimal(puntosTotales / partidosJugados) : 0;
+
+    const ultimaActa = [...actas].sort((a, b) => {
+      const partidoA = matchesById.get(a?.partidoId);
+      const partidoB = matchesById.get(b?.partidoId);
+      const timeA = partidoA?.fechaHoraInicio ? new Date(partidoA.fechaHoraInicio).getTime() : 0;
+      const timeB = partidoB?.fechaHoraInicio ? new Date(partidoB.fechaHoraInicio).getTime() : 0;
+
+      if (timeA !== timeB) {
+        return timeB - timeA;
+      }
+
+      return toSafeNumber(b?.partidoId) - toSafeNumber(a?.partidoId);
+    })[0];
+
+    return {
+      ...player,
+      partidosJugados,
+      minutosPorPartido,
+      puntosPorPartido,
+      ultimoPartidoMinutos: roundToOneDecimal(toSafeNumber(ultimaActa?.minutosJugados)),
+      ultimoPartidoPuntos: toSafeNumber(ultimaActa?.puntos),
+    };
+  });
+
   return {
     liveMatches,
     followedTeams,
-    followedPlayers: players,
+    followedPlayers: playersWithStats,
   };
 }
