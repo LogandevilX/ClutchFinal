@@ -50,8 +50,7 @@ public class EquipoController {
         }
 
         try {
-            dto.setId(id);
-            EquipoDTO equipoActualizado = equipoService.save(dto);
+            EquipoDTO equipoActualizado = equipoService.update(id, dto);
             return new ResponseEntity<>(equipoActualizado, HttpStatus.OK);
         } catch (NoSuchElementException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

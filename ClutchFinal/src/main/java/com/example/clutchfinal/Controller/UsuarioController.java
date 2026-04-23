@@ -60,8 +60,7 @@ public class UsuarioController {
         }
 
         try {
-            dto.setId(id);
-            return new ResponseEntity<>(usuarioService.save(dto), HttpStatus.OK);
+            return new ResponseEntity<>(usuarioService.update(id, dto), HttpStatus.OK);
         } catch (NoSuchElementException | IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

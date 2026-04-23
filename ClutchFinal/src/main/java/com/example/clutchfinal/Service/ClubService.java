@@ -28,40 +28,55 @@ public class ClubService {
     private PabellonRepository pabellonRepository;
 
     public ClubDTO save(ClubDTO dto){
-        Club club;
-        if (dto.getId() == null) {
-            club = fabricaClubService.createClub(dto);
-        } else {
-            club = clubRepository.findById(dto.getId())
-                    .orElseThrow(() -> new NoSuchElementException("Club no encontrado con ID: " + dto.getId()));
-            club.setNombreClub(dto.getNombreClub());
-            club.setCif(dto.getCif());
-            club.setTelefono(dto.getTelefono());
-            club.setDirectorTecnico(dto.getDirectorTecnico());
-            club.setEscudo(dto.getEscudo());
+        if (dto.getId() != null) {
+            throw new IllegalArgumentException("Para crear un club no debes enviar ID.");
+        }
+        Club club = fabricaClubService.createClub(dto);
+        validarEscudo(dto.getEscudo());
+        if (dto.getPabellonIds() != null) {
+            aplicarPabellones(dto, club);
+        }
+        return fabricaClubService.createClubDTO(clubRepository.save(club));
+    }
+
+    public ClubDTO update(Long id, ClubDTO dto){
+        Club club = clubRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Club no encontrado con ID: " + id));
+
+        club.setNombreClub(dto.getNombreClub());
+        club.setCif(dto.getCif());
+        club.setTelefono(dto.getTelefono());
+        club.setDirectorTecnico(dto.getDirectorTecnico());
+        club.setEscudo(dto.getEscudo());
+
+        validarEscudo(dto.getEscudo());
+        if (dto.getPabellonIds() != null) {
+            aplicarPabellones(dto, club);
         }
 
+        return fabricaClubService.createClubDTO(clubRepository.save(club));
+    }
+
+    private void validarEscudo(String escudo) {
         // Comprobamos que el jpg introducido existo en el direcorio correcto
-        if(dto.getEscudo() != null && !dto.getEscudo().isEmpty()){
-            Path ruta = Paths.get("upload/escudos/", dto.getEscudo());
+        if(escudo != null && !escudo.isEmpty()){
+            Path ruta = Paths.get("upload/escudos/", escudo);
             if (!Files.exists(ruta)) {
                 throw new RuntimeException("El escudo no existe en la carpeta uploads/escudos");
             }
         }
+    }
 
-        if (dto.getPabellonIds() != null) {
-            Set<Pabellon> pabellones = dto.getPabellonIds().stream()
-                    .map(id -> pabellonRepository.findById(id)
-                            .orElseThrow(() -> new NoSuchElementException("Pabellon no encontrado con ID: " + id)))
-                    .collect(Collectors.toSet());
+    private void aplicarPabellones(ClubDTO dto, Club club) {
+        Set<Pabellon> pabellones = dto.getPabellonIds().stream()
+                .map(id -> pabellonRepository.findById(id)
+                        .orElseThrow(() -> new NoSuchElementException("Pabellon no encontrado con ID: " + id)))
+                .collect(Collectors.toSet());
 
-            if (pabellones.size() != dto.getPabellonIds().size()) {
-                throw new NoSuchElementException("Uno o más pabellones no fueron encontrados");
-            }
-            club.setPabellones(pabellones);
+        if (pabellones.size() != dto.getPabellonIds().size()) {
+            throw new NoSuchElementException("Uno o más pabellones no fueron encontrados");
         }
-
-        return fabricaClubService.createClubDTO(clubRepository.save(club));
+        club.setPabellones(pabellones);
     }
 
     public ClubResponseDTO findById(Long id){
