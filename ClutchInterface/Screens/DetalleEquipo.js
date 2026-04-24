@@ -64,8 +64,8 @@ const getMatchBackgroundColor = (estado) => {
   return '#0d0d0d';
 };
 
-const TeamLogo = ({ uri }) => (
-  <Image source={uri ? { uri } : appLogo} style={styles.teamLogo} />
+const TeamLogo = ({ uri, style }) => (
+  <Image source={uri ? { uri } : appLogo} style={[styles.teamLogo, style]} />
 );
 
 const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => (
@@ -204,11 +204,11 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
   const filteredClassification = useMemo(
     () =>
       (detailData?.classification || []).filter((team) => {
-        if (selectedPhaseId && team?.faseId && team.faseId !== selectedPhaseId) {
+        if (selectedPhaseId && String(team?.faseId ?? '') !== String(selectedPhaseId)) {
           return false;
         }
 
-        if (selectedGroupId && team?.grupoId && team.grupoId !== selectedGroupId) {
+        if (selectedGroupId && String(team?.grupoId ?? '') !== String(selectedGroupId)) {
           return false;
         }
 
@@ -245,16 +245,13 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
 
         <View style={styles.actionBar}>
           <Pressable style={styles.backButton} onPress={onGoBack}>
-            <Text style={styles.backButtonText}>← Retroceder</Text>
+            <Text style={styles.backButtonText}>❮</Text>
           </Pressable>
           <Pressable
-            style={[
-              styles.favoriteButton,
-              { backgroundColor: detailData?.isFavorite ? '#ffd84d' : '#ffffff' },
-            ]}
+            style={styles.favoriteButton}
             onPress={onToggleFavorite}
           >
-            <Text style={styles.favoriteIcon}>★</Text>
+            <Text style={[styles.favoriteIcon, { color: detailData?.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
           </Pressable>
         </View>
 
@@ -412,6 +409,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                     >
                       <Text style={[styles.classificationText, styles.positionCol]}>{String(team.posicion || index + 1).padStart(2, '0')}</Text>
                       <View style={styles.teamCol}>
+                        <TeamLogo uri={team.urlEscudo} style={styles.classificationTeamLogo} />
                         <Text style={styles.teamNameCell}>{team.nombreEquipo}</Text>
                       </View>
                       <Text style={styles.classificationText}>{(team.partidosGanados || 0) + (team.partidosPerdidos || 0)}</Text>
@@ -536,22 +534,23 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   backButton: {
-    borderWidth: 1,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
     borderColor: '#fff',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(5, 15, 29, 0.88)',
-  },
-  backButtonText: { color: '#fff', fontWeight: '700' },
-  favoriteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  favoriteIcon: { fontSize: 22, color: '#111' },
+  backButtonText: { color: '#fff', fontWeight: '900', fontSize: 26, lineHeight: 26, marginRight: 2 },
+  favoriteButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  favoriteIcon: { fontSize: 30, marginLeft: 2 },
   centerMessage: {
     flex: 1,
     alignItems: 'center',
@@ -709,19 +708,19 @@ const styles = StyleSheet.create({
   classificationHeaderRow: {
     flexDirection: 'row',
     backgroundColor: '#cfd4de',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 8,
     alignItems: 'center',
   },
   classificationHeaderText: {
-    width: 30,
+    width: 36,
     color: '#111',
     fontWeight: '900',
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
   },
   classificationRow: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 8,
     backgroundColor: '#061528',
     flexDirection: 'row',
@@ -737,21 +736,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     textAlign: 'center',
-    width: 30,
-    fontSize: 12,
+    width: 36,
+    fontSize: 14,
   },
   positionCol: {
-    width: 34,
+    width: 40,
   },
   teamCol: {
     flex: 1,
     alignItems: 'flex-start',
     paddingHorizontal: 6,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  classificationTeamLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   teamNameCell: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: 15,
+    flexShrink: 1,
   },
   filtersRow: {
     flexDirection: 'row',

@@ -76,7 +76,7 @@ export default function RegistroUsuarioScreen({ onGoLogin, onGoBackHome }) {
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.card}>
               <Pressable onPress={onGoBackHome} style={styles.backButton}>
-                <Text style={styles.backText}>← Volver al inicio</Text>
+                <Text style={styles.backButtonText}>❮</Text>
               </Pressable>
 
               <Text style={styles.title}>Registro de Usuario</Text>
@@ -156,19 +156,19 @@ const styles = StyleSheet.create({
       paddingHorizontal: 28,
       paddingVertical: 40,
     },
-    backText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '700',
-      },
   backButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#7E1F26',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
+  backButtonText: { color: '#fff', fontWeight: '900', fontSize: 26, lineHeight: 26, marginRight: 2 },
     title: {
       fontSize: 34,
       fontWeight: '800',
