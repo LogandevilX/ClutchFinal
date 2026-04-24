@@ -44,6 +44,7 @@ public class FabricaInscripcionService {
 
         if (inscripcion.getFase() != null) {
             dto.setFaseId(inscripcion.getFase().getId());
+            dto.setFaseActual(inscripcion.getFase().getNombreFase());
             if (inscripcion.getFase().getDivision() != null) {
                 dto.setNombreDivision(inscripcion.getFase().getDivision().getNombreDivision());
             }

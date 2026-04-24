@@ -14,9 +14,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PartidoService {
@@ -351,6 +354,7 @@ public class PartidoService {
         equipoRepository.save(equipoLocal);
         equipoRepository.save(equipoVisitante);
         partidoRepository.save(partido);
+        actualizarPosicionesGrupo(partido.getGrupo().getId());
     }
 
     private EstadoPartidoDTO construirEstadoPartido(Long partidoId) {
@@ -687,5 +691,50 @@ public class PartidoService {
 
     private BigDecimal valorSeguro(BigDecimal valor) {
         return valor != null ? valor : BigDecimal.ZERO;
+    }
+
+    private void actualizarPosicionesGrupo(Long grupoId) {
+        List<Inscripcion> inscripcionesGrupo = inscripcionRepository.findByGrupoId(grupoId);
+        List<Equipo> equiposGrupo = inscripcionesGrupo.stream()
+                .map(Inscripcion::getEquipo)
+                .toList();
+
+        if (equiposGrupo.isEmpty()) {
+            return;
+        }
+
+        long partidosFinalizados = partidoRepository.countByGrupoIdAndFechaHoraFinIsNotNull(grupoId);
+        if (partidosFinalizados == 0) {
+            equiposGrupo.forEach(equipo -> equipo.setPosicion(null));
+            equipoRepository.saveAll(equiposGrupo);
+            return;
+        }
+
+        List<Equipo> equiposConPuntos = equiposGrupo.stream()
+                .filter(equipo -> (equipo.getPuntos() != null ? equipo.getPuntos() : 0) > 0)
+                .sorted(Comparator
+                        .comparingInt((Equipo equipo) -> equipo.getPuntos() != null ? equipo.getPuntos() : 0)
+                        .reversed()
+                        .thenComparing(this::diferenciaPPPPCPP, Comparator.reverseOrder())
+                        .thenComparing(Equipo::getId))
+                .toList();
+
+        List<Equipo> equiposSinPuntos = new ArrayList<>(equiposGrupo.stream()
+                .filter(equipo -> (equipo.getPuntos() != null ? equipo.getPuntos() : 0) == 0)
+                .toList());
+        Collections.shuffle(equiposSinPuntos, ThreadLocalRandom.current());
+
+        List<Equipo> clasificacion = new ArrayList<>(equiposConPuntos);
+        clasificacion.addAll(equiposSinPuntos);
+
+        for (int i = 0; i < clasificacion.size(); i++) {
+            clasificacion.get(i).setPosicion(i + 1);
+        }
+
+        equipoRepository.saveAll(clasificacion);
+    }
+
+    private BigDecimal diferenciaPPPPCPP(Equipo equipo) {
+        return valorSeguro(equipo.getPuntosAFavor()).subtract(valorSeguro(equipo.getPuntosEnContra()));
     }
 }
