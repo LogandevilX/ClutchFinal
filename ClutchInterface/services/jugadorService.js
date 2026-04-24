@@ -201,6 +201,27 @@ const buildActaTotals = (totals) => ({
   pm: totals.plusMinus,
 });
 
+const buildActaAverages = (totals) => ({
+  m: avg(totals.minutes, totals.games),
+  pts: avg(totals.points, totals.games),
+  tla: avg(totals.tlMade, totals.games),
+  tli: avg(totals.tlAttempted, totals.games),
+  pctTl: percent(totals.tlMade, totals.tlAttempted),
+  t2a: avg(totals.t2Made, totals.games),
+  t2i: avg(totals.t2Attempted, totals.games),
+  pctT2: percent(totals.t2Made, totals.t2Attempted),
+  t3a: avg(totals.t3Made, totals.games),
+  t3i: avg(totals.t3Attempted, totals.games),
+  pctT3: percent(totals.t3Made, totals.t3Attempted),
+  reb: avg(totals.rebounds, totals.games),
+  tap: avg(totals.blocks, totals.games),
+  rob: avg(totals.steals, totals.games),
+  perd: avg(totals.turnovers, totals.games),
+  falt: avg(totals.fouls, totals.games),
+  val: avg(totals.value, totals.games),
+  pm: avg(totals.plusMinus, totals.games),
+});
+
 const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   const localTeam = match?.equipoLocal;
   const awayTeam = match?.equipoVisitante;
@@ -345,6 +366,7 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
   const totalsCards = buildTotalsMetrics(playerTotals, divisionTotals);
 
   const actaTotals = buildActaTotals(playerTotals);
+  const actaAverages = buildActaAverages(playerTotals);
   const matchRows = filteredActas
     .map((acta) =>
       toMatchRow({
@@ -360,6 +382,7 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
     summary,
     totalsCards,
     actaTotals,
+    actaAverages,
     matchRows,
   };
 }

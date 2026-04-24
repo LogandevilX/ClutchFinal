@@ -22,7 +22,7 @@ const backgroundImage = require('../assets/Fondo_Cancha2.png');
 const appLogo = require('../assets/LogoClutch.png');
 
 const tabs = [
-  { key: 'totales', label: 'Totales' },
+  { key: 'totales', label: 'Estadísticas' },
   { key: 'partidos', label: 'Partidos' },
 ];
 
@@ -272,7 +272,7 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
                 {totalsTabColumns.map((metric) => (
                   <View key={metric.key} style={styles.totalValueCard}>
                     <Text style={styles.totalValueLabel}>{metric.label}</Text>
-                    <Text style={styles.totalValueNumber}>{formatValue(teamView.actaTotals?.[metric.key])}</Text>
+                    <Text style={styles.totalValueNumber}>{formatValue(teamView.actaAverages?.[metric.key])}</Text>
                   </View>
                 ))}
               </View>
