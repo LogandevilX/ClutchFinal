@@ -33,6 +33,14 @@ const toSafeNumber = (value) => {
 };
 
 const roundToOneDecimal = (value) => Math.round(value * 10) / 10;
+const getDateValue = (value) => {
+  if (!value) {
+    return 0;
+  }
+
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
 
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ').trim();
@@ -130,6 +138,27 @@ export async function addFavorite({ usuarioId, equipoId = null, jugadorId = null
   });
 
   return parseResponse(response);
+}
+
+export async function toggleFavoriteTeam({ usuarioId, equipoId }) {
+  const favoritosResponse = await fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`);
+
+  if (!favoritosResponse.ok) {
+    throw new Error('No se pudieron cargar los favoritos para actualizar el equipo.');
+  }
+
+  const teamFavorite = safeArray(favoritosResponse.data).find(
+    (favorito) => favorito?.equipoId === equipoId && !favorito?.jugadorId
+  );
+
+  if (teamFavorite?.id) {
+    const deleteResponse = await fetch(`${FAVORITOS_URL}/${teamFavorite.id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(deleteResponse);
+  }
+
+  return addFavorite({ usuarioId, equipoId, jugadorId: null });
 }
 
 export async function fetchSearchData(usuarioId, searchText) {
@@ -343,5 +372,104 @@ export async function fetchHomeData(usuarioId) {
     liveMatches,
     followedTeams,
     followedPlayers: playersWithStats,
+  };
+}
+
+export async function fetchTeamDetailData({ usuarioId, equipoId }) {
+  const [teamResponse, partidosResponse, inscripcionesResponse, equiposResponse, favoritosResponse] = await Promise.all([
+    fetchJson(`${EQUIPOS_URL}/${equipoId}`),
+    fetchJson(PARTIDOS_URL),
+    fetchJson(INSCRIPCIONES_URL),
+    fetchJson(EQUIPOS_URL),
+    fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`),
+  ]);
+
+  if (!teamResponse.ok || !partidosResponse.ok || !inscripcionesResponse.ok || !equiposResponse.ok || !favoritosResponse.ok) {
+    throw new Error('No se pudo cargar el detalle del equipo.');
+  }
+
+  const team = teamResponse.data;
+  const inscripciones = safeArray(inscripcionesResponse.data);
+  const allMatches = safeArray(partidosResponse.data);
+  const allTeams = safeArray(equiposResponse.data);
+  const favoritos = safeArray(favoritosResponse.data);
+
+  const currentInscripcion = inscripciones.find((entry) => entry?.equipoId === equipoId) || null;
+  const selectedFaseId = currentInscripcion?.faseId || null;
+  const selectedGrupoId = currentInscripcion?.grupoId || null;
+
+  const sameDivisionEntries = inscripciones.filter(
+    (entry) => entry?.nombreDivision && entry.nombreDivision === currentInscripcion?.nombreDivision
+  );
+
+  const classificationTeamIds = new Set(
+    (selectedGrupoId
+      ? sameDivisionEntries.filter((entry) => entry?.grupoId === selectedGrupoId)
+      : sameDivisionEntries
+    ).map((entry) => entry?.equipoId)
+  );
+
+  const classification = allTeams
+    .filter((entry) => classificationTeamIds.has(entry?.id))
+    .sort((a, b) => {
+      const positionDiff = toSafeNumber(a?.posicion) - toSafeNumber(b?.posicion);
+
+      if (positionDiff !== 0) {
+        return positionDiff;
+      }
+
+      return toSafeNumber(b?.puntos) - toSafeNumber(a?.puntos);
+    });
+
+  const phases = Array.from(
+    new Map(
+      inscripciones
+        .filter((entry) => entry?.equipoId === equipoId)
+        .map((entry) => [entry.faseId, { faseId: entry.faseId, nombreFase: entry.faseActual || `Fase ${entry.faseId}` }])
+    ).values()
+  );
+  const groupsByPhase = {};
+
+  phases.forEach((phase) => {
+    groupsByPhase[phase.faseId] = Array.from(
+      new Map(
+        inscripciones
+          .filter((entry) => entry?.faseId === phase.faseId)
+          .map((entry) => [entry.grupoId, { grupoId: entry.grupoId, nombreGrupo: entry.nombreGrupo || `Grupo ${entry.grupoId}` }])
+      ).values()
+    );
+  });
+
+  const teamMatches = allMatches
+    .filter((match) => {
+      const localId = match?.equipoLocal?.id;
+      const awayId = match?.equipoVisitante?.id;
+      return localId === equipoId || awayId === equipoId;
+    })
+    .map((match) => ({
+      ...match,
+      equipoLocal: {
+        ...match?.equipoLocal,
+        urlEscudo: buildAbsoluteAssetUrl(match?.equipoLocal?.urlEscudo),
+      },
+      equipoVisitante: {
+        ...match?.equipoVisitante,
+        urlEscudo: buildAbsoluteAssetUrl(match?.equipoVisitante?.urlEscudo),
+      },
+    }))
+    .sort((a, b) => getDateValue(a?.fechaHoraInicio) - getDateValue(b?.fechaHoraInicio));
+
+  return {
+    team: {
+      ...team,
+      urlEscudo: buildAbsoluteAssetUrl(team?.urlEscudo),
+      inscripcion: currentInscripcion,
+    },
+    players: safeArray(team?.jugadores),
+    classification,
+    phases,
+    groupsByPhase,
+    matches: teamMatches,
+    isFavorite: favoritos.some((favorito) => favorito?.equipoId === equipoId && !favorito?.jugadorId),
   };
 }
