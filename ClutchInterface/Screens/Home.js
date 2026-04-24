@@ -64,7 +64,7 @@ function TeamLogo({ uri }) {
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ');
 
-export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
+export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlayerDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [liveMatches, setLiveMatches] = useState([]);
@@ -343,7 +343,11 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
               }
 
               return (
-                <View key={item.id} style={styles.playerCard}>
+                <Pressable
+                  key={item.id}
+                  style={styles.playerCard}
+                  onPress={() => onGoPlayerDetail?.(item.player.id)}
+                >
                   <View style={styles.playerTop}>
                     <Image
                       source={item.player.photoUrl ? { uri: item.player.photoUrl } : appLogo}
@@ -381,7 +385,7 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
                       </View>
                     </View>
                   </View>
-                </View>
+                </Pressable>
               );
             })}
           </ScrollView>
@@ -444,7 +448,14 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
                 ))}
 
                 {playerSearchResults.map((player) => (
-                  <View key={player.key} style={styles.searchCard}>
+                  <Pressable
+                    key={player.key}
+                    style={styles.searchCard}
+                    onPress={() => {
+                      closeSearchOverlay();
+                      onGoPlayerDetail?.(player.id);
+                    }}
+                  >
                     <View style={styles.searchMainInfo}>
                       <View style={styles.playerSearchTextWrap}>
                         <Text style={styles.favoriteName}>{player.nombreCompleto}</Text>
@@ -454,7 +465,7 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
                     <Pressable onPress={() => onAddFavorite(player)}>
                       <Text style={[styles.starIcon, { color: player.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
                     </Pressable>
-                  </View>
+                  </Pressable>
                 ))}
               </ScrollView>
             </View>

@@ -6,11 +6,14 @@ import RegistroUsuarioScreen from './Screens/RegistroUsuario';
 import HomeScreen from './Screens/Home';
 import PerfilScreen from './Screens/Perfil';
 import DetalleEquipoScreen from './Screens/DetalleEquipo';
+import DetalleJugadorScreen from './Screens/DetalleJugador';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
   const [loggedUser, setLoggedUser] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+  const [playerDetailBackScreen, setPlayerDetailBackScreen] = useState('home');
 
   return (
     <>
@@ -47,6 +50,11 @@ export default function App() {
             setSelectedTeamId(teamId);
             setScreen('detalleEquipo');
           }}
+          onGoPlayerDetail={(playerId) => {
+            setSelectedPlayerId(playerId);
+            setPlayerDetailBackScreen('home');
+            setScreen('detalleJugador');
+          }}
         />
       ) : null}
 
@@ -63,6 +71,19 @@ export default function App() {
           teamId={selectedTeamId}
           user={loggedUser}
           onGoBack={() => setScreen('home')}
+          onGoPlayerDetail={(playerId) => {
+            setSelectedPlayerId(playerId);
+            setPlayerDetailBackScreen('detalleEquipo');
+            setScreen('detalleJugador');
+          }}
+        />
+      ) : null}
+
+      {screen === 'detalleJugador' ? (
+        <DetalleJugadorScreen
+          playerId={selectedPlayerId}
+          user={loggedUser}
+          onGoBack={() => setScreen(playerDetailBackScreen)}
         />
       ) : null}
 

@@ -70,7 +70,7 @@ const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => 
   </View>
 );
 
-export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
+export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState('plantilla');
@@ -231,7 +231,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
             {activeTab === 'plantilla' ? (
               <View style={styles.tabContent}>
                 {detailData.players.map((player) => (
-                  <View key={player.id} style={styles.playerRow}>
+                  <Pressable key={player.id} style={styles.playerRow} onPress={() => onGoPlayerDetail?.(player.id)}>
                     <Image source={player.pathFoto ? { uri: player.pathFoto } : appLogo} style={styles.playerAvatar} />
                     <View style={styles.playerInfoBlock}>
                       <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
@@ -256,7 +256,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                       </View>
                     </View>
                     <Text style={styles.playerArrow}>›</Text>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             ) : null}
