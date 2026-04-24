@@ -84,6 +84,12 @@ const aggregateTotals = (actas) =>
       t2Attempted: acc.t2Attempted + toNumber(acta?.t2Tirados),
       t3Made: acc.t3Made + toNumber(acta?.triplesAnotados),
       t3Attempted: acc.t3Attempted + toNumber(acta?.triplesTirados),
+      rebounds: acc.rebounds + toNumber(acta?.rebotes),
+      blocks: acc.blocks + toNumber(acta?.tapones),
+      steals: acc.steals + toNumber(acta?.robos),
+      turnovers: acc.turnovers + toNumber(acta?.perdida),
+      fouls: acc.fouls + toNumber(acta?.falta),
+      plusMinus: acc.plusMinus + toNumber(acta?.plusMinus),
     }),
     {
       games: 0,
@@ -96,6 +102,12 @@ const aggregateTotals = (actas) =>
       t2Attempted: 0,
       t3Made: 0,
       t3Attempted: 0,
+      rebounds: 0,
+      blocks: 0,
+      steals: 0,
+      turnovers: 0,
+      fouls: 0,
+      plusMinus: 0,
     }
   );
 
@@ -168,6 +180,27 @@ const buildTotalsMetrics = (playerTotals, divisionTotals) => {
   });
 };
 
+const buildActaTotals = (totals) => ({
+  m: round(totals.minutes),
+  pts: totals.points,
+  tla: totals.tlMade,
+  tli: totals.tlAttempted,
+  pctTl: percent(totals.tlMade, totals.tlAttempted),
+  t2a: totals.t2Made,
+  t2i: totals.t2Attempted,
+  pctT2: percent(totals.t2Made, totals.t2Attempted),
+  t3a: totals.t3Made,
+  t3i: totals.t3Attempted,
+  pctT3: percent(totals.t3Made, totals.t3Attempted),
+  reb: totals.rebounds,
+  tap: totals.blocks,
+  rob: totals.steals,
+  perd: totals.turnovers,
+  falt: totals.fouls,
+  val: totals.value,
+  pm: totals.plusMinus,
+});
+
 const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   const localTeam = match?.equipoLocal;
   const awayTeam = match?.equipoVisitante;
@@ -177,6 +210,8 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   const tlAttempted = toNumber(acta?.tlTirados);
   const t2Made = toNumber(acta?.t2Anotados);
   const t2Attempted = toNumber(acta?.t2Tirados);
+  const t3Made = toNumber(acta?.triplesAnotados);
+  const t3Attempted = toNumber(acta?.triplesTirados);
 
   return {
     id: acta?.id,
@@ -190,38 +225,18 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
       t2a: t2Made,
       t2i: t2Attempted,
       pctT2: percent(t2Made, t2Attempted),
+      t3a: t3Made,
+      t3i: t3Attempted,
+      pctT3: percent(t3Made, t3Attempted),
+      reb: toNumber(acta?.rebotes),
+      tap: toNumber(acta?.tapones),
+      rob: toNumber(acta?.robos),
+      perd: toNumber(acta?.perdida),
+      falt: toNumber(acta?.falta),
+      val: toNumber(acta?.valoracion),
+      pm: toNumber(acta?.plusMinus),
     },
     sortValue: getDateValue(match?.fechaHoraInicio),
-  };
-};
-
-const buildTableSummaryRows = (totals) => {
-  const tlMade = totals.tlMade;
-  const tlAttempted = totals.tlAttempted;
-  const t2Made = totals.t2Made;
-  const t2Attempted = totals.t2Attempted;
-
-  return {
-    media: {
-      m: avg(totals.minutes, totals.games),
-      pts: avg(totals.points, totals.games),
-      tla: avg(tlMade, totals.games),
-      tli: avg(tlAttempted, totals.games),
-      pctTl: percent(tlMade, tlAttempted),
-      t2a: avg(t2Made, totals.games),
-      t2i: avg(t2Attempted, totals.games),
-      pctT2: percent(t2Made, t2Attempted),
-    },
-    total: {
-      m: round(totals.minutes),
-      pts: totals.points,
-      tla: tlMade,
-      tli: tlAttempted,
-      pctTl: percent(tlMade, tlAttempted),
-      t2a: t2Made,
-      t2i: t2Attempted,
-      pctT2: percent(t2Made, t2Attempted),
-    },
   };
 };
 
@@ -277,7 +292,13 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
   const matchesById = new Map(allMatches.map((match) => [match.id, match]));
   const teamsById = new Map(allTeams.map((team) => [team.id, team]));
 
-  const playerTeamIds = Array.from(new Set(playerActas.map((acta) => acta?.equipoId).filter((id) => typeof id === 'number')));
+  const playerTeamIds = Array.from(
+    new Set(
+      safeArray(jugador?.equipoIds)
+        .concat(playerActas.map((acta) => acta?.equipoId))
+        .filter((id) => typeof id === 'number')
+    )
+  );
   const teams = playerTeamIds
     .map((teamId) => teamsById.get(teamId))
     .filter(Boolean)
@@ -323,7 +344,7 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
   const summary = buildSummary(playerTotals);
   const totalsCards = buildTotalsMetrics(playerTotals, divisionTotals);
 
-  const summaryRows = buildTableSummaryRows(playerTotals);
+  const actaTotals = buildActaTotals(playerTotals);
   const matchRows = filteredActas
     .map((acta) =>
       toMatchRow({
@@ -338,7 +359,7 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
   return {
     summary,
     totalsCards,
-    summaryRows,
+    actaTotals,
     matchRows,
   };
 }

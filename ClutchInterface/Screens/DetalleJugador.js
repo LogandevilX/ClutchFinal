@@ -35,6 +35,37 @@ const tableColumns = [
   { key: 't2a', label: 'T2A' },
   { key: 't2i', label: 'T2I' },
   { key: 'pctT2', label: '%T2' },
+  { key: 't3a', label: 'T3A' },
+  { key: 't3i', label: 'T3I' },
+  { key: 'pctT3', label: '%T3' },
+  { key: 'reb', label: 'REB' },
+  { key: 'tap', label: 'TAP' },
+  { key: 'rob', label: 'ROB' },
+  { key: 'perd', label: 'PERD' },
+  { key: 'falt', label: 'FALT' },
+  { key: 'val', label: 'VAL' },
+  { key: 'pm', label: '+/-' },
+];
+
+const totalsTabColumns = [
+  { key: 'm', label: 'Minutos' },
+  { key: 'pts', label: 'Puntos' },
+  { key: 'tla', label: 'TL Anotados' },
+  { key: 'tli', label: 'TL Tirados' },
+  { key: 'pctTl', label: '% TL' },
+  { key: 't2a', label: 'T2 Anotados' },
+  { key: 't2i', label: 'T2 Tirados' },
+  { key: 'pctT2', label: '% T2' },
+  { key: 't3a', label: 'T3 Anotados' },
+  { key: 't3i', label: 'T3 Tirados' },
+  { key: 'pctT3', label: '% T3' },
+  { key: 'reb', label: 'Rebotes' },
+  { key: 'tap', label: 'Tapones' },
+  { key: 'rob', label: 'Robos' },
+  { key: 'perd', label: 'Pérdidas' },
+  { key: 'falt', label: 'Faltas' },
+  { key: 'val', label: 'Valoración' },
+  { key: 'pm', label: '+/-' },
 ];
 
 const formatValue = (value) => {
@@ -185,30 +216,30 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
 
         {!loading && !errorMessage && detailData && teamView ? (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            <View style={styles.playerCard}>
-              <View style={styles.teamSelectorWrap}>
-                <Pressable style={styles.teamSelectorButton} onPress={() => setIsTeamMenuOpen((prev) => !prev)}>
-                  <Text style={styles.teamSelectorText} numberOfLines={1}>{selectedTeamName}</Text>
-                  <Text style={styles.teamSelectorChevron}>▾</Text>
-                </Pressable>
-                {isTeamMenuOpen ? (
-                  <View style={styles.teamDropdown}>
-                    {(detailData.teams || []).map((team) => (
-                      <Pressable
-                        key={team.id}
-                        style={styles.teamDropdownItem}
-                        onPress={() => {
-                          setSelectedTeamId(team.id);
-                          setIsTeamMenuOpen(false);
-                        }}
-                      >
-                        <Text style={styles.teamDropdownText}>{team.nombreEquipo}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : null}
-              </View>
+            <View style={styles.teamSelectorWrap}>
+              <Pressable style={styles.teamSelectorButton} onPress={() => setIsTeamMenuOpen((prev) => !prev)}>
+                <Text style={styles.teamSelectorText} numberOfLines={1}>{selectedTeamName}</Text>
+                <Text style={styles.teamSelectorChevron}>▾</Text>
+              </Pressable>
+              {isTeamMenuOpen ? (
+                <View style={styles.teamDropdown}>
+                  {(detailData.teams || []).map((team) => (
+                    <Pressable
+                      key={team.id}
+                      style={styles.teamDropdownItem}
+                      onPress={() => {
+                        setSelectedTeamId(team.id);
+                        setIsTeamMenuOpen(false);
+                      }}
+                    >
+                      <Text style={styles.teamDropdownText}>{team.nombreEquipo}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
 
+            <View style={styles.playerCard}>
               <View style={styles.playerImageWrap}>
                 <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerImage} />
                 <View style={styles.nameOverlay}>
@@ -237,12 +268,11 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
             </View>
 
             {activeTab === 'totales' ? (
-              <View style={styles.totalsWrap}>
-                {teamView.totalsCards.map((metric) => (
-                  <View key={metric.key} style={styles.metricCard}>
-                    <Text style={styles.metricTitle}>{metric.label}</Text>
-                    <BarRow value={metric.playerValue} widthPercent={metric.playerPercent} color={metric.color} />
-                    <BarRow value={metric.divisionValue} widthPercent={metric.divisionPercent} color="#7b7c80" />
+              <View style={styles.totalsWrapCompact}>
+                {totalsTabColumns.map((metric) => (
+                  <View key={metric.key} style={styles.totalValueCard}>
+                    <Text style={styles.totalValueLabel}>{metric.label}</Text>
+                    <Text style={styles.totalValueNumber}>{formatValue(teamView.actaTotals?.[metric.key])}</Text>
                   </View>
                 ))}
               </View>
@@ -250,19 +280,22 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
 
             {activeTab === 'partidos' ? (
               <View style={styles.matchesTableContainer}>
-                <View style={styles.tableHeaderRow}>
-                  <Text style={styles.tableHeaderLabel} />
-                  {tableColumns.map((column) => (
-                    <Text key={column.key} style={styles.tableHeaderCell}>{column.label}</Text>
-                  ))}
-                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <View>
+                    <View style={styles.tableHeaderRow}>
+                      <Text style={styles.tableHeaderLabel} />
+                      {tableColumns.map((column) => (
+                        <Text key={column.key} style={styles.tableHeaderCell}>{column.label}</Text>
+                      ))}
+                    </View>
 
-                <TableRow label="Media" values={teamView.summaryRows?.media} />
-                <TableRow label="Total" values={teamView.summaryRows?.total} />
+                    <TableRow label="Total" values={teamView.actaTotals} />
 
-                {teamView.matchRows.map((row) => (
-                  <TableRow key={row.id} label={row.rival} values={row.values} highlighted />
-                ))}
+                    {teamView.matchRows.map((row) => (
+                      <TableRow key={row.id} label={row.rival} values={row.values} highlighted />
+                    ))}
+                  </View>
+                </ScrollView>
               </View>
             ) : null}
           </ScrollView>
@@ -317,20 +350,21 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#0d8dff',
     backgroundColor: 'rgba(3, 11, 23, 0.92)',
+    marginTop: 10,
   },
   teamSelectorWrap: { zIndex: 9 },
   teamSelectorButton: {
     marginHorizontal: 8,
-    marginTop: 8,
-    height: 46,
+    marginTop: 2,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#7a2226',
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  teamSelectorText: { flex: 1, color: '#ff4a4a', fontWeight: '800', fontSize: 34 * 0.65 },
-  teamSelectorChevron: { color: '#ff4a4a', fontSize: 26, marginLeft: 8 },
+  teamSelectorText: { flex: 1, color: '#ff4a4a', fontWeight: '800', fontSize: 34 * 0.48 },
+  teamSelectorChevron: { color: '#ff4a4a', fontSize: 18, marginLeft: 8 },
   teamDropdown: {
     marginHorizontal: 8,
     backgroundColor: 'rgba(5,15,29,0.98)',
@@ -342,8 +376,8 @@ const styles = StyleSheet.create({
   },
   teamDropdownItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   teamDropdownText: { color: '#fff', fontWeight: '600' },
-  playerImageWrap: { marginTop: 8, backgroundColor: '#d7d7d7', borderTopLeftRadius: 62, borderTopRightRadius: 62, overflow: 'hidden' },
-  playerImage: { width: '100%', height: 278, resizeMode: 'cover' },
+  playerImageWrap: { marginTop: 6, backgroundColor: '#d7d7d7', borderTopLeftRadius: 40, borderTopRightRadius: 40, overflow: 'hidden' },
+  playerImage: { width: '100%', height: 210, resizeMode: 'cover' },
   nameOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -382,6 +416,21 @@ const styles = StyleSheet.create({
   tabButtonActive: { backgroundColor: '#7d2426' },
   tabLabel: { color: '#fff', fontWeight: '800', fontSize: 34 * 0.45 },
   totalsWrap: { marginTop: 14, gap: 12 },
+  totalsWrapCompact: {
+    marginTop: 14,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  totalValueCard: {
+    width: '48%',
+    backgroundColor: 'rgba(2, 10, 23, 0.95)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  totalValueLabel: { color: '#c4d8f0', fontWeight: '700', fontSize: 13 },
+  totalValueNumber: { color: '#fff', fontWeight: '900', fontSize: 20, marginTop: 4 },
   metricCard: {
     backgroundColor: 'rgba(2, 10, 23, 0.95)',
     borderRadius: 20,
@@ -418,9 +467,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  tableHeaderLabel: { width: 140 },
+  tableHeaderLabel: { width: 130 },
   tableHeaderCell: {
-    flex: 1,
+    width: 64,
     color: '#fff',
     textAlign: 'center',
     fontWeight: '900',
@@ -435,7 +484,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.08)',
   },
   tableMatchRow: { backgroundColor: '#722124' },
-  tableLabel: { width: 140, color: '#fff', fontWeight: '800', fontSize: 34 * 0.45 },
+  tableLabel: { width: 130, color: '#fff', fontWeight: '800', fontSize: 34 * 0.45 },
   tableLabelMatch: { lineHeight: 28 * 0.75 },
-  tableCellValue: { flex: 1, color: '#fff', textAlign: 'center', fontWeight: '700' },
+  tableCellValue: { width: 64, color: '#fff', textAlign: 'center', fontWeight: '700' },
 });
