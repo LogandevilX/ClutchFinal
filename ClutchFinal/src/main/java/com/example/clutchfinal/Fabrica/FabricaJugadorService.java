@@ -58,6 +58,11 @@ public class FabricaJugadorService {
         if (jugador.getClub() != null) {
             dto.setClubId(jugador.getClub().getId());
         }
+        dto.setEquipoIds(
+                jugador.getEquipos().stream()
+                        .map(equipo -> equipo.getId())
+                        .collect(Collectors.toSet())
+        );
         return dto;
     }
 
