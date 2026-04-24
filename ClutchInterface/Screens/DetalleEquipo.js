@@ -68,6 +68,29 @@ const TeamLogo = ({ uri }) => (
   <Image source={uri ? { uri } : appLogo} style={styles.teamLogo} />
 );
 
+const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => (
+  <View style={styles.filterBox}>
+    <Text style={styles.filterLabel}>{label}</Text>
+    <Pressable style={styles.selectButton} onPress={onToggle}>
+      <Text style={styles.selectText}>{value}</Text>
+      <Text style={styles.selectChevron}>▾</Text>
+    </Pressable>
+    {open ? (
+      <View style={styles.dropdownMenu}>
+        {options.map((option) => (
+          <Pressable
+            key={option.key}
+            style={styles.dropdownItem}
+            onPress={() => onSelect(option.value)}
+          >
+            <Text style={styles.dropdownText}>{option.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+    ) : null}
+  </View>
+);
+
 export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -178,6 +201,22 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
       }));
   }, [detailData?.groupsByPhase, detailData?.matches, selectedGroupId, selectedPhaseId]);
 
+  const filteredClassification = useMemo(
+    () =>
+      (detailData?.classification || []).filter((team) => {
+        if (selectedPhaseId && team?.faseId && team.faseId !== selectedPhaseId) {
+          return false;
+        }
+
+        if (selectedGroupId && team?.grupoId && team.grupoId !== selectedGroupId) {
+          return false;
+        }
+
+        return true;
+      }),
+    [detailData?.classification, selectedGroupId, selectedPhaseId]
+  );
+
   const onToggleFavorite = async () => {
     if (!detailData || !user?.id) {
       return;
@@ -279,7 +318,30 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
               <View style={styles.tabContent}>
                 {detailData.players.map((player) => (
                   <View key={player.id} style={styles.playerRow}>
-                    <Text style={styles.playerName}>{[player.nombre, player.primerApellido, player.segundoApellido].filter(Boolean).join(' ')}</Text>
+                    <Image source={player.pathFoto ? { uri: player.pathFoto } : appLogo} style={styles.playerAvatar} />
+                    <View style={styles.playerInfoBlock}>
+                      <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
+                      <Text style={styles.playerName}>{[player.nombre, player.primerApellido, player.segundoApellido].filter(Boolean).join(' ')}</Text>
+                      <View style={styles.playerStatsRow}>
+                        <View>
+                          <Text style={styles.playerStatLabel}>PJ</Text>
+                          <Text style={styles.playerStatValue}>{player?.partidosJugados || 0}</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.playerStatLabel}>MPP</Text>
+                          <Text style={[styles.playerStatValue, styles.yellowAccent]}>{player?.minutosPorPartido || 0}</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.playerStatLabel}>PPP</Text>
+                          <Text style={[styles.playerStatValue, styles.redAccent]}>{player?.puntosPorPartido || 0}</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.playerStatLabel}>VPP</Text>
+                          <Text style={styles.playerStatValue}>{player?.valoracionPorPartido || 0}</Text>
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={styles.playerArrow}>›</Text>
                   </View>
                 ))}
               </View>
@@ -287,72 +349,123 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
 
             {activeTab === 'clasificacion' ? (
               <View style={styles.tabContent}>
-                {detailData.classification.map((team, index) => (
-                  <View
-                    key={team.id}
-                    style={[
-                      styles.classificationRow,
-                      index === 0 ? styles.firstPlace : null,
-                      index === detailData.classification.length - 1 ? styles.lastPlace : null,
-                    ]}
-                  >
-                    <Text style={styles.classificationText}>{team.posicion || index + 1}. {team.nombreEquipo}</Text>
-                    <Text style={styles.classificationText}>{team.puntos || 0} pts</Text>
+                <View style={styles.filtersRow}>
+                  <DropdownFilter
+                    label="Fase"
+                    value={detailData.phases.find((phase) => phase.faseId === selectedPhaseId)?.nombreFase || 'Selecciona fase'}
+                    open={isPhaseMenuOpen}
+                    onToggle={() => {
+                      setIsGroupMenuOpen(false);
+                      setIsPhaseMenuOpen((prev) => !prev);
+                    }}
+                    options={(detailData.phases || []).map((phase) => ({
+                      key: phase.faseId,
+                      value: phase.faseId,
+                      label: phase.nombreFase,
+                    }))}
+                    onSelect={(faseId) => {
+                      setSelectedPhaseId(faseId);
+                      const firstGroup = detailData.groupsByPhase?.[faseId]?.[0]?.grupoId || null;
+                      setSelectedGroupId(firstGroup);
+                      setIsPhaseMenuOpen(false);
+                    }}
+                  />
+
+                  <DropdownFilter
+                    label="Grupo"
+                    value={availableGroups.find((group) => group.grupoId === selectedGroupId)?.nombreGrupo || 'Selecciona grupo'}
+                    open={isGroupMenuOpen}
+                    onToggle={() => {
+                      setIsPhaseMenuOpen(false);
+                      setIsGroupMenuOpen((prev) => !prev);
+                    }}
+                    options={availableGroups.map((group) => ({
+                      key: group.grupoId,
+                      value: group.grupoId,
+                      label: group.nombreGrupo,
+                    }))}
+                    onSelect={(grupoId) => {
+                      setSelectedGroupId(grupoId);
+                      setIsGroupMenuOpen(false);
+                    }}
+                  />
+                </View>
+
+                <View style={styles.classificationTable}>
+                  <View style={styles.classificationHeaderRow}>
+                    <Text style={[styles.classificationHeaderText, styles.positionCol]}>POS</Text>
+                    <Text style={[styles.classificationHeaderText, styles.teamCol]}>EQUIPO</Text>
+                    <Text style={styles.classificationHeaderText}>PJ</Text>
+                    <Text style={styles.classificationHeaderText}>PG</Text>
+                    <Text style={styles.classificationHeaderText}>PP</Text>
+                    <Text style={styles.classificationHeaderText}>P</Text>
                   </View>
-                ))}
+
+                  {filteredClassification.map((team, index) => (
+                    <View
+                      key={team.id}
+                      style={[
+                        styles.classificationRow,
+                        index === 0 ? styles.firstPlace : null,
+                        index === filteredClassification.length - 1 ? styles.lastPlace : null,
+                      ]}
+                    >
+                      <Text style={[styles.classificationText, styles.positionCol]}>{String(team.posicion || index + 1).padStart(2, '0')}</Text>
+                      <View style={styles.teamCol}>
+                        <Text style={styles.teamNameCell}>{team.nombreEquipo}</Text>
+                      </View>
+                      <Text style={styles.classificationText}>{(team.partidosGanados || 0) + (team.partidosPerdidos || 0)}</Text>
+                      <Text style={styles.classificationText}>{team.partidosGanados || 0}</Text>
+                      <Text style={styles.classificationText}>{team.partidosPerdidos || 0}</Text>
+                      <Text style={styles.classificationText}>{team.puntos || 0}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             ) : null}
 
             {activeTab === 'calendario' ? (
               <View style={styles.tabContent}>
                 <View style={styles.filtersRow}>
-                  <View style={styles.filterBox}>
-                    <Text style={styles.filterLabel}>Fase</Text>
-                    <Pressable style={styles.selectButton} onPress={() => setIsPhaseMenuOpen((prev) => !prev)}>
-                      <Text style={styles.selectText}>{detailData.phases.find((phase) => phase.faseId === selectedPhaseId)?.nombreFase || 'Selecciona fase'}</Text>
-                    </Pressable>
-                    {isPhaseMenuOpen ? (
-                      <View style={styles.dropdownMenu}>
-                        {detailData.phases.map((phase) => (
-                          <Pressable
-                            key={phase.faseId}
-                            style={styles.dropdownItem}
-                            onPress={() => {
-                              setSelectedPhaseId(phase.faseId);
-                              const firstGroup = detailData.groupsByPhase?.[phase.faseId]?.[0]?.grupoId || null;
-                              setSelectedGroupId(firstGroup);
-                              setIsPhaseMenuOpen(false);
-                            }}
-                          >
-                            <Text style={styles.dropdownText}>{phase.nombreFase}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    ) : null}
-                  </View>
+                  <DropdownFilter
+                    label="Fase"
+                    value={detailData.phases.find((phase) => phase.faseId === selectedPhaseId)?.nombreFase || 'Selecciona fase'}
+                    open={isPhaseMenuOpen}
+                    onToggle={() => {
+                      setIsGroupMenuOpen(false);
+                      setIsPhaseMenuOpen((prev) => !prev);
+                    }}
+                    options={(detailData.phases || []).map((phase) => ({
+                      key: phase.faseId,
+                      value: phase.faseId,
+                      label: phase.nombreFase,
+                    }))}
+                    onSelect={(faseId) => {
+                      setSelectedPhaseId(faseId);
+                      const firstGroup = detailData.groupsByPhase?.[faseId]?.[0]?.grupoId || null;
+                      setSelectedGroupId(firstGroup);
+                      setIsPhaseMenuOpen(false);
+                    }}
+                  />
 
-                  <View style={styles.filterBox}>
-                    <Text style={styles.filterLabel}>Grupo</Text>
-                    <Pressable style={styles.selectButton} onPress={() => setIsGroupMenuOpen((prev) => !prev)}>
-                      <Text style={styles.selectText}>{availableGroups.find((group) => group.grupoId === selectedGroupId)?.nombreGrupo || 'Selecciona grupo'}</Text>
-                    </Pressable>
-                    {isGroupMenuOpen ? (
-                      <View style={styles.dropdownMenu}>
-                        {availableGroups.map((group) => (
-                          <Pressable
-                            key={group.grupoId}
-                            style={styles.dropdownItem}
-                            onPress={() => {
-                              setSelectedGroupId(group.grupoId);
-                              setIsGroupMenuOpen(false);
-                            }}
-                          >
-                            <Text style={styles.dropdownText}>{group.nombreGrupo}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    ) : null}
-                  </View>
+                  <DropdownFilter
+                    label="Grupo"
+                    value={availableGroups.find((group) => group.grupoId === selectedGroupId)?.nombreGrupo || 'Selecciona grupo'}
+                    open={isGroupMenuOpen}
+                    onToggle={() => {
+                      setIsPhaseMenuOpen(false);
+                      setIsGroupMenuOpen((prev) => !prev);
+                    }}
+                    options={availableGroups.map((group) => ({
+                      key: group.grupoId,
+                      value: group.grupoId,
+                      label: group.nombreGrupo,
+                    }))}
+                    onSelect={(grupoId) => {
+                      setSelectedGroupId(grupoId);
+                      setIsGroupMenuOpen(false);
+                    }}
+                  />
                 </View>
 
                 {groupedMatches.length === 0 ? <Text style={styles.emptyText}>No hay partidos para los filtros seleccionados.</Text> : null}
@@ -509,20 +622,17 @@ const styles = StyleSheet.create({
   },
   tabsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 8,
   },
   tabButton: {
     flex: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderRadius: 10,
+    paddingVertical: 9,
+    backgroundColor: '#16263f',
     alignItems: 'center',
   },
   tabButtonActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#7c2a2a',
   },
   tabLabel: {
     color: '#fff',
@@ -530,38 +640,118 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   tabLabelActive: {
-    color: '#0d203d',
+    color: '#fff',
   },
   tabContent: {
     marginTop: 12,
   },
   playerRow: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 16,
+    backgroundColor: '#061528',
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  playerAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#fff',
+  },
+  playerInfoBlock: {
+    flex: 1,
+  },
+  playerNumber: {
+    color: '#ecf1fa',
+    fontWeight: '800',
+    fontSize: 12,
   },
   playerName: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
+    marginTop: 2,
   },
-  classificationRow: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 8,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+  playerStatsRow: {
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  playerStatLabel: {
+    color: '#d6e0ef',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  playerStatValue: {
+    marginTop: 2,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  yellowAccent: {
+    color: '#ffd84d',
+  },
+  redAccent: {
+    color: '#ff3f3f',
+  },
+  playerArrow: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: '300',
+  },
+  classificationTable: {
+    marginTop: 4,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#061528',
+  },
+  classificationHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#cfd4de',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  classificationHeaderText: {
+    width: 30,
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  classificationRow: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: '#061528',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   firstPlace: {
-    backgroundColor: '#2f9e44',
+    backgroundColor: '#1ea32b',
   },
   lastPlace: {
-    backgroundColor: '#c92a2a',
+    backgroundColor: '#612020',
   },
   classificationText: {
     color: '#fff',
     fontWeight: '700',
+    textAlign: 'center',
+    width: 30,
+    fontSize: 12,
+  },
+  positionCol: {
+    width: 34,
+  },
+  teamCol: {
+    flex: 1,
+    alignItems: 'flex-start',
+    paddingHorizontal: 6,
+  },
+  teamNameCell: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
   },
   filtersRow: {
     flexDirection: 'row',
@@ -581,20 +771,25 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#fff',
-    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    backgroundColor: '#132742',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   selectText: {
     color: '#fff',
     fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
+  selectChevron: {
+    color: '#fff',
+    marginLeft: 8,
   },
   dropdownMenu: {
     marginTop: 4,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#fff',
-    backgroundColor: 'rgba(5, 15, 29, 0.95)',
+    backgroundColor: '#132742',
     overflow: 'hidden',
   },
   dropdownItem: {
