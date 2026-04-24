@@ -58,7 +58,7 @@ export default function LoginScreen({ onGoRegister, onGoBackHome, onLoginSuccess
           >
             <View style={styles.overlayCard}>
               <Pressable style={styles.backButton} onPress={onGoBackHome}>
-                <Text style={styles.backText}>← Volver al inicio</Text>
+                <Text style={styles.backButtonText}>❮</Text>
               </Pressable>
 
               <View style={styles.logoCircle}>
@@ -127,19 +127,19 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10
   },
-  backText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
   backButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#7E1F26',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
+  backButtonText: { color: '#fff', fontWeight: '900', fontSize: 26, lineHeight: 26, marginRight: 2 },
   logoCircle: {
     width: 180,
     height: 180,

@@ -145,7 +145,7 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
           >
             <View style={styles.overlayCard}>
               <Pressable style={styles.backButton} onPress={onGoHome}>
-                <Text style={styles.backText}>← Volver al inicio</Text>
+                <Text style={styles.backButtonText}>❮</Text>
               </Pressable>
 
               <View style={styles.logoCircle}>
@@ -194,22 +194,17 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: 'flex-start',
-    flexDirection: 'row',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(5, 15, 29, 0.92)',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    justifyContent: 'center',
     marginBottom: 24,
   },
-  backText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
+  backButtonText: { color: '#fff', fontWeight: '900', fontSize: 26, lineHeight: 26, marginRight: 2 },
   logoCircle: {
     width: 90,
     height: 90,
