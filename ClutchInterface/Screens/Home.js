@@ -64,7 +64,7 @@ function TeamLogo({ uri }) {
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ');
 
-export default function HomeScreen({ user, onGoProfile }) {
+export default function HomeScreen({ user, onGoProfile, onGoTeamDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [liveMatches, setLiveMatches] = useState([]);
@@ -302,7 +302,11 @@ export default function HomeScreen({ user, onGoProfile }) {
             {favoritesSections.map((item) => {
               if (item.type === 'team') {
                 return (
-                  <View key={item.id} style={styles.favoriteCard}>
+                  <Pressable
+                    key={item.id}
+                    style={styles.favoriteCard}
+                    onPress={() => onGoTeamDetail?.(item.team.id)}
+                  >
                     <View style={styles.favoriteTop}>
                       <TeamLogo uri={item.team.shieldUrl} />
                       <View style={styles.favoriteInfo}>
@@ -334,7 +338,7 @@ export default function HomeScreen({ user, onGoProfile }) {
                         <Text style={styles.statsValueText}>{item.team.puntosEnContra || 0}</Text>
                       </View>
                     </View>
-                  </View>
+                  </Pressable>
                 );
               }
 
@@ -418,7 +422,14 @@ export default function HomeScreen({ user, onGoProfile }) {
                 ) : null}
 
                 {teamSearchResults.map((team) => (
-                  <View key={team.key} style={styles.searchCard}>
+                  <Pressable
+                    key={team.key}
+                    style={styles.searchCard}
+                    onPress={() => {
+                      closeSearchOverlay();
+                      onGoTeamDetail?.(team.id);
+                    }}
+                  >
                     <View style={styles.searchMainInfo}>
                       <TeamLogo uri={team.logoUrl} />
                       <View style={styles.searchTextWrap}>
@@ -429,7 +440,7 @@ export default function HomeScreen({ user, onGoProfile }) {
                     <Pressable onPress={() => onAddFavorite(team)}>
                       <Text style={[styles.starIcon, { color: team.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
                     </Pressable>
-                  </View>
+                  </Pressable>
                 ))}
 
                 {playerSearchResults.map((player) => (

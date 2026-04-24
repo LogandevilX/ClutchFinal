@@ -5,10 +5,12 @@ import LoginScreen from './Screens/login';
 import RegistroUsuarioScreen from './Screens/RegistroUsuario';
 import HomeScreen from './Screens/Home';
 import PerfilScreen from './Screens/Perfil';
+import DetalleEquipoScreen from './Screens/DetalleEquipo';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
   const [loggedUser, setLoggedUser] = useState(null);
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
 
   return (
     <>
@@ -41,6 +43,10 @@ export default function App() {
         <HomeScreen
           user={loggedUser}
           onGoProfile={() => setScreen('perfil')}
+          onGoTeamDetail={(teamId) => {
+            setSelectedTeamId(teamId);
+            setScreen('detalleEquipo');
+          }}
         />
       ) : null}
 
@@ -49,6 +55,14 @@ export default function App() {
           user={loggedUser}
           onUserUpdate={(updatedUser) => setLoggedUser(updatedUser)}
           onGoHome={() => setScreen('home')}
+        />
+      ) : null}
+
+      {screen === 'detalleEquipo' ? (
+        <DetalleEquipoScreen
+          teamId={selectedTeamId}
+          user={loggedUser}
+          onGoBack={() => setScreen('home')}
         />
       ) : null}
 
