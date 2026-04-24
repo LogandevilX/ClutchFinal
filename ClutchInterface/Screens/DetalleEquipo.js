@@ -12,7 +12,15 @@ import {
   Text,
   View,
 } from 'react-native';
-import { fetchTeamDetailData, toggleFavoriteTeam } from '../services/homeService';
+import { toggleFavoriteTeam } from '../services/homeService';
+import {
+  fetchTeamDetailData,
+  getAvailableGroups,
+  getDefaultGroupId,
+  getDefaultPhaseId,
+  getFilteredClassification,
+  getGroupedMatches,
+} from '../services/detalleEquipoService';
 
 const backgroundImage = require('../assets/Fondo_Cancha.png');
 const appLogo = require('../assets/LogoClutch.png');
@@ -22,35 +30,6 @@ const tabs = [
   { key: 'clasificacion', label: 'Clasificación' },
   { key: 'calendario', label: 'Calendario' },
 ];
-
-const toDate = (value) => {
-  const parsed = value ? new Date(value) : null;
-  return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
-};
-
-const formatDate = (value) => {
-  const date = toDate(value);
-
-  if (!date) {
-    return 'Sin fecha';
-  }
-
-  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-};
-
-const getWeekNumber = (value) => {
-  const date = toDate(value);
-
-  if (!date) {
-    return 0;
-  }
-
-  const dateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = dateUTC.getUTCDay() || 7;
-  dateUTC.setUTCDate(dateUTC.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(dateUTC.getUTCFullYear(), 0, 1));
-  return Math.ceil((((dateUTC - yearStart) / 86400000) + 1) / 7);
-};
 
 const getMatchBackgroundColor = (estado) => {
   if (estado === 'FINALIZADO') {
@@ -122,8 +101,9 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
         }
 
         setDetailData(data);
-        setSelectedPhaseId(data.team?.inscripcion?.faseId || data.phases?.[0]?.faseId || null);
-        setSelectedGroupId(data.team?.inscripcion?.grupoId || null);
+        const defaultPhaseId = getDefaultPhaseId(data);
+        setSelectedPhaseId(defaultPhaseId);
+        setSelectedGroupId(getDefaultGroupId(data, defaultPhaseId));
       } catch (error) {
         if (mounted) {
           setErrorMessage('No se pudieron cargar los datos del equipo.');
@@ -142,79 +122,16 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
     };
   }, [teamId, user?.id]);
 
-  const availableGroups = useMemo(
-    () => detailData?.groupsByPhase?.[selectedPhaseId] || [],
-    [detailData?.groupsByPhase, selectedPhaseId]
+  const availableGroups = useMemo(() => getAvailableGroups(detailData, selectedPhaseId), [detailData, selectedPhaseId]);
+
+  const groupedMatches = useMemo(
+    () => getGroupedMatches(detailData, selectedPhaseId, selectedGroupId),
+    [detailData, selectedGroupId, selectedPhaseId]
   );
 
-  const groupedMatches = useMemo(() => {
-    const selectedPhaseGroupIds = new Set((detailData?.groupsByPhase?.[selectedPhaseId] || []).map((group) => group.grupoId));
-
-    const filteredMatches = (detailData?.matches || []).filter((match) => {
-      if (selectedPhaseId && selectedPhaseGroupIds.size > 0 && !selectedPhaseGroupIds.has(match?.grupoId)) {
-        return false;
-      }
-
-      if (selectedGroupId && match?.grupoId !== selectedGroupId) {
-        return false;
-      }
-
-      return true;
-    });
-
-    const jornadasMap = new Map();
-
-    filteredMatches.forEach((match) => {
-      const date = toDate(match?.fechaHoraInicio);
-      const year = date ? date.getFullYear() : 0;
-      const week = getWeekNumber(match?.fechaHoraInicio);
-      const jornadaKey = `${year}-${week}`;
-      const jornadaLabel = week ? `Jornada ${week}` : 'Jornada sin asignar';
-      const dateLabel = formatDate(match?.fechaHoraInicio);
-
-      if (!jornadasMap.has(jornadaKey)) {
-        jornadasMap.set(jornadaKey, {
-          key: jornadaKey,
-          label: jornadaLabel,
-          sortValue: date ? date.getTime() : 0,
-          dates: new Map(),
-        });
-      }
-
-      const jornada = jornadasMap.get(jornadaKey);
-
-      if (!jornada.dates.has(dateLabel)) {
-        jornada.dates.set(dateLabel, []);
-      }
-
-      jornada.dates.get(dateLabel).push(match);
-    });
-
-    return Array.from(jornadasMap.values())
-      .sort((a, b) => a.sortValue - b.sortValue)
-      .map((jornada) => ({
-        ...jornada,
-        dates: Array.from(jornada.dates.entries()).map(([dateLabel, matches]) => ({
-          dateLabel,
-          matches,
-        })),
-      }));
-  }, [detailData?.groupsByPhase, detailData?.matches, selectedGroupId, selectedPhaseId]);
-
   const filteredClassification = useMemo(
-    () =>
-      (detailData?.classification || []).filter((team) => {
-        if (selectedPhaseId && String(team?.faseId ?? '') !== String(selectedPhaseId)) {
-          return false;
-        }
-
-        if (selectedGroupId && String(team?.grupoId ?? '') !== String(selectedGroupId)) {
-          return false;
-        }
-
-        return true;
-      }),
-    [detailData?.classification, selectedGroupId, selectedPhaseId]
+    () => getFilteredClassification(detailData, selectedPhaseId, selectedGroupId),
+    [detailData, selectedGroupId, selectedPhaseId]
   );
 
   const onToggleFavorite = async () => {
@@ -362,8 +279,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                     }))}
                     onSelect={(faseId) => {
                       setSelectedPhaseId(faseId);
-                      const firstGroup = detailData.groupsByPhase?.[faseId]?.[0]?.grupoId || null;
-                      setSelectedGroupId(firstGroup);
+                      setSelectedGroupId(getDefaultGroupId(detailData, faseId));
                       setIsPhaseMenuOpen(false);
                     }}
                   />
@@ -440,8 +356,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                     }))}
                     onSelect={(faseId) => {
                       setSelectedPhaseId(faseId);
-                      const firstGroup = detailData.groupsByPhase?.[faseId]?.[0]?.grupoId || null;
-                      setSelectedGroupId(firstGroup);
+                      setSelectedGroupId(getDefaultGroupId(detailData, faseId));
                       setIsPhaseMenuOpen(false);
                     }}
                   />
@@ -744,7 +659,8 @@ const styles = StyleSheet.create({
   },
   teamCol: {
     flex: 1,
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 6,
     flexDirection: 'row',
     gap: 8,
@@ -759,6 +675,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     flexShrink: 1,
+    textAlign: 'center',
   },
   filtersRow: {
     flexDirection: 'row',
