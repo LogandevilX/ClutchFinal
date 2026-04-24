@@ -22,7 +22,7 @@ import {
   getGroupedMatches,
 } from '../services/detalleEquipoService';
 
-const backgroundImage = require('../assets/Fondo_Cancha.png');
+const backgroundImage = require('../assets/Fondo_Cancha2.png');
 const appLogo = require('../assets/LogoClutch.png');
 
 const tabs = [
@@ -237,19 +237,19 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                       <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
                       <Text style={styles.playerName}>{[player.nombre, player.primerApellido, player.segundoApellido].filter(Boolean).join(' ')}</Text>
                       <View style={styles.playerStatsRow}>
-                        <View>
+                        <View style={styles.playerStatItem}>
                           <Text style={styles.playerStatLabel}>PJ</Text>
                           <Text style={styles.playerStatValue}>{player?.partidosJugados || 0}</Text>
                         </View>
-                        <View>
+                        <View style={styles.playerStatItem}>
                           <Text style={styles.playerStatLabel}>MPP</Text>
                           <Text style={[styles.playerStatValue, styles.yellowAccent]}>{player?.minutosPorPartido || 0}</Text>
                         </View>
-                        <View>
+                        <View style={styles.playerStatItem}>
                           <Text style={styles.playerStatLabel}>PPP</Text>
                           <Text style={[styles.playerStatValue, styles.redAccent]}>{player?.puntosPorPartido || 0}</Text>
                         </View>
-                        <View>
+                        <View style={styles.playerStatItem}>
                           <Text style={styles.playerStatLabel}>VPP</Text>
                           <Text style={styles.playerStatValue}>{player?.valoracionPorPartido || 0}</Text>
                         </View>
@@ -307,7 +307,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                 <View style={styles.classificationTable}>
                   <View style={styles.classificationHeaderRow}>
                     <Text style={[styles.classificationHeaderText, styles.positionCol]}>POS</Text>
-                    <Text style={[styles.classificationHeaderText, styles.teamCol]}>EQUIPO</Text>
+                    <Text style={[styles.classificationHeaderText, styles.teamColTitle]}>EQUIPO</Text>
                     <Text style={styles.classificationHeaderText}>PJ</Text>
                     <Text style={styles.classificationHeaderText}>PG</Text>
                     <Text style={styles.classificationHeaderText}>PP</Text>
@@ -323,11 +323,17 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack }) {
                         index === filteredClassification.length - 1 ? styles.lastPlace : null,
                       ]}
                     >
-                      <Text style={[styles.classificationText, styles.positionCol]}>{String(team.posicion || index + 1).padStart(2, '0')}</Text>
+                      <Text style={[styles.classificationText, styles.positionCol]}>
+                        {String(team.posicion || index + 1).padStart(2, '0')}
+                      </Text>
+
                       <View style={styles.teamCol}>
                         <TeamLogo uri={team.urlEscudo} style={styles.classificationTeamLogo} />
-                        <Text style={styles.teamNameCell}>{team.nombreEquipo}</Text>
+                        <Text style={styles.teamNameCell}>
+                          {team.nombreEquipo}
+                        </Text>
                       </View>
+
                       <Text style={styles.classificationText}>{(team.partidosGanados || 0) + (team.partidosPerdidos || 0)}</Text>
                       <Text style={styles.classificationText}>{team.partidosGanados || 0}</Text>
                       <Text style={styles.classificationText}>{team.partidosPerdidos || 0}</Text>
@@ -590,18 +596,24 @@ const styles = StyleSheet.create({
   playerStatsRow: {
     marginTop: 8,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 50,
+  },
+  playerStatItem: {
+    alignItems: 'center',
   },
   playerStatLabel: {
     color: '#d6e0ef',
     fontSize: 12,
     fontWeight: '700',
+    textAlign: 'center',
   },
   playerStatValue: {
     marginTop: 2,
     color: '#fff',
     fontSize: 20,
     fontWeight: '800',
+    textAlign: 'center',
   },
   yellowAccent: {
     color: '#ffd84d',
@@ -624,11 +636,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#cfd4de',
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
   },
   classificationHeaderText: {
-    width: 36,
+    width: 34,
     color: '#111',
     fontWeight: '900',
     fontSize: 14,
@@ -636,7 +648,7 @@ const styles = StyleSheet.create({
   },
   classificationRow: {
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     backgroundColor: '#061528',
     flexDirection: 'row',
     alignItems: 'center',
@@ -649,33 +661,41 @@ const styles = StyleSheet.create({
   },
   classificationText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
-    width: 36,
-    fontSize: 14,
+    width: 34,
+    fontSize: 16,
   },
   positionCol: {
-    width: 40,
+    width: 38,
+  },
+  teamColTitle: {
+    flex: 1,
+    textAlign: 'left',
+    paddingLeft: 6,
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
   },
   teamCol: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    gap: 10,
   },
   classificationTeamLogo: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#fff',
   },
   teamNameCell: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 15,
-    flexShrink: 1,
-    textAlign: 'center',
+    fontSize: 14,
+    flex: 1,
+    textAlign: 'left',
   },
   filtersRow: {
     flexDirection: 'row',
