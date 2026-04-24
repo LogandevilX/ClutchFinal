@@ -411,6 +411,15 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
 
   const classification = allTeams
     .filter((entry) => classificationTeamIds.has(entry?.id))
+    .map((entry) => {
+      const inscripcionEquipo = sameDivisionEntries.find((inscripcion) => inscripcion?.equipoId === entry?.id);
+
+      return {
+        ...entry,
+        faseId: inscripcionEquipo?.faseId || null,
+        grupoId: inscripcionEquipo?.grupoId || null,
+      };
+    })
     .sort((a, b) => {
       const positionDiff = toSafeNumber(a?.posicion) - toSafeNumber(b?.posicion);
 
@@ -465,7 +474,10 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
       urlEscudo: buildAbsoluteAssetUrl(team?.urlEscudo),
       inscripcion: currentInscripcion,
     },
-    players: safeArray(team?.jugadores),
+    players: safeArray(team?.jugadores).map((player) => ({
+      ...player,
+      pathFoto: buildAbsoluteAssetUrl(player?.pathFoto),
+    })),
     classification,
     phases,
     groupsByPhase,
