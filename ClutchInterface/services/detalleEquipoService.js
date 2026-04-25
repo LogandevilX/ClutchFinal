@@ -113,6 +113,9 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
   const currentInscripcion = inscripciones.find((entry) => entry?.equipoId === equipoId) || null;
   const divisionName = currentInscripcion?.nombreDivision || null;
   const sameDivisionEntries = inscripciones.filter((entry) => entry?.nombreDivision === divisionName);
+  const sameDivisionTeamIds = new Set(
+    sameDivisionEntries.map((entry) => entry?.equipoId).filter((id) => typeof id === 'number')
+  );
 
   const classification = allTeams
     .map((entry) => {
@@ -148,11 +151,11 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
 
   const groupsByPhase = buildGroupsByPhase(inscripciones, divisionName);
 
-  const teamMatches = allMatches
+  const divisionMatches = allMatches
     .filter((match) => {
       const localId = match?.equipoLocal?.id;
       const awayId = match?.equipoVisitante?.id;
-      return localId === equipoId || awayId === equipoId;
+      return sameDivisionTeamIds.has(localId) && sameDivisionTeamIds.has(awayId);
     })
     .map((match) => ({
       ...match,
@@ -180,7 +183,7 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
     classification,
     phases,
     groupsByPhase,
-    matches: teamMatches,
+    matches: divisionMatches,
     isFavorite: favoritos.some((favorito) => favorito?.equipoId === equipoId && !favorito?.jugadorId),
   };
 }
