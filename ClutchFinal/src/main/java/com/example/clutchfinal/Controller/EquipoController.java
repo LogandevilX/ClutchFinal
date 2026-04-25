@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.clutchfinal.DTO.EquipoDTO;
 import com.example.clutchfinal.DTO.EquipoDetalleDTO;
-import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.Service.EquipoService;
 
 import java.util.List;
@@ -19,7 +18,7 @@ public class EquipoController {
     private EquipoService equipoService;
 
     @GetMapping
-    public ResponseEntity<List<EquipoResponseDTO>> findAll(){
+    public ResponseEntity<List<EquipoDetalleDTO>> findAll(){
         return new ResponseEntity<>(equipoService.findAll(), HttpStatus.OK);
     }
 

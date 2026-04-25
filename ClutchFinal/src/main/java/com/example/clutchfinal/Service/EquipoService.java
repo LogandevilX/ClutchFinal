@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EquipoDTO;
 import com.example.clutchfinal.DTO.EquipoDetalleDTO;
-import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.DTO.EntrenadorDTO;
 import com.example.clutchfinal.DTO.JugadorResponseDTO;
 import com.example.clutchfinal.Fabrica.FabricaEntrenadorService;
@@ -102,9 +101,9 @@ public class EquipoService {
                 .orElse(null);
     }
 
-    public List<EquipoResponseDTO> findAll(){
+    public List<EquipoDetalleDTO> findAll(){
         return equipoRepository.findAll().stream()
-                .map(this::createEquipoResponse)
+                .map(this::createEquipoDetalleSinPlantilla)
                 .toList();
     }
 
@@ -124,10 +123,10 @@ public class EquipoService {
         return fabricaEquipoService.createEquipoDetalleDTO(equipo, escudo, pabellon, entrenadores, jugadores);
     }
 
-    private EquipoResponseDTO createEquipoResponse(Equipo equipo) {
+    private EquipoDetalleDTO createEquipoDetalleSinPlantilla(Equipo equipo) {
         String escudo = equipoRepository.getEscudo(equipo.getId());
         String pabellon = equipoRepository.getPabellon(equipo.getId());
-        return fabricaEquipoService.createEquipoResponseDTO(equipo, escudo, pabellon);
+        return fabricaEquipoService.createEquipoDetalleBasicoDTO(equipo, escudo, pabellon);
     }
 
     public void deleteById(Long id){

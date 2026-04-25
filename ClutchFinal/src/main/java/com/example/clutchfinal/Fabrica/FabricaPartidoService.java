@@ -63,8 +63,8 @@ public class FabricaPartidoService {
         return new PartidosResponseDTO(
                 partido.getId(),
                 partido.getGrupo().getId(),
-                fabricaEquipoService.createEquipoResponseDTO(partido.getInscripcionLocal().getEquipo(), escudoLocal, direccionLocal),
-                fabricaEquipoService.createEquipoResponseDTO(partido.getInscripcionVisitante().getEquipo(), escudoVisitante, direccionVisitante),
+                fabricaEquipoService.createEquipoDetalleBasicoDTO(partido.getInscripcionLocal().getEquipo(), escudoLocal, direccionLocal),
+                fabricaEquipoService.createEquipoDetalleBasicoDTO(partido.getInscripcionVisitante().getEquipo(), escudoVisitante, direccionVisitante),
                 partido.getJornada(),
                 partido.getFechaHoraInicio(),
                 partido.getFechaHoraFin(),
