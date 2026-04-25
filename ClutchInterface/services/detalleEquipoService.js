@@ -1,4 +1,5 @@
-import { API_ASSETS_BASE_URL, API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { buildAbsoluteAssetUrl, fetchJson, getDateValue, safeArray, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
@@ -6,21 +7,6 @@ const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 
-const safeArray = (value) => (Array.isArray(value) ? value : []);
-
-const toSafeNumber = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const getDateValue = (value) => {
-  if (!value) {
-    return 0;
-  }
-
-  const timestamp = new Date(value).getTime();
-  return Number.isFinite(timestamp) ? timestamp : 0;
-};
 
 const toDate = (value) => {
   const parsed = value ? new Date(value) : null;
@@ -88,23 +74,6 @@ const calculatePlayerStatsFromActas = (actas, equipoId) => {
   };
 };
 
-const buildAbsoluteAssetUrl = (path) => {
-  if (!path || typeof path !== 'string') {
-    return null;
-  }
-
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_ASSETS_BASE_URL}${normalizedPath}`;
-};
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  return parseResponse(response);
-}
 
 const buildGroupsByPhase = (inscripciones, divisionName) => {
   const groupsByPhase = {};

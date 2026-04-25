@@ -1,14 +1,8 @@
-import { API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { fetchJson, safeArray } from './serviceUtils';
 
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
-
-const safeArray = (value) => (Array.isArray(value) ? value : []);
-
-const fetchJson = async (url, options) => {
-  const response = await fetch(url, options);
-  return parseResponse(response);
-};
 
 export const SHOT_ACTIONS = {
   Triple45Iz: { tipoEvento: 'T3', posicion: 'Triple45Iz', puntos: 3 },

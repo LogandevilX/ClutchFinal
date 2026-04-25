@@ -1,9 +1,10 @@
-import { API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { fetchJson } from './serviceUtils';
 
 const USERS_URL = `${API_BASE_URL}/usuarios`;
 
 export async function loginUsuario(email, password) {
-  const response = await fetch(`${USERS_URL}/login`, {
+  return fetchJson(`${USERS_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -11,11 +12,11 @@ export async function loginUsuario(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  return parseResponse(response);
 }
 
+
 export async function registrarEspectador({ email, password, apodo }) {
-  const response = await fetch(USERS_URL, {
+  return fetchJson(USERS_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,11 +29,11 @@ export async function registrarEspectador({ email, password, apodo }) {
     }),
   });
 
-  return parseResponse(response);
 }
 
+
 export async function actualizarUsuario(id, { email, password, apodo, rol, fechaRegistro }) {
-  const response = await fetch(`${USERS_URL}/${id}`, {
+  return fetchJson(`${USERS_URL}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -46,5 +47,5 @@ export async function actualizarUsuario(id, { email, password, apodo, rol, fecha
     }),
   });
 
-  return parseResponse(response);
 }
+

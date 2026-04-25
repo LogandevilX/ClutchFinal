@@ -1,22 +1,11 @@
-import { API_ASSETS_BASE_URL, API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { buildAbsoluteAssetUrl, fetchJson, getDateValue, safeArray, toId, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
-
-const safeArray = (value) => (Array.isArray(value) ? value : []);
-
-const toNumber = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const toId = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
 
 const buildIdMap = (items, getId = (item) => item?.id) =>
   new Map(
@@ -36,56 +25,31 @@ const buildUniqueIdList = (values) =>
 
 const round = (value, digits = 1) => {
   const factor = 10 ** digits;
-  return Math.round(toNumber(value) * factor) / factor;
+  return Math.round(toSafeNumber(value) * factor) / factor;
 };
 
 const percent = (made, attempted) => {
-  const attempts = toNumber(attempted);
+  const attempts = toSafeNumber(attempted);
   if (!attempts) {
     return 0;
   }
 
-  return round((toNumber(made) / attempts) * 100, 1);
+  return round((toSafeNumber(made) / attempts) * 100, 1);
 };
 
 const avg = (sum, games) => {
-  const totalGames = toNumber(games);
+  const totalGames = toSafeNumber(games);
   if (!totalGames) {
     return 0;
   }
 
-  return round(toNumber(sum) / totalGames, 1);
+  return round(toSafeNumber(sum) / totalGames, 1);
 };
 
-const buildAbsoluteAssetUrl = (path) => {
-  if (!path || typeof path !== 'string') {
-    return null;
-  }
-
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_ASSETS_BASE_URL}${normalizedPath}`;
-};
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  return parseResponse(response);
-}
 
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ').trim();
 
-const getDateValue = (value) => {
-  if (!value) {
-    return 0;
-  }
-
-  const timestamp = new Date(value).getTime();
-  return Number.isFinite(timestamp) ? timestamp : 0;
-};
 
 const getTeamIdsByDivision = (inscripciones, divisionName) =>
   safeArray(inscripciones)
@@ -100,21 +64,21 @@ const aggregateTotals = (actas) =>
   safeArray(actas).reduce(
     (acc, acta) => ({
       games: acc.games + 1,
-      minutes: acc.minutes + toNumber(acta?.minutosJugados),
-      points: acc.points + toNumber(acta?.puntos),
-      value: acc.value + toNumber(acta?.valoracion),
-      tlMade: acc.tlMade + toNumber(acta?.tlAnotados),
-      tlAttempted: acc.tlAttempted + toNumber(acta?.tlTirados),
-      t2Made: acc.t2Made + toNumber(acta?.t2Anotados),
-      t2Attempted: acc.t2Attempted + toNumber(acta?.t2Tirados),
-      t3Made: acc.t3Made + toNumber(acta?.triplesAnotados),
-      t3Attempted: acc.t3Attempted + toNumber(acta?.triplesTirados),
-      rebounds: acc.rebounds + toNumber(acta?.rebotes),
-      blocks: acc.blocks + toNumber(acta?.tapones),
-      steals: acc.steals + toNumber(acta?.robos),
-      turnovers: acc.turnovers + toNumber(acta?.perdida),
-      fouls: acc.fouls + toNumber(acta?.falta),
-      plusMinus: acc.plusMinus + toNumber(acta?.plusMinus),
+      minutes: acc.minutes + toSafeNumber(acta?.minutosJugados),
+      points: acc.points + toSafeNumber(acta?.puntos),
+      value: acc.value + toSafeNumber(acta?.valoracion),
+      tlMade: acc.tlMade + toSafeNumber(acta?.tlAnotados),
+      tlAttempted: acc.tlAttempted + toSafeNumber(acta?.tlTirados),
+      t2Made: acc.t2Made + toSafeNumber(acta?.t2Anotados),
+      t2Attempted: acc.t2Attempted + toSafeNumber(acta?.t2Tirados),
+      t3Made: acc.t3Made + toSafeNumber(acta?.triplesAnotados),
+      t3Attempted: acc.t3Attempted + toSafeNumber(acta?.triplesTirados),
+      rebounds: acc.rebounds + toSafeNumber(acta?.rebotes),
+      blocks: acc.blocks + toSafeNumber(acta?.tapones),
+      steals: acc.steals + toSafeNumber(acta?.robos),
+      turnovers: acc.turnovers + toSafeNumber(acta?.perdida),
+      fouls: acc.fouls + toSafeNumber(acta?.falta),
+      plusMinus: acc.plusMinus + toSafeNumber(acta?.plusMinus),
     }),
     {
       games: 0,
@@ -252,12 +216,12 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   const awayTeam = match?.equipoVisitante;
   const rival = toId(localTeam?.id) === selectedTeamId ? awayTeam : localTeam;
 
-  const tlMade = toNumber(acta?.tlAnotados);
-  const tlAttempted = toNumber(acta?.tlTirados);
-  const t2Made = toNumber(acta?.t2Anotados);
-  const t2Attempted = toNumber(acta?.t2Tirados);
-  const t3Made = toNumber(acta?.triplesAnotados);
-  const t3Attempted = toNumber(acta?.triplesTirados);
+  const tlMade = toSafeNumber(acta?.tlAnotados);
+  const tlAttempted = toSafeNumber(acta?.tlTirados);
+  const t2Made = toSafeNumber(acta?.t2Anotados);
+  const t2Attempted = toSafeNumber(acta?.t2Tirados);
+  const t3Made = toSafeNumber(acta?.triplesAnotados);
+  const t3Attempted = toSafeNumber(acta?.triplesTirados);
 
   return {
     id: acta?.id,
@@ -265,7 +229,7 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
     jornada: Number.isFinite(Number(match?.jornada)) && Number(match?.jornada) > 0 ? Number(match?.jornada) : null,
     values: {
       m: round(acta?.minutosJugados),
-      pts: toNumber(acta?.puntos),
+      pts: toSafeNumber(acta?.puntos),
       tla: tlMade,
       tli: tlAttempted,
       pctTl: percent(tlMade, tlAttempted),
@@ -275,13 +239,13 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
       t3a: t3Made,
       t3i: t3Attempted,
       pctT3: percent(t3Made, t3Attempted),
-      reb: toNumber(acta?.rebotes),
-      tap: toNumber(acta?.tapones),
-      rob: toNumber(acta?.robos),
-      perd: toNumber(acta?.perdida),
-      falt: toNumber(acta?.falta),
-      val: toNumber(acta?.valoracion),
-      pm: toNumber(acta?.plusMinus),
+      reb: toSafeNumber(acta?.rebotes),
+      tap: toSafeNumber(acta?.tapones),
+      rob: toSafeNumber(acta?.robos),
+      perd: toSafeNumber(acta?.perdida),
+      falt: toSafeNumber(acta?.falta),
+      val: toSafeNumber(acta?.valoracion),
+      pm: toSafeNumber(acta?.plusMinus),
     },
     sortValue: getDateValue(match?.fechaHoraInicio),
   };

@@ -21,6 +21,20 @@ const appLogo = require('../assets/LogoClutch.png');
 
 function buildFavoritesSections(teams, players) {
   const sections = [];
+  const teamIds = new Set(teams.map((team) => team.id));
+  const playersByTeamId = new Map();
+  const playersWithoutTeam = [];
+
+  players.forEach((player) => {
+    if (teamIds.has(player.teamId)) {
+      const list = playersByTeamId.get(player.teamId) || [];
+      list.push(player);
+      playersByTeamId.set(player.teamId, list);
+      return;
+    }
+
+    playersWithoutTeam.push(player);
+  });
 
   teams.forEach((team) => {
     sections.push({
@@ -29,26 +43,22 @@ function buildFavoritesSections(teams, players) {
       team,
     });
 
-    players
-      .filter((player) => player.teamId === team.id)
-      .forEach((player) => {
-        sections.push({
-          type: 'player',
-          id: `player-${player.id}`,
-          player,
-        });
-      });
-  });
-
-  players
-    .filter((player) => !player.teamId || !teams.some((team) => team.id === player.teamId))
-    .forEach((player) => {
+    (playersByTeamId.get(team.id) || []).forEach((player) => {
       sections.push({
         type: 'player',
         id: `player-${player.id}`,
         player,
       });
     });
+  });
+
+  playersWithoutTeam.forEach((player) => {
+    sections.push({
+      type: 'player',
+      id: `player-${player.id}`,
+      player,
+    });
+  });
 
   return sections;
 }

@@ -1,23 +1,10 @@
-import { API_ASSETS_BASE_URL, API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { buildAbsoluteAssetUrl, fetchJson, safeArray } from './serviceUtils';
 
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 
-const safeArray = (value) => (Array.isArray(value) ? value : []);
-
-const buildAbsoluteAssetUrl = (path) => {
-  if (!path || typeof path !== 'string') {
-    return null;
-  }
-
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_ASSETS_BASE_URL}${normalizedPath}`;
-};
 
 const getPlayerDisplayName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido]
@@ -63,10 +50,6 @@ const extractCoachNames = (equipo = {}) => {
   };
 };
 
-async function fetchJson(url, options = undefined) {
-  const response = await fetch(url, options);
-  return parseResponse(response);
-}
 
 export async function fetchPartidoById(partidoId) {
   const response = await fetchJson(`${PARTIDOS_URL}/${partidoId}`);
