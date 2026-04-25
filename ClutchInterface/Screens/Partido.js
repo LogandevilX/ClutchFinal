@@ -27,6 +27,7 @@ const SHOT_GRID = [
   ['Triple45Iz', 'TripleCabecera', 'Triple45Der'],
   ['CuarentaCincoIz', 'Cabecera', 'CuarentaCincoDer'],
   ['TripleEsquinaIz', 'Pintura', 'TripleEsquinaDerecha'],
+  ['EsquinaIz', null, 'EsquinaDer'],
 ];
 
 const findActaByPlayer = (actas, jugadorId) => (actas || []).find((acta) => String(acta?.jugadorId) === String(jugadorId));
@@ -106,7 +107,6 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   const [shotClock, setShotClock] = useState(24);
   const [clockRunning, setClockRunning] = useState(false);
   const [pose14Mode, setPose14Mode] = useState(false);
-  const [showPossessionEnd, setShowPossessionEnd] = useState(false);
   const [showShotResult, setShowShotResult] = useState(false);
   const [pendingShot, setPendingShot] = useState(null);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
@@ -185,6 +185,16 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     return onCourt;
   }, [state?.historial]);
 
+  const localPlayersOnCourt = useMemo(() => {
+    const onCourt = playersOnCourtByTeam[String(teamLocal?.id)] || new Set();
+    return localRoster.filter((player) => onCourt.has(String(player.id)));
+  }, [localRoster, playersOnCourtByTeam, teamLocal?.id]);
+
+  const awayPlayersOnCourt = useMemo(() => {
+    const onCourt = playersOnCourtByTeam[String(teamVisitante?.id)] || new Set();
+    return awayRoster.filter((player) => onCourt.has(String(player.id)));
+  }, [awayRoster, playersOnCourtByTeam, teamVisitante?.id]);
+
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
     return () => {
@@ -255,13 +265,20 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     }
 
     setClockRunning(false);
-    setShowPossessionEnd(true);
-    const timeoutId = setTimeout(() => {
-      setShowPossessionEnd(false);
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
+    setShotClock(24);
+    setPose14Mode(false);
   }, [shotClock]);
+
+  useEffect(() => {
+    if (!selectedPlayer?.id || !selectedPlayer?.equipoId) {
+      return;
+    }
+
+    const onCourt = playersOnCourtByTeam[String(selectedPlayer.equipoId)] || new Set();
+    if (!onCourt.has(String(selectedPlayer.id))) {
+      setSelectedPlayer(null);
+    }
+  }, [playersOnCourtByTeam, selectedPlayer]);
 
   useEffect(() => {
     if (mainClock < 600 || !partidoId) {
@@ -339,6 +356,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       side,
       equipoId: side === 'local' ? teamLocal?.id : teamVisitante?.id,
     });
+  };
+
+  const clearSelectedPlayer = () => {
+    setSelectedPlayer(null);
   };
 
   const handleQuickAction = async (action) => {
@@ -499,11 +520,23 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
         <View style={styles.centerHeaderBox}>
           <View style={styles.periodRow}>
             <Text style={styles.periodLabel}>P{currentPeriod}</Text>
-            <Pressable style={styles.clockControlButton} onPress={() => setMainClock(0)}>
+            <Pressable
+              style={styles.clockControlButton}
+              onPress={() => {
+                clearSelectedPlayer();
+                setMainClock(0);
+              }}
+            >
               <Text style={styles.clockControlText}>Editar</Text>
             </Pressable>
             {mainClock >= 600 && !isFourthFinished ? (
-              <Pressable style={styles.nextPeriodButton} onPress={() => setShowPeriodModal(true)}>
+              <Pressable
+                style={styles.nextPeriodButton}
+                onPress={() => {
+                  clearSelectedPlayer();
+                  setShowPeriodModal(true);
+                }}
+              >
                 <Text style={styles.nextPeriodText}>Siguiente periodo</Text>
               </Pressable>
             ) : (
@@ -512,16 +545,29 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           </View>
 
           <View style={styles.possessionRow}>
-            <Pressable style={styles.smallControlButton} onPress={() => setShotClock(24)}>
+            <Pressable
+              style={styles.smallControlButton}
+              onPress={() => {
+                clearSelectedPlayer();
+                setShotClock(24);
+              }}
+            >
               <Text style={styles.smallControlText}>↺24</Text>
             </Pressable>
-            <Pressable style={styles.smallControlButton} onPress={() => setClockRunning((prev) => !prev)}>
+            <Pressable
+              style={styles.smallControlButton}
+              onPress={() => {
+                clearSelectedPlayer();
+                setClockRunning((prev) => !prev);
+              }}
+            >
               <Text style={styles.smallControlText}>{clockRunning ? 'Pausa' : 'Play'}</Text>
             </Pressable>
             <Text style={styles.shotClockText}>{shotClock} - 0</Text>
             <Pressable
               style={styles.smallControlButton}
               onPress={() => {
+                clearSelectedPlayer();
                 setShotClock(14);
                 setPose14Mode(true);
               }}
@@ -538,10 +584,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
         </View>
       </View>
 
-      <View style={styles.mainContent}>
+      <Pressable style={styles.mainContent} onPress={clearSelectedPlayer}>
         <View style={styles.sideZone}>
           <ScrollView contentContainerStyle={styles.playersContainer}>
-            {localRoster.map((player) => (
+            {localPlayersOnCourt.map((player) => (
               <PlayerCard
                 key={`local-${player.id}`}
                 player={player}
@@ -558,15 +604,19 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           <View style={styles.shotMap}>
             {SHOT_GRID.map((row, index) => (
               <View key={`row-${index}`} style={styles.shotRow}>
-                {row.map((shotKey) => (
-                  <Pressable
-                    key={shotKey}
-                    style={[styles.shotButton, !selectedPlayer?.id ? styles.disabledButton : null]}
-                    onPress={() => handleShot(shotKey)}
-                    disabled={!selectedPlayer?.id}
-                  >
-                    <Text style={styles.shotButtonText}>{SHOT_ACTIONS[shotKey].posicion}</Text>
-                  </Pressable>
+                {row.map((shotKey, colIndex) => (
+                  shotKey ? (
+                    <Pressable
+                      key={shotKey}
+                      style={[styles.shotButton, !selectedPlayer?.id ? styles.disabledButton : null]}
+                      onPress={() => handleShot(shotKey)}
+                      disabled={!selectedPlayer?.id}
+                    >
+                      <Text style={styles.shotButtonText}>{SHOT_ACTIONS[shotKey].posicion}</Text>
+                    </Pressable>
+                  ) : (
+                    <View key={`empty-slot-${index}-${colIndex}`} style={styles.shotButtonSpacer} />
+                  )
                 ))}
               </View>
             ))}
@@ -588,7 +638,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
         <View style={styles.sideZone}>
           <ScrollView contentContainerStyle={styles.playersContainer}>
-            {awayRoster.map((player) => (
+            {awayPlayersOnCourt.map((player) => (
               <PlayerCard
                 key={`away-${player.id}`}
                 player={player}
@@ -600,15 +650,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             ))}
           </ScrollView>
         </View>
-      </View>
-
-      <Modal visible={showPossessionEnd} transparent animationType="fade">
-        <View style={styles.overlayBackdrop}>
-          <View style={styles.overlayCard}>
-            <Text style={styles.overlayTitle}>FIN POSESIÓN</Text>
-          </View>
-        </View>
-      </Modal>
+      </Pressable>
 
       <Modal visible={showShotResult} transparent animationType="fade" onRequestClose={() => setShowShotResult(false)}>
         <View style={styles.overlayBackdrop}>
@@ -826,6 +868,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   shotButtonText: { color: '#FFF', fontWeight: '700', textAlign: 'center', fontSize: 12 },
+  shotButtonSpacer: { flex: 1 },
   quickActionsRow: { flexDirection: 'row', gap: 8 },
   quickActionBtn: {
     flex: 1,
