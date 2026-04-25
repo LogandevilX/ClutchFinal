@@ -304,10 +304,9 @@ export async function fetchHomeData(usuarioId) {
       const awayId = match?.equipoVisitante?.id;
 
       const followsTeam = followedTeamIds.has(localId) || followedTeamIds.has(awayId);
-      const started = Boolean(match?.fechaHoraInicio);
-      const finished = Boolean(match?.fechaHoraFin);
+      const isInProgress = match?.estado === 'EN_CURSO';
 
-      return followsTeam && started && !finished;
+      return followsTeam && isInProgress;
     })
     .map((match) => ({
       ...match,

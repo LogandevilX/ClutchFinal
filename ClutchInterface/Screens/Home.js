@@ -277,22 +277,32 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlay
             {liveMatches.length === 0 ? (
               <Text style={styles.emptyText}>No hay partidos en directo de tus equipos seguidos.</Text>
             ) : (
-              <View style={styles.liveMatchesRow}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveMatchesRow}>
                 {liveMatches.map((match) => (
                   <View key={match.id} style={styles.liveCard}>
                     <Text style={styles.liveBadge}>● LIVE</Text>
                     <View style={styles.teamRow}>
-                      <TeamLogo uri={match.equipoLocal?.urlEscudo} />
-                      <Text style={styles.scoreText}>{match.puntosLocal} - {match.puntosVisitante}</Text>
-                      <TeamLogo uri={match.equipoVisitante?.urlEscudo} />
-                    </View>
-                    <View style={styles.teamAbbrRow}>
-                      <Text style={styles.teamAbbr}>{match.equipoLocal?.nombreEquipo || 'Local'}</Text>
-                      <Text style={styles.teamAbbr}>{match.equipoVisitante?.nombreEquipo || 'Visitante'}</Text>
+                      <View style={styles.teamColumn}>
+                        <TeamLogo uri={match.equipoLocal?.urlEscudo} />
+                        <Text style={styles.teamAbbr} numberOfLines={2} ellipsizeMode="tail">
+                          {match.equipoLocal?.nombreEquipo || 'Local'}
+                        </Text>
+                      </View>
+
+                      <View style={styles.scoreColumn}>
+                        <Text style={styles.scoreText}>{match.puntosLocal} - {match.puntosVisitante}</Text>
+                      </View>
+
+                      <View style={styles.teamColumn}>
+                        <TeamLogo uri={match.equipoVisitante?.urlEscudo} />
+                        <Text style={styles.teamAbbr} numberOfLines={2} ellipsizeMode="tail">
+                          {match.equipoVisitante?.nombreEquipo || 'Visitante'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             )}
 
             <View style={styles.sectionHeader}>
@@ -558,7 +568,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   seeAllText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  liveMatchesRow: { gap: 12 },
+  liveMatchesRow: { gap: 12, paddingRight: 8 },
   liveCard: {
     backgroundColor: 'rgba(5, 15, 29, 0.92)',
     borderRadius: 16,
@@ -566,13 +576,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderWidth: 4,
     borderColor: '#ffffff',
+    width: 320,
   },
-  liveBadge: { color: '#ff5d5d', fontWeight: '800', marginBottom: 8 },
+  liveBadge: { color: '#ff5d5d', fontWeight: '800', marginBottom: 8, alignSelf: 'center', textAlign: 'center' },
   teamRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  teamColumn: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scoreColumn: { width: 108, alignItems: 'center', justifyContent: 'center' },
   shield: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fff' },
   scoreText: { color: '#fff', fontSize: 30, fontWeight: '900' },
-  teamAbbrRow: { marginTop: 8, gap: 8, flexDirection: 'row', justifyContent: 'space-between' },
-  teamAbbr: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  teamAbbr: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 8,
+    textAlign: 'center',
+    width: '100%',
+  },
   emptyText: { color: '#e4ebf7', fontStyle: 'italic', marginBottom: 8 },
   searchCard: {
     marginTop: 10,

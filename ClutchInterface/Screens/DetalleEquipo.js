@@ -32,15 +32,40 @@ const tabs = [
 ];
 
 const getMatchBackgroundColor = (estado) => {
-  if (estado === 'FINALIZADO') {
-    return '#0f5f34';
-  }
-
   if (estado === 'EN_CURSO') {
-    return '#8d1d1d';
+    return '#7c2a2a';
   }
 
-  return '#0d0d0d';
+  return '#132742';
+};
+
+const toValidDate = (value) => {
+  const parsed = value ? new Date(value) : null;
+  return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
+};
+
+const formatScheduledStart = (value) => {
+  const date = toValidDate(value);
+
+  if (!date) {
+    return 'Hora no disponible';
+  }
+
+  return date.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatLiveClock = (match) => {
+  const startDate = toValidDate(match?.fechaHoraInicio);
+  const nowMs = Date.now();
+  const startMs = startDate ? startDate.getTime() : nowMs;
+  const elapsedMinutes = Math.max(0, Math.floor((nowMs - startMs) / 60000));
+  const quarter = Math.max(1, Number(match?.periodoActual) || Math.floor(elapsedMinutes / 10) + 1);
+  const minuteInQuarter = elapsedMinutes % 10;
+
+  return `Min ${minuteInQuarter}' · Q${quarter}`;
 };
 
 const TeamLogo = ({ uri, style }) => (
@@ -398,6 +423,11 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                         {dateGroup.matches.map((match) => (
                           <View key={match.id} style={[styles.matchCard, { backgroundColor: getMatchBackgroundColor(match.estado) }]}>
                             {match.estado === 'EN_CURSO' ? <Text style={styles.liveTag}>LIVE</Text> : null}
+                            <Text style={styles.matchTimeText}>
+                              {match.estado === 'PROGRAMADO' ? formatScheduledStart(match.fechaHoraInicio) : null}
+                              {match.estado === 'EN_CURSO' ? formatLiveClock(match) : null}
+                              {match.estado === 'FINALIZADO' ? 'Finalizado' : null}
+                            </Text>
                             <View style={styles.matchMainRow}>
                               <View style={styles.sideTeamWrap}>
                                 <TeamLogo uri={match.equipoLocal?.urlEscudo} />
@@ -772,12 +802,20 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+    minHeight: 205,
+    justifyContent: 'space-between',
   },
   liveTag: {
     alignSelf: 'center',
     color: '#fff',
     fontWeight: '900',
-    marginBottom: 6,
+    marginBottom: 2,
+  },
+  matchTimeText: {
+    color: '#dce7f4',
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   matchMainRow: {
     flexDirection: 'row',
@@ -795,6 +833,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     textAlign: 'center',
+    width: '100%',
   },
   scoreText: {
     color: '#fff',
@@ -802,10 +841,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   venueWrap: {
-    marginTop: 10,
+    marginTop: 12,
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 8,
+    alignSelf: 'stretch',
   },
   venueText: {
     color: '#1b2e4a',
