@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -15,10 +16,11 @@ import { fetchPartidosAsignados } from '../services/mesaService';
 const backgroundImage = require('../assets/Fondo_Mesa.png');
 const appLogo = require('../assets/LogoClutch.png');
 
-export default function InicioMesaScreen({ user, onGoProfile }) {
+export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch }) {
   const [partidos, setPartidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -95,16 +97,48 @@ export default function InicioMesaScreen({ user, onGoProfile }) {
               ) : null}
 
               {partidos.map((partido) => (
-                <View key={String(partido.id)} style={styles.matchCard}>
+                <Pressable key={String(partido.id)} style={styles.matchCard} onPress={() => setSelectedMatch(partido)}>
                   <Text style={styles.matchTitle}>{partido.local} vs {partido.visitante}</Text>
                   <Text style={styles.matchInfo}>📅 {partido.fechaHora}</Text>
                   <Text style={styles.matchInfo}>📍 {partido.pabellon}</Text>
                   <Text style={styles.matchStatus}>{partido.estado}</Text>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           ) : null}
         </View>
+
+        <Modal
+          visible={Boolean(selectedMatch)}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSelectedMatch(null)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>¿Deseas iniciar este partido?</Text>
+              <Text style={styles.modalText}>
+                {selectedMatch?.local} vs {selectedMatch?.visitante}
+              </Text>
+
+              <View style={styles.modalActions}>
+                <Pressable style={[styles.modalButton, styles.modalCancel]} onPress={() => setSelectedMatch(null)}>
+                  <Text style={styles.modalButtonText}>No</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.modalButton, styles.modalConfirm]}
+                  onPress={() => {
+                    const match = selectedMatch;
+                    setSelectedMatch(null);
+                    onGoStartMatch?.(match);
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>Sí, iniciar</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -217,5 +251,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: '#00000099',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 18,
+  },
+  modalTitle: {
+    color: '#151515',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  modalText: {
+    color: '#2F2F2F',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalButton: {
+    borderRadius: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  modalCancel: {
+    backgroundColor: '#8A8A8A',
+  },
+  modalConfirm: {
+    backgroundColor: '#1D8D4A',
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
 });

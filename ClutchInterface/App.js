@@ -8,6 +8,7 @@ import PerfilScreen from './Screens/Perfil';
 import DetalleEquipoScreen from './Screens/DetalleEquipo';
 import DetalleJugadorScreen from './Screens/DetalleJugador';
 import InicioMesaScreen from './Screens/InicioMesa';
+import IniciarPartidoScreen from './Screens/IniciarPartido';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -15,6 +16,7 @@ export default function App() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [playerDetailBackScreen, setPlayerDetailBackScreen] = useState('home');
+  const [selectedMesaMatch, setSelectedMesaMatch] = useState(null);
 
   const goToInitialLoggedScreen = (user) => {
     if (user?.rol === 'ANOTADOR') {
@@ -78,6 +80,7 @@ export default function App() {
             setSelectedTeamId(null);
             setSelectedPlayerId(null);
             setPlayerDetailBackScreen('home');
+            setSelectedMesaMatch(null);
             setScreen('inicio');
           }}
         />
@@ -87,6 +90,20 @@ export default function App() {
         <InicioMesaScreen
           user={loggedUser}
           onGoProfile={() => setScreen('perfil')}
+          onGoStartMatch={(match) => {
+            setSelectedMesaMatch(match);
+            setScreen('iniciarPartido');
+          }}
+        />
+      ) : null}
+
+      {screen === 'iniciarPartido' ? (
+        <IniciarPartidoScreen
+          partido={selectedMesaMatch}
+          onGoBack={() => {
+            setSelectedMesaMatch(null);
+            setScreen('inicioMesa');
+          }}
         />
       ) : null}
 
