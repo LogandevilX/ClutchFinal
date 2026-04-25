@@ -32,7 +32,7 @@ const formatRegisterDate = (dateValue) => {
   return date.toLocaleDateString('es-ES');
 };
 
-export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
+export default function PerfilScreen({ user, onUserUpdate, onGoHome, onLogout }) {
   const [editingField, setEditingField] = useState(null);
   const [savingField, setSavingField] = useState(null);
   const [apodoDraft, setApodoDraft] = useState(user?.apodo || '');
@@ -159,6 +159,10 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome }) {
                 {renderEditableRow({ label: 'Apodo', value: user?.apodo, field: 'apodo' })}
                 {renderEditableRow({ label: 'Correo', value: user?.email, field: 'email' })}
               </View>
+
+              <Pressable style={styles.logoutButton} onPress={onLogout}>
+                <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+              </Pressable>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -281,5 +285,18 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 22,
+  },
+  logoutButton: {
+    marginTop: 18,
+    alignSelf: 'center',
+    backgroundColor: '#7E1F26',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });

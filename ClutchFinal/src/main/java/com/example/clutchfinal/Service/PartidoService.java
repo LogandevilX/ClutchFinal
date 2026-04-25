@@ -1,6 +1,7 @@
 package com.example.clutchfinal.Service;
 
 import com.example.clutchfinal.DTO.*;
+import com.example.clutchfinal.Fabrica.FabricaPartidoService;
 import com.example.clutchfinal.Model.*;
 import com.example.clutchfinal.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +43,8 @@ public class PartidoService {
     private ActaService actaService;
     @Autowired
     private HistorialPartidoService historialPartidoService;
+    @Autowired
+    private FabricaPartidoService fabricaPartidoService;
 
     @Transactional
     public PartidoDTO savePartido(PartidoDTO dto) {
@@ -102,7 +104,7 @@ public class PartidoService {
             partido.setEstado(EstadoPartido.PROGRAMADO);
         }
 
-        return toPartidoDTO(partidoRepository.save(partido));
+        return fabricaPartidoService.toPartidoDTO(partidoRepository.save(partido));
     }
 
     @Transactional
@@ -364,15 +366,22 @@ public class PartidoService {
         List<ActaDTO> actas = actaService.findActasByPartidoId(partidoId);
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
 
-        return new EstadoPartidoDTO(toPartidosResponseDTO(partido), actas, historial);
+        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTO(partido), actas, historial);
     }
 
     public PartidosResponseDTO findPartidoById(Long id) {
-        return partidoRepository.findById(id).map(this::toPartidosResponseDTO).orElse(null);
+        return partidoRepository.findById(id).map(fabricaPartidoService::toPartidoResponseDTO).orElse(null);
     }
 
     public List<PartidosResponseDTO> findAllPartidos() {
-        return partidoRepository.findAll().stream().map(this::toPartidosResponseDTO).toList();
+        return partidoRepository.findAll().stream().map(fabricaPartidoService::toPartidoResponseDTO).toList();
+    }
+
+    public List<PartidosResponseDTO> findPartidosByUsuarioId(Long usuarioId) {
+        return partidoRepository.findByUsuarioId(usuarioId).stream()
+                .sorted(Comparator.comparing(Partido::getFechaHoraInicio, Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(fabricaPartidoService::toPartidoResponseDTO)
+                .toList();
     }
 
     @Transactional
@@ -380,72 +389,6 @@ public class PartidoService {
         Partido partido = partidoRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado con ID: " + id));
         partidoRepository.delete(partido);
-    }
-
-    private PartidoDTO toPartidoDTO(Partido p) {
-        return new PartidoDTO(
-                p.getId(),
-                p.getGrupo().getId(),
-                p.getInscripcionLocal().getId(),
-                p.getInscripcionVisitante().getId(),
-                p.getUsuario().getId(),
-                p.getFechaHoraInicio(),
-                p.getFechaHoraFin(),
-                p.getPuntosLocal(),
-                p.getPuntosVisitante(),
-                p.getPabellonDeJuego(),
-                p.getEstado()
-        );
-    }
-
-
-    private PartidosResponseDTO toPartidosResponseDTO(Partido p) {
-        List<ParcialPartidoDTO> parcialesDTO = p.getParciales() != null
-                ? p.getParciales().stream()
-                .map(parcial -> new ParcialPartidoDTO(
-                        parcial.getPeriodo(),
-                        parcial.getPuntosLocal(),
-                        parcial.getPuntosVisitante()
-                ))
-                .toList()
-                : new ArrayList<>();
-
-        return new PartidosResponseDTO(
-                p.getId(),
-                p.getGrupo().getId(),
-                toEquipoResponseDTO(p.getInscripcionLocal().getEquipo()),
-                toEquipoResponseDTO(p.getInscripcionVisitante().getEquipo()),
-                p.getFechaHoraInicio(),
-                p.getFechaHoraFin(),
-                p.getPuntosLocal(),
-                p.getPuntosVisitante(),
-                p.getPabellonDeJuego(),
-                p.getPeriodoActual(),
-                parcialesDTO,
-                p.getEstado()
-        );
-    }
-
-    private EquipoResponseDTO toEquipoResponseDTO(Equipo equipo) {
-        EquipoResponseDTO dto = new EquipoResponseDTO();
-        dto.setId(equipo.getId());
-        dto.setNombreEquipo(equipo.getNombreEquipo());
-        dto.setPartidosGanados(equipo.getPartidosGanados());
-        dto.setPartidosPerdidos(equipo.getPartidosPerdidos());
-        dto.setPuntos(equipo.getPuntos());
-        dto.setPosicion(equipo.getPosicion());
-        dto.setPuntosAFavor(equipo.getPuntosAFavor());
-        dto.setPuntosEnContra(equipo.getPuntosEnContra());
-
-        if (equipo.getClub() != null) {
-            dto.setUrlEscudo(equipo.getClub().getEscudo() != null ? "/escudos/" + equipo.getClub().getEscudo() : null);
-            dto.setDireccion(equipo.getClub().getPabellones().stream()
-                    .findFirst()
-                    .map(Pabellon::getDireccion)
-                    .orElse(null));
-        }
-
-        return dto;
     }
 
     private void actualizarMediasPuntos(Equipo equipo, int puntosAnotados, int puntosRecibidos) {

@@ -7,6 +7,7 @@ import HomeScreen from './Screens/Home';
 import PerfilScreen from './Screens/Perfil';
 import DetalleEquipoScreen from './Screens/DetalleEquipo';
 import DetalleJugadorScreen from './Screens/DetalleJugador';
+import InicioMesaScreen from './Screens/InicioMesa';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -14,6 +15,15 @@ export default function App() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [playerDetailBackScreen, setPlayerDetailBackScreen] = useState('home');
+
+  const goToInitialLoggedScreen = (user) => {
+    if (user?.rol === 'ANOTADOR') {
+      setScreen('inicioMesa');
+      return;
+    }
+
+    setScreen('home');
+  };
 
   return (
     <>
@@ -31,7 +41,7 @@ export default function App() {
           onGoBackHome={() => setScreen('inicio')}
           onLoginSuccess={(user) => {
             setLoggedUser(user);
-            setScreen('home');
+            goToInitialLoggedScreen(user);
           }}
         />
       ) : null}
@@ -62,7 +72,21 @@ export default function App() {
         <PerfilScreen
           user={loggedUser}
           onUserUpdate={(updatedUser) => setLoggedUser(updatedUser)}
-          onGoHome={() => setScreen('home')}
+          onGoHome={() => setScreen(loggedUser?.rol === 'ANOTADOR' ? 'inicioMesa' : 'home')}
+          onLogout={() => {
+            setLoggedUser(null);
+            setSelectedTeamId(null);
+            setSelectedPlayerId(null);
+            setPlayerDetailBackScreen('home');
+            setScreen('inicio');
+          }}
+        />
+      ) : null}
+
+      {screen === 'inicioMesa' ? (
+        <InicioMesaScreen
+          user={loggedUser}
+          onGoProfile={() => setScreen('perfil')}
         />
       ) : null}
 
