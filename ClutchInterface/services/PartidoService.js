@@ -20,6 +20,8 @@ export const SHOT_ACTIONS = {
   Cabecera: { tipoEvento: 'T2', posicion: 'Cabecera', puntos: 2 },
   CuarentaCincoDer: { tipoEvento: 'T2', posicion: '45Der', puntos: 2 },
   Pintura: { tipoEvento: 'T2', posicion: 'Pintura', puntos: 2 },
+  EsquinaIz: { tipoEvento: 'T2', posicion: 'EsquinaIz', puntos: 2 },
+  EsquinaDer: { tipoEvento: 'T2', posicion: 'EsquinaDer', puntos: 2 },
 };
 
 export const DEFENSIVE_ACTIONS = ['ROBO', 'REBOTE', 'TAPON', 'PERDIDA'];
