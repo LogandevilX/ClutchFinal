@@ -37,10 +37,19 @@ export async function fetchPartidosAsignados(usuarioId) {
       id: partido?.id,
       localId: partido?.equipoLocal?.id || null,
       visitanteId: partido?.equipoVisitante?.id || null,
+      equipoLocal: {
+        id: partido?.equipoLocal?.id || null,
+        nombreEquipo: partido?.equipoLocal?.nombreEquipo || 'Equipo local',
+      },
+      equipoVisitante: {
+        id: partido?.equipoVisitante?.id || null,
+        nombreEquipo: partido?.equipoVisitante?.nombreEquipo || 'Equipo visitante',
+      },
       local: partido?.equipoLocal?.nombreEquipo || 'Equipo local',
       visitante: partido?.equipoVisitante?.nombreEquipo || 'Equipo visitante',
       dateMs: new Date(partido?.fechaHoraInicio || '').getTime(),
       fechaHora: formatMatchDate(partido?.fechaHoraInicio),
+      fechaHoraInicio: partido?.fechaHoraInicio || null,
       pabellon: partido?.pabellonDeJuego || 'Pabellón no disponible',
       estado: partido?.estado || 'PROGRAMADO',
     }))
