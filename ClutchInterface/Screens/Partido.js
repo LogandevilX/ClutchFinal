@@ -30,6 +30,7 @@ const SHOT_GRID = [
 ];
 
 const findActaByPlayer = (actas, jugadorId) => (actas || []).find((acta) => String(acta?.jugadorId) === String(jugadorId));
+const EVENT_ORDER = { SALIDA: 0, ENTRADA: 1 };
 
 const fallbackState = (setupData) => ({
   partido: setupData?.partido || null,
@@ -113,6 +114,9 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   const [showPlayerActas, setShowPlayerActas] = useState(false);
   const [playerActas, setPlayerActas] = useState([]);
   const [loadingActas, setLoadingActas] = useState(false);
+  const [substitutionTarget, setSubstitutionTarget] = useState(null);
+  const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
+  const [processingSubstitution, setProcessingSubstitution] = useState(false);
   const [nextPeriodStarters, setNextPeriodStarters] = useState({ local: [], visitante: [] });
 
   const partidoId = partido?.id || setupData?.partido?.id;
@@ -137,6 +141,49 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
     return points;
   }, [state?.actas, teamLocal?.id, teamVisitante?.id]);
+
+  const playersOnCourtByTeam = useMemo(() => {
+    const onCourt = {};
+    const historialOrdenado = [...(state?.historial || [])].sort((a, b) => {
+      const periodoA = Number(a?.periodo || 0);
+      const periodoB = Number(b?.periodo || 0);
+      if (periodoA !== periodoB) return periodoA - periodoB;
+
+      const segundoA = Number((a?.segundo ?? ((a?.minuto || 0) * 60)) || 0);
+      const segundoB = Number((b?.segundo ?? ((b?.minuto || 0) * 60)) || 0);
+      if (segundoA !== segundoB) return segundoA - segundoB;
+
+      const orderA = EVENT_ORDER[a?.tipoEvento] ?? 99;
+      const orderB = EVENT_ORDER[b?.tipoEvento] ?? 99;
+      if (orderA !== orderB) return orderA - orderB;
+
+      return Number(a?.id || 0) - Number(b?.id || 0);
+    });
+
+    historialOrdenado.forEach((evento) => {
+      if (!evento?.equipoId || !evento?.jugadorId) {
+        return;
+      }
+
+      const tipo = evento?.tipoEvento;
+      if (tipo !== 'ENTRADA' && tipo !== 'SALIDA') {
+        return;
+      }
+
+      const teamKey = String(evento.equipoId);
+      if (!onCourt[teamKey]) {
+        onCourt[teamKey] = new Set();
+      }
+
+      if (tipo === 'ENTRADA') {
+        onCourt[teamKey].add(String(evento.jugadorId));
+      } else {
+        onCourt[teamKey].delete(String(evento.jugadorId));
+      }
+    });
+
+    return onCourt;
+  }, [state?.historial]);
 
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
@@ -334,7 +381,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
         equipoId: selectedPlayer.equipoId,
         jugadorId: selectedPlayer.id,
         tipoEvento: pendingShot.tipoEvento,
-        acierto: isSuccess ? 'true' : 'false',
+        acierto: isSuccess ? 'SI' : 'NO',
         periodo: currentPeriod,
         minuto: minute,
         segundo: second,
@@ -371,6 +418,62 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       setPlayerActas([]);
     } finally {
       setLoadingActas(false);
+    }
+  };
+
+  const handleOpenSubstitution = (player, side) => {
+    setSubstitutionTarget({
+      ...player,
+      side,
+      equipoId: side === 'local' ? teamLocal?.id : teamVisitante?.id,
+    });
+    setShowSubstitutionModal(true);
+  };
+
+  const benchOptions = useMemo(() => {
+    if (!substitutionTarget?.equipoId) {
+      return [];
+    }
+
+    const roster = substitutionTarget.side === 'local' ? localRoster : awayRoster;
+    const onCourt = playersOnCourtByTeam[String(substitutionTarget.equipoId)] || new Set();
+
+    return roster.filter((player) =>
+      String(player.id) !== String(substitutionTarget.id) && !onCourt.has(String(player.id)));
+  }, [substitutionTarget, localRoster, awayRoster, playersOnCourtByTeam]);
+
+  const handleConfirmSubstitution = async (incomingPlayer) => {
+    if (!substitutionTarget?.equipoId || !incomingPlayer?.id) {
+      return;
+    }
+
+    try {
+      setProcessingSubstitution(true);
+      await sendEvent(partidoId, {
+        equipoId: substitutionTarget.equipoId,
+        jugadorId: substitutionTarget.id,
+        tipoEvento: 'SALIDA',
+        periodo: currentPeriod,
+        minuto: minute,
+        segundo: second,
+      });
+
+      const updated = await sendEvent(partidoId, {
+        equipoId: substitutionTarget.equipoId,
+        jugadorId: incomingPlayer.id,
+        tipoEvento: 'ENTRADA',
+        periodo: currentPeriod,
+        minuto: minute,
+        segundo: second,
+      });
+
+      setState(updated);
+      setShowSubstitutionModal(false);
+      setSubstitutionTarget(null);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo registrar la sustitución.');
+    } finally {
+      setProcessingSubstitution(false);
     }
   };
 
@@ -438,14 +541,14 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       <View style={styles.mainContent}>
         <View style={styles.sideZone}>
           <ScrollView contentContainerStyle={styles.playersContainer}>
-            {awayRoster.map((player) => (
+            {localRoster.map((player) => (
               <PlayerCard
-                key={`away-${player.id}`}
+                key={`local-${player.id}`}
                 player={player}
                 isSelected={selectedPlayer?.id === player.id}
-                onSelect={() => handleSelectPlayer(player, 'visitante')}
+                onSelect={() => handleSelectPlayer(player, 'local')}
                 onShowActa={() => handleOpenPlayerActa(player)}
-                onSub={() => Alert.alert('Sustitución', 'Pulsa otro jugador para gestionar entrada/salida.')}
+                onSub={() => handleOpenSubstitution(player, 'local')}
               />
             ))}
           </ScrollView>
@@ -485,14 +588,14 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
         <View style={styles.sideZone}>
           <ScrollView contentContainerStyle={styles.playersContainer}>
-            {localRoster.map((player) => (
+            {awayRoster.map((player) => (
               <PlayerCard
-                key={`local-${player.id}`}
+                key={`away-${player.id}`}
                 player={player}
                 isSelected={selectedPlayer?.id === player.id}
-                onSelect={() => handleSelectPlayer(player, 'local')}
+                onSelect={() => handleSelectPlayer(player, 'visitante')}
                 onShowActa={() => handleOpenPlayerActa(player)}
-                onSub={() => Alert.alert('Sustitución', 'Pulsa otro jugador para gestionar entrada/salida.')}
+                onSub={() => handleOpenSubstitution(player, 'visitante')}
               />
             ))}
           </ScrollView>
@@ -597,12 +700,54 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             <ScrollView>
               {playerActas.map((acta) => (
                 <Text key={String(acta.id)} style={styles.actaText}>
-                  Partido #{acta.partidoId} · PTS {acta.puntos} · REB {acta.rebotes} · AST 0 · FALT {acta.falta}
+                  MIN {acta.minutosJugados || 0} · PTS {acta.puntos || 0} · TL {acta.tlAnotados || 0}/{acta.tlTirados || 0}
+                  {'\n'}
+                  T2 {acta.t2Anotados || 0}/{acta.t2Tirados || 0} · T3 {acta.triplesAnotados || 0}/{acta.triplesTirados || 0}
+                  {'\n'}
+                  REB {acta.rebotes || 0} · ROB {acta.robos || 0} · TAP {acta.tapones || 0}
+                  {'\n'}
+                  PER {acta.perdida || 0} · FALT {acta.falta || 0} · VAL {acta.valoracion || 0} · +/- {acta.plusMinus || 0}
                 </Text>
               ))}
               {!loadingActas && playerActas.length === 0 ? <Text style={styles.actaText}>Sin actas disponibles.</Text> : null}
             </ScrollView>
             <Pressable style={styles.closeModalBtn} onPress={() => setShowPlayerActas(false)}>
+              <Text style={styles.resultText}>Cerrar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showSubstitutionModal} transparent animationType="fade" onRequestClose={() => setShowSubstitutionModal(false)}>
+        <View style={styles.overlayBackdrop}>
+          <View style={[styles.overlayCard, styles.playerActaCard]}>
+            <Text style={styles.overlayTitle}>Sustitución</Text>
+            <Text style={styles.actaText}>
+              Sale #{String(substitutionTarget?.dorsal || 0).padStart(2, '0')} {substitutionTarget?.nombreCompleto || ''}
+            </Text>
+            {processingSubstitution ? <ActivityIndicator size="small" color="#FFF" /> : null}
+            <ScrollView>
+              {benchOptions.map((player) => (
+                <Pressable
+                  key={`bench-${player.id}`}
+                  style={styles.starterRow}
+                  onPress={() => handleConfirmSubstitution(player)}
+                  disabled={processingSubstitution}
+                >
+                  <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')} {player.nombreCompleto}</Text>
+                </Pressable>
+              ))}
+              {!processingSubstitution && benchOptions.length === 0 ? (
+                <Text style={styles.actaText}>No hay jugadores de banquillo disponibles.</Text>
+              ) : null}
+            </ScrollView>
+            <Pressable
+              style={styles.closeModalBtn}
+              onPress={() => {
+                setShowSubstitutionModal(false);
+                setSubstitutionTarget(null);
+              }}
+            >
               <Text style={styles.resultText}>Cerrar</Text>
             </Pressable>
           </View>

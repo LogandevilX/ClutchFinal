@@ -81,7 +81,7 @@ public class ActaService {
 
     private void aplicarEvento(Partido partido, Equipo equipo, Acta acta, HistorialPartidoDTO eventoDTO) {
         EventoPartido tipoEvento = eventoDTO.getTipoEvento();
-        boolean acierto = eventoDTO.getAcierto() != null && eventoDTO.getAcierto().equalsIgnoreCase("SI");
+        boolean acierto = esAcierto(eventoDTO.getAcierto());
         if (tipoEvento == null) {
             recalcularValoracion(acta);
             return;
@@ -120,6 +120,17 @@ public class ActaService {
         }
 
         recalcularValoracion(acta);
+    }
+
+    private boolean esAcierto(String acierto) {
+        if (acierto == null) {
+            return false;
+        }
+
+        String valorNormalizado = acierto.trim();
+        return valorNormalizado.equalsIgnoreCase("SI")
+                || valorNormalizado.equalsIgnoreCase("TRUE")
+                || valorNormalizado.equals("1");
     }
 
     private void sumarPuntos(Acta acta, Partido partido, Equipo equipo, int puntos) {
