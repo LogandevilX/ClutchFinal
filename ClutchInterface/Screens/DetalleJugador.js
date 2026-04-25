@@ -205,16 +205,6 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Image source={appLogo} style={styles.userAvatar} />
-            <Text style={styles.userName}>{user?.apodo || 'Usuario'}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.headerIcon}>🔍</Text>
-            <Text style={styles.headerIcon}>🔔</Text>
-          </View>
-        </View>
 
         <View style={styles.actionBar}>
           <Pressable style={styles.backButton} onPress={onGoBack}>
@@ -262,6 +252,7 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
               ) : null}
             </View>
 
+            {/* NOTA: Z-Index ajustado aquí para evitar problemas con el menú desplegable */}
             <View style={styles.playerImageWrap}>
               <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerImage} />
               <View style={styles.nameOverlay}>
@@ -341,17 +332,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 20,
   },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  userAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff' },
-  userName: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  headerRight: { flexDirection: 'row', gap: 12 },
-  headerIcon: { color: '#fff', fontSize: 20 },
   actionBar: {
     marginBottom: 10,
     flexDirection: 'row',
@@ -402,7 +382,15 @@ const styles = StyleSheet.create({
   },
   teamDropdownItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   teamDropdownText: { color: '#fff', fontWeight: '600' },
-  playerImageWrap: { marginTop: 16, backgroundColor: '#d7d7d7', borderTopLeftRadius: 40, borderTopRightRadius: 40, overflow: 'hidden' },
+  playerImageWrap: {
+    marginTop: 16,
+    backgroundColor: '#d7d7d7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    overflow: 'hidden',
+    zIndex: -1,
+    elevation: -1
+  },
   playerImage: { width: '100%', height: 210, resizeMode: 'cover' },
   nameOverlay: {
     position: 'absolute',

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { fetchPartidosAsignados } from '../services/mesaService';
 
-const backgroundImage = require('../assets/Fondo_Cancha2.png');
+const backgroundImage = require('../assets/Fondo_Mesa.png');
 const appLogo = require('../assets/LogoClutch.png');
 
 export default function InicioMesaScreen({ user, onGoProfile }) {
@@ -130,10 +130,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(13, 31, 54, 0.75)',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: 10,
     paddingVertical: 7,
     maxWidth: '80%',
@@ -151,8 +147,6 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     flex: 1,
-    backgroundColor: 'rgba(7, 18, 35, 0.7)',
-    borderRadius: 24,
     paddingVertical: 22,
     paddingHorizontal: 16,
   },
