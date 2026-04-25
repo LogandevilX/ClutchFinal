@@ -1,11 +1,3 @@
-import { Platform } from 'react-native';
-
-const API_HOST_BY_PLATFORM = {
-  android: '10.0.2.2',
-  ios: 'localhost',
-  default: 'localhost',
-};
-
 const API = '192.168.1.74:8080';
 
 export const API_BASE_URL = `http://${API}/clutch`;

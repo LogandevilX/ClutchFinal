@@ -1,4 +1,5 @@
-import { API_ASSETS_BASE_URL, API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL, parseResponse } from './apiConfig';
+import { buildAbsoluteAssetUrl, fetchJson, getDateValue, safeArray, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
@@ -7,40 +8,7 @@ const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 const SEARCH_STATIC_TTL_MS = 5 * 60 * 1000;
 
-const safeArray = (value) => (Array.isArray(value) ? value : []);
-
-const buildAbsoluteAssetUrl = (path) => {
-  if (!path || typeof path !== 'string') {
-    return null;
-  }
-
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_ASSETS_BASE_URL}${normalizedPath}`;
-};
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  return parseResponse(response);
-}
-
-const toSafeNumber = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 const roundToOneDecimal = (value) => Math.round(value * 10) / 10;
-const getDateValue = (value) => {
-  if (!value) {
-    return 0;
-  }
-
-  const timestamp = new Date(value).getTime();
-  return Number.isFinite(timestamp) ? timestamp : 0;
-};
 
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ').trim();
@@ -50,6 +18,7 @@ let searchStaticCache = {
   teamResults: [],
   playerResults: [],
 };
+let searchStaticPromise = null;
 
 async function getSearchStaticDataset() {
   const now = Date.now();
@@ -58,10 +27,15 @@ async function getSearchStaticDataset() {
     return searchStaticCache;
   }
 
-  const [equiposResponse, inscripcionesResponse] = await Promise.all([
-    fetchJson(EQUIPOS_URL),
-    fetchJson(INSCRIPCIONES_URL),
-  ]);
+  if (searchStaticPromise) {
+    return searchStaticPromise;
+  }
+
+  searchStaticPromise = (async () => {
+    const [equiposResponse, inscripcionesResponse] = await Promise.all([
+      fetchJson(EQUIPOS_URL),
+      fetchJson(INSCRIPCIONES_URL),
+    ]);
 
   if (!equiposResponse.ok || !inscripcionesResponse.ok) {
     throw new Error('No se pudieron cargar los datos base de búsqueda.');
@@ -121,13 +95,20 @@ async function getSearchStaticDataset() {
     });
   });
 
-  searchStaticCache = {
-    expiresAt: now + SEARCH_STATIC_TTL_MS,
-    teamResults,
-    playerResults,
-  };
+    searchStaticCache = {
+      expiresAt: now + SEARCH_STATIC_TTL_MS,
+      teamResults,
+      playerResults,
+    };
 
-  return searchStaticCache;
+    return searchStaticCache;
+  })();
+
+  try {
+    return await searchStaticPromise;
+  } finally {
+    searchStaticPromise = null;
+  }
 }
 
 export async function addFavorite({ usuarioId, equipoId = null, jugadorId = null }) {

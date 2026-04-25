@@ -1,8 +1,7 @@
-import { API_BASE_URL, parseResponse } from './apiConfig';
+import { API_BASE_URL } from './apiConfig';
+import { fetchJson, safeArray } from './serviceUtils';
 
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
-
-const safeArray = (value) => (Array.isArray(value) ? value : []);
 
 const formatMatchDate = (dateValue) => {
   if (!dateValue) {
@@ -25,8 +24,7 @@ const formatMatchDate = (dateValue) => {
 };
 
 export async function fetchPartidosAsignados(usuarioId) {
-  const response = await fetch(`${PARTIDOS_URL}/usuario/${usuarioId}`);
-  const parsedResponse = await parseResponse(response);
+  const parsedResponse = await fetchJson(`${PARTIDOS_URL}/usuario/${usuarioId}`);
 
   if (!parsedResponse.ok) {
     throw new Error('No se pudieron cargar los partidos asignados al anotador.');
