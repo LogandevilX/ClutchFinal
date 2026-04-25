@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import {
   ActivityIndicator,
   Alert,
@@ -79,6 +80,24 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const lockLandscape = async () => {
+      try {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      } catch (error) {
+        // Ignorado: si el dispositivo no soporta bloqueo de orientación, la pantalla sigue disponible.
+      }
+    };
+
+    lockLandscape();
+
+    return () => {
+      ScreenOrientation.unlockAsync().catch(() => {
+        // Ignorado en limpieza.
+      });
+    };
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     const load = async () => {
@@ -92,7 +111,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
       setErrorMessage('');
 
       try {
-        const data = await fetchInitialMatchSetup(partido.id);
+        const data = await fetchInitialMatchSetup(partido);
 
         if (!mounted) {
           return;
@@ -115,7 +134,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
     return () => {
       mounted = false;
     };
-  }, [partido?.id]);
+  }, [partido]);
 
   const canStart = localConvocados.length > 0 && visitanteConvocados.length > 0;
 
@@ -332,7 +351,13 @@ const styles = StyleSheet.create({
   screenTitle: { color: '#FFF', fontSize: 18, fontWeight: '800' },
   centerMessage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: '#FFD8D8', fontWeight: '700' },
-  mainRow: { flex: 1, flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingBottom: 12 },
+  mainRow: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+  },
   teamSection: {
     flex: 1,
     backgroundColor: '#FFFFFF0F',

@@ -65,14 +65,15 @@ export async function fetchInscripcionesByEquipo(equipoId) {
     throw new Error('No se pudieron cargar las inscripciones del equipo.');
   }
 
-  return safeArray(response.data).filter((row) => row?.equipoId === equipoId);
+  return safeArray(response.data).filter((row) => String(row?.equipoId) === String(equipoId));
 }
 
-export async function fetchInitialMatchSetup(partidoId) {
-  const partido = await fetchPartidoById(partidoId);
+export async function fetchInitialMatchSetup(selectedMatch) {
+  const selectedMatchId = selectedMatch?.id;
+  const partido = await fetchPartidoById(selectedMatchId);
 
-  const localId = partido?.equipoLocal?.id;
-  const visitanteId = partido?.equipoVisitante?.id;
+  const localId = partido?.equipoLocal?.id || selectedMatch?.equipoLocal?.id || selectedMatch?.localId;
+  const visitanteId = partido?.equipoVisitante?.id || selectedMatch?.equipoVisitante?.id || selectedMatch?.visitanteId;
 
   if (!localId || !visitanteId) {
     throw new Error('El partido no contiene los equipos local y visitante.');
@@ -86,7 +87,13 @@ export async function fetchInitialMatchSetup(partidoId) {
   ]);
 
   return {
-    partido,
+    partido: {
+      ...partido,
+      id: partido?.id || selectedMatchId,
+      fechaHoraInicio: partido?.fechaHoraInicio || selectedMatch?.fechaHoraInicio,
+      equipoLocal: partido?.equipoLocal || selectedMatch?.equipoLocal,
+      equipoVisitante: partido?.equipoVisitante || selectedMatch?.equipoVisitante,
+    },
     local: {
       ...equipoLocal,
       coaches: extractCoachNames(equipoLocal),
