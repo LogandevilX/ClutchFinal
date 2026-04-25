@@ -16,7 +16,7 @@ import { fetchPartidosAsignados } from '../services/mesaService';
 const backgroundImage = require('../assets/Fondo_Mesa.png');
 const appLogo = require('../assets/LogoClutch.png');
 
-export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch }) {
+export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch, onGoCurrentMatch }) {
   const [partidos, setPartidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -97,7 +97,17 @@ export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch }) 
               ) : null}
 
               {partidos.map((partido) => (
-                <Pressable key={String(partido.id)} style={styles.matchCard} onPress={() => setSelectedMatch(partido)}>
+                <Pressable
+                  key={String(partido.id)}
+                  style={styles.matchCard}
+                  onPress={() => {
+                    if (partido?.estado === 'EN_CURSO') {
+                      onGoCurrentMatch?.(partido);
+                      return;
+                    }
+                    setSelectedMatch(partido);
+                  }}
+                >
                   <Text style={styles.matchTitle}>{partido.local} vs {partido.visitante}</Text>
                   <Text style={styles.matchInfo}>📅 {partido.fechaHora}</Text>
                   <Text style={styles.matchInfo}>📍 {partido.pabellon}</Text>

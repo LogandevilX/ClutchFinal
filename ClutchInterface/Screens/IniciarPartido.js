@@ -70,7 +70,7 @@ const TeamSection = ({ sideLabel, team, selectedPlayers, onOpenPicker, onRemoveP
   </View>
 );
 
-export default function IniciarPartidoScreen({ partido, onGoBack }) {
+export default function IniciarPartidoScreen({ partido, onGoBack, onMatchStarted }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [setupData, setSetupData] = useState(null);
@@ -250,7 +250,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
     try {
       setSubmitting(true);
 
-      const acta = await initializeActa({
+      await initializeActa({
         partidoId: setupData.partido.id,
         equipoLocalId: setupData.local.id,
         equipoVisitanteId: setupData.visitante.id,
@@ -258,14 +258,14 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
         visitanteConvocados,
       });
 
-      await startFirstPeriod({
+      const startedState = await startFirstPeriod({
         partidoId: setupData.partido.id,
-        actaId: acta?.id || null,
       });
-
-      Alert.alert('Partido iniciado', 'Acta inicializada y primer periodo iniciado (periodo 1, minuto 0).', [
-        { text: 'Aceptar', onPress: onGoBack },
-      ]);
+      onMatchStarted?.({
+        partido: setupData.partido,
+        setupData,
+        state: startedState,
+      });
     } catch (error) {
       Alert.alert('No se pudo iniciar', 'No fue posible inicializar el acta o arrancar el primer periodo.');
     } finally {
