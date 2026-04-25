@@ -17,6 +17,7 @@ public class PartidoDTO {
     private Long inscripcionLocalId;
     private Long inscripcionVisitanteId;
     private Long usuarioId;
+    private Integer jornada;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private Integer puntosLocal;
@@ -24,4 +25,3 @@ public class PartidoDTO {
     private String pabellonDeJuego;
     private EstadoPartido estado;
 }
-

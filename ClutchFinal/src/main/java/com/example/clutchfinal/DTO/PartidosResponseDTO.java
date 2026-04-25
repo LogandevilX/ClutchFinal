@@ -17,6 +17,7 @@ public class PartidosResponseDTO {
     private Long grupoId;
     private EquipoResponseDTO equipoLocal;
     private EquipoResponseDTO equipoVisitante;
+    private Integer jornada;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private Integer puntosLocal;
@@ -26,5 +27,4 @@ public class PartidosResponseDTO {
     private List<ParcialPartidoDTO> parciales;
     private EstadoPartido estado;
 }
-
 

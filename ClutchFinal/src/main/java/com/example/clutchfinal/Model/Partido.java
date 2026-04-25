@@ -36,6 +36,9 @@ public class Partido {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
+    @Column(name = "jornada", nullable = false)
+    private Integer jornada;
+
     @Column(name = "fecha_hora_inicio", nullable = false)
     private LocalDateTime fechaHoraInicio;
 
@@ -92,4 +95,3 @@ public class Partido {
                 });
     }
 }
-
