@@ -18,6 +18,22 @@ const toId = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const buildIdMap = (items, getId = (item) => item?.id) =>
+  new Map(
+    safeArray(items)
+      .map((item) => [toId(getId(item)), item])
+      .filter(([id]) => id !== null)
+  );
+
+const buildUniqueIdList = (values) =>
+  Array.from(
+    new Set(
+      safeArray(values)
+        .map((id) => toId(id))
+        .filter((id) => id !== null)
+    )
+  );
+
 const round = (value, digits = 1) => {
   const factor = 10 ** digits;
   return Math.round(toNumber(value) * factor) / factor;
@@ -245,7 +261,7 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
 
   return {
     id: acta?.id,
-    rival: rival?.nombreEquipo || teamsById.get(rival?.id)?.nombreEquipo || 'Rival sin identificar',
+    rival: rival?.nombreEquipo || teamsById.get(toId(rival?.id))?.nombreEquipo || 'Rival sin identificar',
     values: {
       m: round(acta?.minutosJugados),
       pts: toNumber(acta?.puntos),
@@ -272,13 +288,14 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
 
 export async function toggleFavoritePlayer({ usuarioId, jugadorId }) {
   const favoritosResponse = await fetchJson(`${FAVORITOS_URL}/usuario/${usuarioId}`);
+  const normalizedPlayerId = toId(jugadorId);
 
   if (!favoritosResponse.ok) {
     throw new Error('No se pudieron cargar los favoritos para actualizar el jugador.');
   }
 
   const playerFavorite = safeArray(favoritosResponse.data).find(
-    (favorito) => toId(favorito?.jugadorId) === toId(jugadorId) && !favorito?.equipoId
+    (favorito) => toId(favorito?.jugadorId) === normalizedPlayerId && !favorito?.equipoId
   );
 
   if (playerFavorite?.id) {
@@ -318,23 +335,17 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
   const allTeams = safeArray(equiposResponse.data);
   const allInscripciones = safeArray(inscripcionesResponse.data);
   const favoritos = safeArray(favoritosResponse.data);
+  const normalizedPlayerId = toId(jugadorId);
 
-  const matchesById = new Map(allMatches.map((match) => [match.id, match]));
-  const teamsById = new Map(allTeams.map((team) => [team.id, team]));
+  const matchesById = buildIdMap(allMatches);
+  const teamsById = buildIdMap(allTeams);
 
-  const playerTeamIds = Array.from(
-    new Set(
-      safeArray(jugador?.equipoIds)
-        .concat(playerActas.map((acta) => acta?.equipoId))
-        .map((id) => toId(id))
-        .filter((id) => id !== null)
-    )
-  );
+  const playerTeamIds = buildUniqueIdList(safeArray(jugador?.equipoIds).concat(playerActas.map((acta) => acta?.equipoId)));
   const teams = playerTeamIds
     .map((teamId) => teamsById.get(teamId))
     .filter(Boolean)
     .map((team) => ({
-      id: team.id,
+      id: toId(team.id),
       nombreEquipo: team.nombreEquipo,
     }));
 
@@ -352,7 +363,7 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
     matchesById,
     teamsById,
     allInscripciones,
-    isFavorite: favoritos.some((favorito) => toId(favorito?.jugadorId) === toId(jugadorId) && !favorito?.equipoId),
+    isFavorite: favoritos.some((favorito) => toId(favorito?.jugadorId) === normalizedPlayerId && !favorito?.equipoId),
   };
 }
 
@@ -371,9 +382,9 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
 
   const teamInscripcion = safeArray(detailData.allInscripciones).find((inscripcion) => toId(inscripcion?.equipoId) === teamId);
   const divisionName = teamInscripcion?.nombreDivision;
-  const divisionTeamIds = getTeamIdsByDivision(detailData.allInscripciones, divisionName);
+  const divisionTeamIds = new Set(getTeamIdsByDivision(detailData.allInscripciones, divisionName));
 
-  const divisionActas = safeArray(detailData.actas).filter((acta) => divisionTeamIds.includes(toId(acta?.equipoId)));
+  const divisionActas = safeArray(detailData.actas).filter((acta) => divisionTeamIds.has(toId(acta?.equipoId)));
   const divisionTotals = aggregateTotals(divisionActas);
 
   const summary = buildSummary(playerTotals);
@@ -385,7 +396,7 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
     .map((acta) =>
       toMatchRow({
         acta,
-        match: detailData.matchesById.get(acta?.partidoId),
+        match: detailData.matchesById.get(toId(acta?.partidoId)),
         selectedTeamId: teamId,
         teamsById: detailData.teamsById,
       })
