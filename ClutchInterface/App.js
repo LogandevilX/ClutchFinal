@@ -9,6 +9,7 @@ import DetalleEquipoScreen from './Screens/DetalleEquipo';
 import DetalleJugadorScreen from './Screens/DetalleJugador';
 import InicioMesaScreen from './Screens/InicioMesa';
 import IniciarPartidoScreen from './Screens/IniciarPartido';
+import PartidoScreen from './Screens/Partido';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -17,6 +18,7 @@ export default function App() {
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [playerDetailBackScreen, setPlayerDetailBackScreen] = useState('home');
   const [selectedMesaMatch, setSelectedMesaMatch] = useState(null);
+  const [liveMatchPayload, setLiveMatchPayload] = useState(null);
 
   const goToInitialLoggedScreen = (user) => {
     if (user?.rol === 'ANOTADOR') {
@@ -81,6 +83,7 @@ export default function App() {
             setSelectedPlayerId(null);
             setPlayerDetailBackScreen('home');
             setSelectedMesaMatch(null);
+            setLiveMatchPayload(null);
             setScreen('inicio');
           }}
         />
@@ -94,6 +97,13 @@ export default function App() {
             setSelectedMesaMatch(match);
             setScreen('iniciarPartido');
           }}
+          onGoCurrentMatch={(match) => {
+            setLiveMatchPayload({
+              partido: match,
+              setupData: null,
+            });
+            setScreen('partido');
+          }}
         />
       ) : null}
 
@@ -102,6 +112,23 @@ export default function App() {
           partido={selectedMesaMatch}
           onGoBack={() => {
             setSelectedMesaMatch(null);
+            setScreen('inicioMesa');
+          }}
+          onMatchStarted={(payload) => {
+            setLiveMatchPayload(payload);
+            setSelectedMesaMatch(null);
+            setScreen('partido');
+          }}
+        />
+      ) : null}
+
+      {screen === 'partido' ? (
+        <PartidoScreen
+          partido={liveMatchPayload?.partido}
+          setupData={liveMatchPayload?.setupData}
+          initialState={liveMatchPayload?.state}
+          onExit={() => {
+            setLiveMatchPayload(null);
             setScreen('inicioMesa');
           }}
         />
