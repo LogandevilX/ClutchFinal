@@ -35,6 +35,8 @@ export async function fetchPartidosAsignados(usuarioId) {
   const partidos = safeArray(parsedResponse.data)
     .map((partido) => ({
       id: partido?.id,
+      localId: partido?.equipoLocal?.id || null,
+      visitanteId: partido?.equipoVisitante?.id || null,
       local: partido?.equipoLocal?.nombreEquipo || 'Equipo local',
       visitante: partido?.equipoVisitante?.nombreEquipo || 'Equipo visitante',
       dateMs: new Date(partido?.fechaHoraInicio || '').getTime(),
