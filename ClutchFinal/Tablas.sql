@@ -177,6 +177,7 @@ CREATE TABLE `Partidos` (
 `id_grupo` int(11) NOT NULL,
 `id_inscripcion_local` int(11) NOT NULL,
 `id_inscripcion_visitante` int(11) NOT NULL,
+`jornada` int(11) NOT NULL,
 `fecha_hora_inicio` datetime NOT NULL,
 `fecha_hora_fin` datetime NULL,
 `puntos_local` int(11) NOT NULL DEFAULT 0,

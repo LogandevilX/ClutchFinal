@@ -156,6 +156,29 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
   }, [playerId, user?.id]);
 
   const teamView = useMemo(() => getSelectedTeamView(detailData, selectedTeamId), [detailData, selectedTeamId]);
+  const groupedMatchRows = useMemo(() => {
+    const grouped = new Map();
+
+    (teamView?.matchRows || []).forEach((row) => {
+      const jornadaNumber = Number(row?.jornada);
+      const hasJornada = Number.isFinite(jornadaNumber) && jornadaNumber > 0;
+      const key = hasJornada ? `jornada-${jornadaNumber}` : 'jornada-sin-asignar';
+
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          key,
+          label: hasJornada ? `Jornada ${jornadaNumber}` : 'Jornada sin asignar',
+          sortValue: hasJornada ? jornadaNumber : Number.MAX_SAFE_INTEGER,
+          rows: [],
+        });
+      }
+
+      grouped.get(key).rows.push(row);
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => a.sortValue - b.sortValue);
+  }, [teamView?.matchRows]);
+
   const selectedTeamName = useMemo(
     () => detailData?.teams?.find((team) => Number(team.id) === Number(selectedTeamId))?.nombreEquipo || 'Sin equipo',
     [detailData, selectedTeamId]
@@ -289,8 +312,15 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
 
                     <TableRow label="Total" values={teamView.actaTotals} />
 
-                    {teamView.matchRows.map((row) => (
-                      <TableRow key={row.id} label={row.rival} values={row.values} highlighted />
+                    {groupedMatchRows.map((group) => (
+                      <View key={group.key}>
+                        <View style={styles.jornadaRow}>
+                          <Text style={styles.jornadaText}>{group.label}</Text>
+                        </View>
+                        {group.rows.map((row) => (
+                          <TableRow key={row.id} label={row.rival} values={row.values} highlighted />
+                        ))}
+                      </View>
                     ))}
                   </View>
                 </ScrollView>
@@ -480,6 +510,19 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.08)',
   },
   tableMatchRow: { backgroundColor: '#722124' },
+  jornadaRow: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.12)',
+  },
+  jornadaText: {
+    color: '#f2e84f',
+    fontWeight: '900',
+    fontSize: 12,
+    textTransform: 'uppercase',
+  },
   tableLabel: { width: 130, color: '#fff', fontWeight: '800', fontSize: 34 * 0.45 },
   tableLabelMatch: { lineHeight: 28 * 0.75 },
   tableCellValue: { width: 64, color: '#fff', textAlign: 'center', fontWeight: '700' },

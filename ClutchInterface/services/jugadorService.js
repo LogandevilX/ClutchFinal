@@ -262,6 +262,7 @@ const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   return {
     id: acta?.id,
     rival: rival?.nombreEquipo || teamsById.get(toId(rival?.id))?.nombreEquipo || 'Rival sin identificar',
+    jornada: Number.isFinite(Number(match?.jornada)) && Number(match?.jornada) > 0 ? Number(match?.jornada) : null,
     values: {
       m: round(acta?.minutosJugados),
       pts: toNumber(acta?.puntos),

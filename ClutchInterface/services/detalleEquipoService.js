@@ -26,20 +26,6 @@ const toDate = (value) => {
   return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
 };
 
-const getWeekNumber = (value) => {
-  const date = toDate(value);
-
-  if (!date) {
-    return 0;
-  }
-
-  const dateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = dateUTC.getUTCDay() || 7;
-  dateUTC.setUTCDate(dateUTC.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(dateUTC.getUTCFullYear(), 0, 1));
-  return Math.ceil((((dateUTC - yearStart) / 86400000) + 1) / 7);
-};
-
 const formatDate = (value) => {
   const date = toDate(value);
 
@@ -242,18 +228,18 @@ export const getGroupedMatches = (detailData, selectedPhaseId, selectedGroupId) 
   const jornadasMap = new Map();
 
   filteredMatches.forEach((match) => {
+    const jornadaNumber = Number(match?.jornada);
+    const hasValidJornada = Number.isFinite(jornadaNumber) && jornadaNumber > 0;
     const date = toDate(match?.fechaHoraInicio);
-    const year = date ? date.getFullYear() : 0;
-    const week = getWeekNumber(match?.fechaHoraInicio);
-    const jornadaKey = `${year}-${week}`;
-    const jornadaLabel = week ? `Jornada ${week}` : 'Jornada sin asignar';
+    const jornadaKey = hasValidJornada ? `jornada-${jornadaNumber}` : 'jornada-sin-asignar';
+    const jornadaLabel = hasValidJornada ? `Jornada ${jornadaNumber}` : 'Jornada sin asignar';
     const dateLabel = formatDate(match?.fechaHoraInicio);
 
     if (!jornadasMap.has(jornadaKey)) {
       jornadasMap.set(jornadaKey, {
         key: jornadaKey,
         label: jornadaLabel,
-        sortValue: date ? date.getTime() : 0,
+        sortValue: hasValidJornada ? jornadaNumber : Number.MAX_SAFE_INTEGER,
         dates: new Map(),
       });
     }

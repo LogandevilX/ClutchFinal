@@ -87,10 +87,26 @@ public class PartidoService {
             throw new IllegalArgumentException("Las inscripciones deben pertenecer al grupo del partido.");
         }
 
+        if (dto.getJornada() == null || dto.getJornada() <= 0) {
+            throw new IllegalArgumentException("Debe indicar una jornada válida (mayor que 0).");
+        }
+
+        boolean existeConflictoJornada = partidoRepository.existsConflictoEquipoEnJornada(
+                grupo.getId(),
+                dto.getJornada(),
+                inscripcionLocal.getId(),
+                inscripcionVisitante.getId(),
+                partido.getId()
+        );
+        if (existeConflictoJornada) {
+            throw new IllegalArgumentException("Uno de los equipos ya tiene un partido asignado en esa jornada.");
+        }
+
         partido.setGrupo(grupo);
         partido.setInscripcionLocal(inscripcionLocal);
         partido.setInscripcionVisitante(inscripcionVisitante);
         partido.setUsuario(usuario);
+        partido.setJornada(dto.getJornada());
         partido.setFechaHoraInicio(dto.getFechaHoraInicio() != null ? dto.getFechaHoraInicio() : LocalDateTime.now());
         partido.setFechaHoraFin(dto.getFechaHoraFin());
         partido.setPuntosLocal(dto.getPuntosLocal() != null ? dto.getPuntosLocal() : 0);
