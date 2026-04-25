@@ -23,24 +23,22 @@ import {
 
 const appLogo = require('../assets/LogoClutch.png');
 
-const TeamSection = ({ sideLabel, team, selectedPlayers, onOpenPicker }) => (
+const TeamSection = ({ sideLabel, team, selectedPlayers, onOpenPicker, onRemovePlayer }) => (
   <View style={styles.teamSection}>
     <Text style={styles.sideLabel}>{sideLabel}</Text>
 
     <View style={styles.teamHeader}>
-      <Image source={team?.urlEscudo ? { uri: team.urlEscudo } : appLogo} style={styles.teamLogo} />
+      <Image
+        source={team?.urlEscudo ? { uri: team.urlEscudo } : appLogo}
+        style={styles.teamLogo}
+        resizeMode="contain"
+      />
       <Text style={styles.teamName}>{team?.nombreEquipo || 'Equipo'}</Text>
     </View>
 
     <View style={styles.coachRow}>
-      <View>
-        <Text style={styles.coachText}>1º Entrenador: {team?.coaches?.firstCoach || 'Sin asignar'}</Text>
-        <Text style={styles.coachText}>2º Entrenador: {team?.coaches?.secondCoach || 'Sin asignar'}</Text>
-      </View>
-
-      <View style={styles.signatureBox}>
-        <Text style={styles.signatureTitle}>Firma entrenador</Text>
-      </View>
+      <Text style={styles.coachText}>1º Entrenador: {team?.coaches?.firstCoach || 'Sin asignar'}</Text>
+      <Text style={styles.coachText}>2º Entrenador: {team?.coaches?.secondCoach || 'Sin asignar'}</Text>
     </View>
 
     <View style={styles.playersBox}>
@@ -57,9 +55,14 @@ const TeamSection = ({ sideLabel, team, selectedPlayers, onOpenPicker }) => (
         {selectedPlayers.map((row) => (
           <View key={String(row.jugadorId)} style={styles.playerRow}>
             <Text style={styles.playerName}>#{String(row.dorsal).padStart(2, '0')} · {row.nombreCompleto}</Text>
-            <Text style={[styles.playerRole, row.titular ? styles.playerRoleStarter : null]}>
-              {row.titular ? 'TITULAR' : 'NO TITULAR'}
-            </Text>
+            <View style={styles.playerActions}>
+              <Text style={[styles.playerRole, row.titular ? styles.playerRoleStarter : null]}>
+                {row.titular ? 'TITULAR' : 'NO TITULAR'}
+              </Text>
+              <Pressable style={styles.removePlayerButton} onPress={() => onRemovePlayer(row.jugadorId)}>
+                <Text style={styles.removePlayerText}>Quitar</Text>
+              </Pressable>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -78,6 +81,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
   const [dorsalInput, setDorsalInput] = useState('');
   const [isStarter, setIsStarter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [currentTimeMs, setCurrentTimeMs] = useState(Date.now());
 
   useEffect(() => {
     const lockLandscape = async () => {
@@ -136,11 +140,25 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
     };
   }, [partido]);
 
+  useEffect(() => {
+    if (!setupData?.partido?.fechaHoraInicio || loading || errorMessage) {
+      return undefined;
+    }
+
+    setCurrentTimeMs(Date.now());
+
+    const intervalId = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [setupData?.partido?.fechaHoraInicio, loading, errorMessage]);
+
   const canStart = localConvocados.length > 0 && visitanteConvocados.length > 0;
 
   const remainingTimeLabel = useMemo(
-    () => formatTimeUntilStart(setupData?.partido?.fechaHoraInicio),
-    [setupData?.partido?.fechaHoraInicio]
+    () => formatTimeUntilStart(setupData?.partido?.fechaHoraInicio, currentTimeMs),
+    [setupData?.partido?.fechaHoraInicio, currentTimeMs]
   );
 
   const openPlayerPicker = (teamSide) => {
@@ -186,6 +204,12 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
       return;
     }
 
+    const starterCount = selectedList.filter((row) => row.titular).length;
+    if (isStarter && starterCount >= 5) {
+      Alert.alert('Titulares completos', 'Solo se puede añadir un máximo de 5 titulares por equipo.');
+      return;
+    }
+
     const normalizedDorsal = dorsal.padStart(2, '0');
 
     if (selectedList.some((row) => String(row.dorsal).padStart(2, '0') === normalizedDorsal)) {
@@ -207,6 +231,15 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
     }
 
     closePlayerPicker();
+  };
+
+  const onRemovePlayer = (teamSide, jugadorId) => {
+    if (teamSide === 'local') {
+      setLocalConvocados((previous) => previous.filter((row) => row.jugadorId !== jugadorId));
+      return;
+    }
+
+    setVisitanteConvocados((previous) => previous.filter((row) => row.jugadorId !== jugadorId));
   };
 
   const onStartMatch = async () => {
@@ -265,6 +298,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
             team={setupData.local}
             selectedPlayers={localConvocados}
             onOpenPicker={() => openPlayerPicker('local')}
+            onRemovePlayer={(jugadorId) => onRemovePlayer('local', jugadorId)}
           />
 
           <View style={styles.centerSection}>
@@ -287,6 +321,7 @@ export default function IniciarPartidoScreen({ partido, onGoBack }) {
             team={setupData.visitante}
             selectedPlayers={visitanteConvocados}
             onOpenPicker={() => openPlayerPicker('visitante')}
+            onRemovePlayer={(jugadorId) => onRemovePlayer('visitante', jugadorId)}
           />
         </View>
       ) : null}
@@ -370,19 +405,8 @@ const styles = StyleSheet.create({
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   teamLogo: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFF' },
   teamName: { color: '#FFF', fontSize: 18, fontWeight: '800', flexShrink: 1 },
-  coachRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginBottom: 12 },
+  coachRow: { marginBottom: 12 },
   coachText: { color: '#E7ECF3', fontWeight: '600', marginBottom: 4 },
-  signatureBox: {
-    width: 110,
-    minHeight: 66,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#8FA9C9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-  },
-  signatureTitle: { color: '#CFE0F5', textAlign: 'center', fontSize: 12, fontWeight: '600' },
   playersBox: { flex: 1, borderRadius: 10, borderWidth: 1, borderColor: '#58779E', padding: 10 },
   playersHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   playersTitle: { color: '#FFF', fontWeight: '700' },
@@ -400,12 +424,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   playerName: { color: '#FFF', fontWeight: '600', flex: 1 },
+  playerActions: { alignItems: 'flex-end', gap: 6 },
   playerRole: {
     color: '#CFD8E6',
     fontSize: 12,
     fontWeight: '700',
   },
   playerRoleStarter: { color: '#86F2A1' },
+  removePlayerButton: {
+    backgroundColor: '#A83B3B',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  removePlayerText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
   centerSection: {
     width: 230,
     backgroundColor: '#FFFFFF10',

@@ -1,4 +1,4 @@
-import { API_BASE_URL, parseResponse } from './apiConfig';
+import { API_ASSETS_BASE_URL, API_BASE_URL, parseResponse } from './apiConfig';
 
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
@@ -6,22 +6,52 @@ const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
+const buildAbsoluteAssetUrl = (path) => {
+  if (!path || typeof path !== 'string') {
+    return null;
+  }
+
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_ASSETS_BASE_URL}${normalizedPath}`;
+};
+
 const getPlayerDisplayName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido]
     .filter(Boolean)
     .join(' ')
     .trim() || 'Jugador';
 
+const getCoachDisplayName = (coach) => {
+  if (!coach || typeof coach !== 'object') {
+    return '';
+  }
+
+  const nestedCoach = coach?.entrenador && typeof coach.entrenador === 'object' ? coach.entrenador : null;
+  const source = nestedCoach || coach;
+
+  return [source?.nombre, source?.primerApellido].filter(Boolean).join(' ').trim();
+};
+
 const extractCoachNames = (equipo = {}) => {
+  const coaches = safeArray(equipo?.entrenadores)
+    .map(getCoachDisplayName)
+    .filter(Boolean);
+
   const firstCoach =
-    equipo?.primerEntrenador
+    coaches[0]
+    || equipo?.primerEntrenador
     || equipo?.entrenadorPrincipal
     || equipo?.nombrePrimerEntrenador
     || equipo?.coachPrincipal
     || 'Sin asignar';
 
   const secondCoach =
-    equipo?.segundoEntrenador
+    coaches[1]
+    || equipo?.segundoEntrenador
     || equipo?.entrenadorAuxiliar
     || equipo?.nombreSegundoEntrenador
     || equipo?.assistantCoach
@@ -96,6 +126,7 @@ export async function fetchInitialMatchSetup(selectedMatch) {
     },
     local: {
       ...equipoLocal,
+      urlEscudo: buildAbsoluteAssetUrl(equipoLocal?.urlEscudo || partido?.equipoLocal?.urlEscudo),
       coaches: extractCoachNames(equipoLocal),
       inscripciones: inscripcionesLocal,
       jugadoresDisponibles: safeArray(equipoLocal?.jugadores).map((player) => ({
@@ -105,6 +136,7 @@ export async function fetchInitialMatchSetup(selectedMatch) {
     },
     visitante: {
       ...equipoVisitante,
+      urlEscudo: buildAbsoluteAssetUrl(equipoVisitante?.urlEscudo || partido?.equipoVisitante?.urlEscudo),
       coaches: extractCoachNames(equipoVisitante),
       inscripciones: inscripcionesVisitante,
       jugadoresDisponibles: safeArray(equipoVisitante?.jugadores).map((player) => ({
@@ -115,14 +147,14 @@ export async function fetchInitialMatchSetup(selectedMatch) {
   };
 }
 
-export function formatTimeUntilStart(dateValue) {
+export function formatTimeUntilStart(dateValue, nowMs = Date.now()) {
   const date = new Date(dateValue || '');
 
   if (Number.isNaN(date.getTime())) {
     return 'Hora de inicio no disponible';
   }
 
-  const diffMs = date.getTime() - Date.now();
+  const diffMs = date.getTime() - nowMs;
 
   if (diffMs <= 0) {
     return 'El partido ya puede iniciar';
