@@ -15,8 +15,8 @@ import java.util.List;
 public class PartidosResponseDTO {
     private Long id;
     private Long grupoId;
-    private EquipoResponseDTO equipoLocal;
-    private EquipoResponseDTO equipoVisitante;
+    private EquipoDetalleDTO equipoLocal;
+    private EquipoDetalleDTO equipoVisitante;
     private Integer jornada;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
@@ -27,4 +27,3 @@ public class PartidosResponseDTO {
     private List<ParcialPartidoDTO> parciales;
     private EstadoPartido estado;
 }
-

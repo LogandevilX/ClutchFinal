@@ -3,7 +3,6 @@ package com.example.clutchfinal.Fabrica;
 import org.springframework.stereotype.Service;
 import com.example.clutchfinal.DTO.EquipoDTO;
 import com.example.clutchfinal.DTO.EquipoDetalleDTO;
-import com.example.clutchfinal.DTO.EquipoResponseDTO;
 import com.example.clutchfinal.DTO.EntrenadorDTO;
 import com.example.clutchfinal.DTO.JugadorResponseDTO;
 import com.example.clutchfinal.Model.Equipo;
@@ -103,8 +102,8 @@ public class FabricaEquipoService {
         return dto;
     }
 
-    public EquipoResponseDTO createEquipoResponseDTO(Equipo equipo, String escudo, String pabellonDireccion){
-        EquipoResponseDTO dto = new EquipoResponseDTO();
+    public EquipoDetalleDTO createEquipoDetalleBasicoDTO(Equipo equipo, String escudo, String pabellonDireccion){
+        EquipoDetalleDTO dto = new EquipoDetalleDTO();
         dto.setId(equipo.getId());
         dto.setNombreEquipo(equipo.getNombreEquipo());
         dto.setPartidosGanados(equipo.getPartidosGanados());
@@ -118,6 +117,8 @@ public class FabricaEquipoService {
             dto.setUrlEscudo("/escudos/" + escudo);
 
         dto.setDireccion(pabellonDireccion);
+        dto.setEntrenadores(List.of());
+        dto.setJugadores(List.of());
         return dto;
     }
 
