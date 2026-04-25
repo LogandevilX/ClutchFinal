@@ -1,6 +1,5 @@
 import { API_BASE_URL, parseResponse } from './apiConfig';
 
-const ACTAS_URL = `${API_BASE_URL}/actas`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
@@ -133,10 +132,11 @@ export function formatTimeUntilStart(dateValue) {
   return `Faltan ${hours} h ${minutes} min`;
 }
 
-export function normalizeConvocados(convocados) {
+export function normalizeConvocados(convocados, equipoId) {
   return safeArray(convocados)
     .filter((row) => row?.jugadorId)
     .map((row) => ({
+      equipoId,
       jugadorId: row.jugadorId,
       dorsal: row.dorsal,
       titular: Boolean(row.titular),
@@ -151,16 +151,13 @@ export async function initializeActa({
   visitanteConvocados,
 }) {
   const body = {
-    partidoId,
-    equipoLocalId,
-    equipoVisitanteId,
-    estado: 'PENDIENTE',
-    convocadosLocal: normalizeConvocados(localConvocados),
-    convocadosVisitante: normalizeConvocados(visitanteConvocados),
-    fechaCreacion: new Date().toISOString(),
+    convocados: [
+      ...normalizeConvocados(localConvocados, equipoLocalId),
+      ...normalizeConvocados(visitanteConvocados, equipoVisitanteId),
+    ],
   };
 
-  const response = await fetchJson(`${ACTAS_URL}/inicializar`, {
+  const response = await fetchJson(`${PARTIDOS_URL}/${partidoId}/actas/inicializar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -173,33 +170,21 @@ export async function initializeActa({
   return response.data;
 }
 
-export async function startFirstPeriod({ partidoId, actaId = null }) {
+export async function startFirstPeriod({ partidoId }) {
   const body = {
     periodo: 1,
     minuto: 0,
-    partidoId,
-    actaId,
   };
 
-  const response = await fetchJson(`${ACTAS_URL}/iniciar-periodo`, {
+  const response = await fetchJson(`${PARTIDOS_URL}/${partidoId}/iniciar-periodo`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
-  if (response.ok) {
-    return response.data;
-  }
-
-  const fallbackResponse = await fetchJson(`${API_BASE_URL}/iniciar-periodo`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!fallbackResponse.ok) {
+  if (!response.ok) {
     throw new Error('No se pudo iniciar el primer periodo del partido.');
   }
 
-  return fallbackResponse.data;
+  return response.data;
 }
