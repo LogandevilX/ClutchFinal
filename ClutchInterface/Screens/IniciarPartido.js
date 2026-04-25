@@ -19,7 +19,7 @@ import {
   formatTimeUntilStart,
   initializeActa,
   startFirstPeriod,
-} from '../services/PartidoService';
+} from '../services/ActaService';
 
 const appLogo = require('../assets/LogoClutch.png');
 
