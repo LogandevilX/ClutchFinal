@@ -157,7 +157,7 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
 
   const teamView = useMemo(() => getSelectedTeamView(detailData, selectedTeamId), [detailData, selectedTeamId]);
   const selectedTeamName = useMemo(
-    () => detailData?.teams?.find((team) => team.id === selectedTeamId)?.nombreEquipo || 'Sin equipo',
+    () => detailData?.teams?.find((team) => Number(team.id) === Number(selectedTeamId))?.nombreEquipo || 'Sin equipo',
     [detailData, selectedTeamId]
   );
 
@@ -239,12 +239,10 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
               ) : null}
             </View>
 
-            <View style={styles.playerCard}>
-              <View style={styles.playerImageWrap}>
-                <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerImage} />
-                <View style={styles.nameOverlay}>
-                  <Text style={styles.playerName}>{(detailData.player?.nombreCompleto || 'Jugador').toUpperCase()}</Text>
-                </View>
+            <View style={styles.playerImageWrap}>
+              <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerImage} />
+              <View style={styles.nameOverlay}>
+                <Text style={styles.playerName}>{(detailData.player?.nombreCompleto || 'Jugador').toUpperCase()}</Text>
               </View>
             </View>
 
@@ -346,13 +344,7 @@ const styles = StyleSheet.create({
   centerMessage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: '#fff', fontWeight: '700' },
   scrollContent: { paddingBottom: 28 },
-  playerCard: {
-    borderWidth: 3,
-    borderColor: '#0d8dff',
-    backgroundColor: 'rgba(3, 11, 23, 0.92)',
-    marginTop: 10,
-  },
-  teamSelectorWrap: { zIndex: 9 },
+  teamSelectorWrap: { position: 'relative', zIndex: 9, elevation: 9 },
   teamSelectorButton: {
     marginHorizontal: 8,
     marginTop: 2,
@@ -366,17 +358,21 @@ const styles = StyleSheet.create({
   teamSelectorText: { flex: 1, color: '#ff4a4a', fontWeight: '800', fontSize: 34 * 0.48 },
   teamSelectorChevron: { color: '#ff4a4a', fontSize: 18, marginLeft: 8 },
   teamDropdown: {
-    marginHorizontal: 8,
+    position: 'absolute',
+    top: 44,
+    left: 8,
+    right: 8,
     backgroundColor: 'rgba(5,15,29,0.98)',
     borderWidth: 1,
     borderColor: '#214f84',
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     overflow: 'hidden',
+    elevation: 10,
   },
   teamDropdownItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   teamDropdownText: { color: '#fff', fontWeight: '600' },
-  playerImageWrap: { marginTop: 6, backgroundColor: '#d7d7d7', borderTopLeftRadius: 40, borderTopRightRadius: 40, overflow: 'hidden' },
+  playerImageWrap: { marginTop: 16, backgroundColor: '#d7d7d7', borderTopLeftRadius: 40, borderTopRightRadius: 40, overflow: 'hidden' },
   playerImage: { width: '100%', height: 210, resizeMode: 'cover' },
   nameOverlay: {
     position: 'absolute',

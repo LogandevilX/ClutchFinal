@@ -13,6 +13,11 @@ const toNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const toId = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const round = (value, digits = 1) => {
   const factor = 10 ** digits;
   return Math.round(toNumber(value) * factor) / factor;
@@ -68,7 +73,11 @@ const getDateValue = (value) => {
 
 const getTeamIdsByDivision = (inscripciones, divisionName) =>
   safeArray(inscripciones)
-    .filter((entry) => entry?.nombreDivision === divisionName && typeof entry?.equipoId === 'number')
+    .map((entry) => ({
+      division: entry?.nombreDivision,
+      equipoId: toId(entry?.equipoId),
+    }))
+    .filter((entry) => entry.division === divisionName && entry.equipoId !== null)
     .map((entry) => entry.equipoId);
 
 const aggregateTotals = (actas) =>
@@ -225,7 +234,7 @@ const buildActaAverages = (totals) => ({
 const toMatchRow = ({ acta, match, selectedTeamId, teamsById }) => {
   const localTeam = match?.equipoLocal;
   const awayTeam = match?.equipoVisitante;
-  const rival = localTeam?.id === selectedTeamId ? awayTeam : localTeam;
+  const rival = toId(localTeam?.id) === selectedTeamId ? awayTeam : localTeam;
 
   const tlMade = toNumber(acta?.tlAnotados);
   const tlAttempted = toNumber(acta?.tlTirados);
@@ -269,7 +278,7 @@ export async function toggleFavoritePlayer({ usuarioId, jugadorId }) {
   }
 
   const playerFavorite = safeArray(favoritosResponse.data).find(
-    (favorito) => favorito?.jugadorId === jugadorId && !favorito?.equipoId
+    (favorito) => toId(favorito?.jugadorId) === toId(jugadorId) && !favorito?.equipoId
   );
 
   if (playerFavorite?.id) {
@@ -317,7 +326,8 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
     new Set(
       safeArray(jugador?.equipoIds)
         .concat(playerActas.map((acta) => acta?.equipoId))
-        .filter((id) => typeof id === 'number')
+        .map((id) => toId(id))
+        .filter((id) => id !== null)
     )
   );
   const teams = playerTeamIds
@@ -328,7 +338,7 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
       nombreEquipo: team.nombreEquipo,
     }));
 
-  const selectedTeamId = teams[0]?.id || null;
+  const selectedTeamId = toId(teams[0]?.id);
 
   return {
     player: {
@@ -342,7 +352,7 @@ export async function fetchPlayerDetailData({ usuarioId, jugadorId }) {
     matchesById,
     teamsById,
     allInscripciones,
-    isFavorite: favoritos.some((favorito) => favorito?.jugadorId === jugadorId && !favorito?.equipoId),
+    isFavorite: favoritos.some((favorito) => toId(favorito?.jugadorId) === toId(jugadorId) && !favorito?.equipoId),
   };
 }
 
@@ -351,15 +361,19 @@ export function getSelectedTeamView(detailData, selectedTeamId) {
     return null;
   }
 
-  const teamId = selectedTeamId || detailData.selectedTeamId;
-  const filteredActas = safeArray(detailData.actas).filter((acta) => acta?.equipoId === teamId);
+  const teamId = toId(selectedTeamId) ?? toId(detailData.selectedTeamId) ?? toId(detailData.teams?.[0]?.id);
+  if (teamId === null) {
+    return null;
+  }
+
+  const filteredActas = safeArray(detailData.actas).filter((acta) => toId(acta?.equipoId) === teamId);
   const playerTotals = aggregateTotals(filteredActas);
 
-  const teamInscripcion = safeArray(detailData.allInscripciones).find((inscripcion) => inscripcion?.equipoId === teamId);
+  const teamInscripcion = safeArray(detailData.allInscripciones).find((inscripcion) => toId(inscripcion?.equipoId) === teamId);
   const divisionName = teamInscripcion?.nombreDivision;
   const divisionTeamIds = getTeamIdsByDivision(detailData.allInscripciones, divisionName);
 
-  const divisionActas = safeArray(detailData.actas).filter((acta) => divisionTeamIds.includes(acta?.equipoId));
+  const divisionActas = safeArray(detailData.actas).filter((acta) => divisionTeamIds.includes(toId(acta?.equipoId)));
   const divisionTotals = aggregateTotals(divisionActas);
 
   const summary = buildSummary(playerTotals);
