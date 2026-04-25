@@ -36,6 +36,11 @@ public class PartidoController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<PartidosResponseDTO>> findByUsuarioId(@PathVariable Long usuarioId) {
+        return new ResponseEntity<>(partidoService.findPartidosByUsuarioId(usuarioId), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<PartidoDTO> save(@RequestBody PartidoDTO dto) {
         try {
