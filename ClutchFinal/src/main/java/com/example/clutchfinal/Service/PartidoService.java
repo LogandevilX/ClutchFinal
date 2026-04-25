@@ -492,46 +492,19 @@ public class PartidoService {
     private Integer[] obtenerTiempoFinalPartido(Long partidoId) {
         Partido partido = partidoRepository.findById(partidoId)
                 .orElseThrow(() -> new NoSuchElementException("Partido no encontrado."));
-        List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
-        int periodo = (partido.getPeriodoActual() != null && partido.getPeriodoActual() > 0) ? partido.getPeriodoActual() : 1;
-        int segundo = 600;
 
-        for (HistorialPartidoDTO evento : historial) {
-            Integer periodoEvento = evento.getPeriodo();
-            Integer segundoEvento = evento.getSegundo() != null
-                    ? evento.getSegundo()
-                    : (evento.getMinuto() != null ? evento.getMinuto() * 60 : null);
-            if (periodoEvento == null || segundoEvento == null) {
-                continue;
-            }
+        int periodo = (partido.getPeriodoActual() != null && partido.getPeriodoActual() > 0)
+                ? partido.getPeriodoActual()
+                : 1;
 
-            if (periodoEvento > periodo || (periodoEvento.equals(periodo) && segundoEvento > segundo)) {
-                periodo = periodoEvento;
-                segundo = segundoEvento;
-            }
-        }
-        return new Integer[]{periodo, segundo};
+        // El cierre oficial del partido se produce al final del periodo en curso (10:00).
+        return new Integer[]{periodo, 600};
     }
 
     private int obtenerSegundoFinPeriodo(Long partidoId, int periodo) {
-        List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
-        int segundoMaximoRegistrado = -1;
-
-        for (HistorialPartidoDTO evento : historial) {
-            Integer periodoEvento = evento.getPeriodo();
-            Integer segundoEvento = evento.getSegundo();
-            if (periodoEvento == null) {
-                continue;
-            }
-            if (periodoEvento == periodo) {
-                if (segundoEvento != null) {
-                    segundoMaximoRegistrado = Math.max(segundoMaximoRegistrado, segundoEvento);
-                } else if (evento.getMinuto() != null) {
-                    segundoMaximoRegistrado = Math.max(segundoMaximoRegistrado, evento.getMinuto() * 60);
-                }
-            }
-        }
-        return segundoMaximoRegistrado >= 0 ? segundoMaximoRegistrado : 600;
+        // El periodo solo se puede cerrar cuando se alcanza 10:00 en el reloj principal.
+        // No usamos el último evento porque puede ser mucho antes y recortaría minutos jugados.
+        return 600;
     }
 
     private void normalizarTiempoEvento(HistorialPartidoDTO eventoDTO) {
