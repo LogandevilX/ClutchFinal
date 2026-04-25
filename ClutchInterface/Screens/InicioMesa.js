@@ -12,17 +12,15 @@ import {
   View,
 } from 'react-native';
 import { fetchPartidosAsignados } from '../services/mesaService';
-import { fetchInitialMatchSetup } from '../services/PartidoService';
 
 const backgroundImage = require('../assets/Fondo_Mesa.png');
 const appLogo = require('../assets/LogoClutch.png');
 
-export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch, activeMatch, onResumeMatch }) {
+export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch }) {
   const [partidos, setPartidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [startingMatch, setStartingMatch] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -64,13 +62,6 @@ export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch, ac
       mounted = false;
     };
   }, [user?.id]);
-
-
-  useEffect(() => {
-    if (activeMatch?.id) {
-      onResumeMatch?.(activeMatch);
-    }
-  }, [activeMatch, onResumeMatch]);
 
   return (
     <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
@@ -135,28 +126,14 @@ export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch, ac
                   <Text style={styles.modalButtonText}>No</Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.modalButton, styles.modalConfirm, startingMatch ? styles.modalButtonDisabled : null]}
-                  disabled={startingMatch}
-                  onPress={async () => {
+                  style={[styles.modalButton, styles.modalConfirm]}
+                  onPress={() => {
                     const match = selectedMatch;
-                    if (!match) {
-                      return;
-                    }
-
-                    try {
-                      setStartingMatch(true);
-                      const setupData = await fetchInitialMatchSetup(match);
-                      setSelectedMatch(null);
-                      onGoStartMatch?.({ ...match, context: setupData });
-                    } catch (error) {
-                      setSelectedMatch(null);
-                      setErrorMessage('No se pudo abrir el partido seleccionado.');
-                    } finally {
-                      setStartingMatch(false);
-                    }
+                    setSelectedMatch(null);
+                    onGoStartMatch?.(match);
                   }}
                 >
-                  <Text style={styles.modalButtonText}>{startingMatch ? 'Abriendo...' : 'Sí, iniciar'}</Text>
+                  <Text style={styles.modalButtonText}>Sí, iniciar</Text>
                 </Pressable>
               </View>
             </View>
@@ -316,9 +293,6 @@ const styles = StyleSheet.create({
   },
   modalConfirm: {
     backgroundColor: '#1D8D4A',
-  },
-  modalButtonDisabled: {
-    opacity: 0.6,
   },
   modalButtonText: {
     color: '#FFFFFF',
