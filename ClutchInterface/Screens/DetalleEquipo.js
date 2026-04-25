@@ -102,6 +102,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
   const [detailData, setDetailData] = useState(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [selectedJornadaKey, setSelectedJornadaKey] = useState(null);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
   const [isPhaseMenuOpen, setIsPhaseMenuOpen] = useState(false);
 
@@ -158,6 +159,21 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
     () => getFilteredClassification(detailData, selectedPhaseId, selectedGroupId),
     [detailData, selectedGroupId, selectedPhaseId]
   );
+  const selectedJornada = useMemo(
+    () => groupedMatches.find((jornada) => jornada.key === selectedJornadaKey) || null,
+    [groupedMatches, selectedJornadaKey]
+  );
+
+  useEffect(() => {
+    if (groupedMatches.length === 0) {
+      setSelectedJornadaKey(null);
+      return;
+    }
+
+    if (!groupedMatches.some((jornada) => jornada.key === selectedJornadaKey)) {
+      setSelectedJornadaKey(groupedMatches[0].key);
+    }
+  }, [groupedMatches, selectedJornadaKey]);
 
   const onToggleFavorite = async () => {
     if (!detailData || !user?.id) {
@@ -414,15 +430,39 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
 
                 {groupedMatches.length === 0 ? <Text style={styles.emptyText}>No hay partidos para los filtros seleccionados.</Text> : null}
 
-                {groupedMatches.map((jornada) => (
-                  <View key={jornada.key} style={styles.jornadaBlock}>
-                    <Text style={styles.jornadaTitle}>{jornada.label}</Text>
-                    {jornada.dates.map((dateGroup) => (
-                      <View key={`${jornada.key}-${dateGroup.dateLabel}`} style={styles.dateGroup}>
-                        <Text style={styles.dateTitle}>{dateGroup.dateLabel}</Text>
+                {groupedMatches.length > 0 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.jornadaSelectorRow}>
+                    {groupedMatches.map((jornada) => (
+                      <Pressable
+                        key={jornada.key}
+                        style={[
+                          styles.jornadaButton,
+                          selectedJornadaKey === jornada.key ? styles.jornadaButtonActive : null,
+                        ]}
+                        onPress={() => setSelectedJornadaKey(jornada.key)}
+                      >
+                        <Text
+                          style={[
+                            styles.jornadaButtonLabel,
+                            selectedJornadaKey === jornada.key ? styles.jornadaButtonLabelActive : null,
+                          ]}
+                        >
+                          {jornada.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                ) : null}
+
+                {selectedJornada ? (
+                  <View key={selectedJornada.key} style={styles.jornadaBlock}>
+                    <Text style={styles.jornadaTitle}>{selectedJornada.label}</Text>
+                    {selectedJornada.dates.map((dateGroup) => (
+                      <View key={`${selectedJornada.key}-${dateGroup.dateLabel}`} style={styles.dateGroup}>
                         {dateGroup.matches.map((match) => (
                           <View key={match.id} style={[styles.matchCard, { backgroundColor: getMatchBackgroundColor(match.estado) }]}>
                             {match.estado === 'EN_CURSO' ? <Text style={styles.liveTag}>LIVE</Text> : null}
+                            {match.estado === 'PROGRAMADO' ? <Text style={styles.matchDateText}>{dateGroup.dateLabel}</Text> : null}
                             <Text style={styles.matchTimeText}>
                               {match.estado === 'PROGRAMADO' ? formatScheduledStart(match.fechaHoraInicio) : null}
                               {match.estado === 'EN_CURSO' ? formatLiveClock(match) : null}
@@ -452,7 +492,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                       </View>
                     ))}
                   </View>
-                ))}
+                ) : null}
               </View>
             ) : null}
           </ScrollView>
@@ -783,6 +823,29 @@ const styles = StyleSheet.create({
   jornadaBlock: {
     marginTop: 8,
   },
+  jornadaSelectorRow: {
+    gap: 8,
+    paddingBottom: 4,
+  },
+  jornadaButton: {
+    borderRadius: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    backgroundColor: '#16263f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jornadaButtonActive: {
+    backgroundColor: '#7c2a2a',
+  },
+  jornadaButtonLabel: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  jornadaButtonLabelActive: {
+    color: '#fff',
+  },
   jornadaTitle: {
     color: '#fff',
     fontSize: 17,
@@ -791,11 +854,6 @@ const styles = StyleSheet.create({
   },
   dateGroup: {
     marginBottom: 12,
-  },
-  dateTitle: {
-    color: '#fff',
-    fontWeight: '700',
-    marginBottom: 6,
   },
   matchCard: {
     borderRadius: 14,
@@ -809,6 +867,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     color: '#fff',
     fontWeight: '900',
+    marginBottom: 2,
+  },
+  matchDateText: {
+    color: '#dce7f4',
+    fontWeight: '700',
+    textAlign: 'center',
     marginBottom: 2,
   },
   matchTimeText: {

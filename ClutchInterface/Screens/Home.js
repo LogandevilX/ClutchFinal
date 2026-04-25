@@ -269,9 +269,6 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlay
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Partidos en directo</Text>
-              <Pressable style={styles.seeAllButton}>
-                <Text style={styles.seeAllText}>Ver todos</Text>
-              </Pressable>
             </View>
 
             {liveMatches.length === 0 ? (
@@ -560,14 +557,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: { color: '#fff', fontSize: 28, fontWeight: '800' },
-  seeAllButton: {
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  seeAllText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   liveMatchesRow: { gap: 12, paddingRight: 8 },
   liveCard: {
     backgroundColor: 'rgba(5, 15, 29, 0.92)',
