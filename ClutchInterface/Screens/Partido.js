@@ -47,14 +47,14 @@ const buildRosterFromState = (state, setupData, sideKey) => {
   const basePlayers = (setupTeam?.jugadoresDisponibles || []).map((player) => ({
     ...player,
     equipoId: teamId,
-    nombreCompleto: player.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim() || `Jugador #${player?.id || ''}`,
+    nombreCompleto: player.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim() || 'Nombre jugador',
   }));
 
   const actasTeam = (state?.actas || []).filter((acta) => String(acta?.equipoId) === String(teamId));
   const rosterFromActas = actasTeam.map((acta) => ({
     id: acta?.jugadorId,
     equipoId: acta?.equipoId,
-    nombreCompleto: `Jugador #${acta?.jugadorId}`,
+    nombreCompleto: 'Nombre jugador',
     dorsal: acta?.dorsal || 0,
     falta: acta?.falta || 0,
     puntos: acta?.puntos || 0,
@@ -87,7 +87,7 @@ function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
 
       <View style={styles.playerButtonsCol}>
         <Pressable style={styles.actionMiniButton} onPress={onSub}>
-          <Text style={styles.miniButtonText}>Sust.</Text>
+          <Text style={styles.miniButtonText}>{'→\n←'}</Text>
         </Pressable>
         <Pressable style={[styles.actionMiniButton, styles.verActaButton]} onPress={onShowActa}>
           <Text style={styles.miniButtonText}>Ver acta</Text>
@@ -118,6 +118,8 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
   const [processingSubstitution, setProcessingSubstitution] = useState(false);
   const [nextPeriodStarters, setNextPeriodStarters] = useState({ local: [], visitante: [] });
+  const [showEditTimeModal, setShowEditTimeModal] = useState(false);
+  const [editClockValue, setEditClockValue] = useState(0);
 
   const partidoId = partido?.id || setupData?.partido?.id;
   const teamLocal = setupData?.local || state?.partido?.equipoLocal;
@@ -304,6 +306,29 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
   const minute = Math.floor(mainClock / 60);
   const second = mainClock % 60;
+  const editMinute = Math.floor(editClockValue / 60);
+  const editSecond = editClockValue % 60;
+
+  const adjustEditClock = (delta) => {
+    setEditClockValue((previous) => {
+      const next = previous + delta;
+      if (next < 0) return 0;
+      if (next > 600) return 600;
+      return next;
+    });
+  };
+
+  const handleOpenEditTime = () => {
+    clearSelectedPlayer();
+    setClockRunning(false);
+    setEditClockValue(mainClock);
+    setShowEditTimeModal(true);
+  };
+
+  const handleApplyEditedTime = () => {
+    setMainClock(editClockValue);
+    setShowEditTimeModal(false);
+  };
 
   const handleAddStarter = (side, playerId) => {
     setNextPeriodStarters((previous) => {
@@ -522,10 +547,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             <Text style={styles.periodLabel}>P{currentPeriod}</Text>
             <Pressable
               style={styles.clockControlButton}
-              onPress={() => {
-                clearSelectedPlayer();
-                setMainClock(0);
-              }}
+              onPress={handleOpenEditTime}
             >
               <Text style={styles.clockControlText}>Editar</Text>
             </Pressable>
@@ -662,6 +684,58 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               </Pressable>
               <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={() => handleShotResult(false)}>
                 <Text style={styles.resultText}>Fallo</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showEditTimeModal} transparent animationType="fade" onRequestClose={() => setShowEditTimeModal(false)}>
+        <View style={styles.overlayBackdrop}>
+          <View style={[styles.overlayCard, styles.editTimeCard]}>
+            <Text style={styles.overlayTitle}>Editar tiempo</Text>
+
+            <Text style={styles.editTimeMainClock}>{formatClock(editClockValue)} - 10:00</Text>
+
+            <View style={styles.editTimeControlsRow}>
+              <View style={styles.editTimeValueBlock}>
+                <Text style={styles.editTimeValueLabel}>Minutos</Text>
+                <Text style={styles.editTimeValueText}>{String(editMinute).padStart(2, '0')}</Text>
+              </View>
+              <View style={styles.editTimeArrowColumn}>
+                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(60)}>
+                  <Text style={styles.smallControlText}>▲</Text>
+                </Pressable>
+                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(-60)}>
+                  <Text style={styles.smallControlText}>▼</Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.editTimeSeparator}>:</Text>
+
+              <View style={styles.editTimeValueBlock}>
+                <Text style={styles.editTimeValueLabel}>Segundos</Text>
+                <Text style={styles.editTimeValueText}>{String(editSecond).padStart(2, '0')}</Text>
+              </View>
+              <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(10)}>
+                <Text style={styles.smallControlText}>+10s</Text>
+              </Pressable>
+              <View style={styles.editTimeArrowColumn}>
+                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(1)}>
+                  <Text style={styles.smallControlText}>▲</Text>
+                </Pressable>
+                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(-1)}>
+                  <Text style={styles.smallControlText}>▼</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.overlayActions}>
+              <Pressable style={styles.closeModalBtn} onPress={() => setShowEditTimeModal(false)}>
+                <Text style={styles.resultText}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={[styles.closeModalBtn, styles.applyTimeBtn]} onPress={handleApplyEditedTime}>
+                <Text style={styles.resultText}>Aplicar</Text>
               </Pressable>
             </View>
           </View>
@@ -838,10 +912,10 @@ const styles = StyleSheet.create({
   sideZone: { flex: 1, borderWidth: 1, borderColor: '#2E5A95', borderRadius: 12, padding: 8 },
   centerZone: { flex: 1.8, borderWidth: 1, borderColor: '#2E5A95', borderRadius: 12, padding: 8, gap: 8 },
   playersContainer: { gap: 8 },
-  playerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  playerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   playerCard: {
     flex: 1,
-    minHeight: 66,
+    minHeight: 54,
     backgroundColor: '#FFFFFF14',
     borderRadius: 10,
     borderWidth: 1,
@@ -852,10 +926,18 @@ const styles = StyleSheet.create({
   playerCardSelected: { borderColor: '#7DF79A', backgroundColor: '#153A28' },
   playerNumber: { color: '#FFF', fontWeight: '900', fontSize: 20 },
   playerFouls: { color: '#FFCDD2', fontWeight: '700' },
-  playerButtonsCol: { gap: 6 },
-  actionMiniButton: { backgroundColor: '#355274', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 },
+  playerButtonsCol: { gap: 8 },
+  actionMiniButton: {
+    backgroundColor: '#355274',
+    borderRadius: 10,
+    minWidth: 64,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   verActaButton: { backgroundColor: '#1E7F87' },
-  miniButtonText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
+  miniButtonText: { color: '#FFF', fontSize: 13, fontWeight: '800', textAlign: 'center', lineHeight: 16 },
   shotMap: { flex: 1, gap: 7, justifyContent: 'center' },
   shotRow: { flexDirection: 'row', gap: 7 },
   shotButton: {
@@ -920,6 +1002,15 @@ const styles = StyleSheet.create({
   startPeriodBtn: { backgroundColor: '#2FA656', borderRadius: 8, paddingVertical: 11, alignItems: 'center' },
   startPeriodText: { color: '#FFF', fontWeight: '900', fontSize: 16 },
   playerActaCard: { maxHeight: '70%' },
+  editTimeCard: { maxWidth: 680 },
+  editTimeMainClock: { color: '#FFF', fontSize: 36, fontWeight: '900', textAlign: 'center', marginVertical: 8 },
+  editTimeControlsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  editTimeValueBlock: { alignItems: 'center', minWidth: 86 },
+  editTimeValueLabel: { color: '#BBD7F4', fontWeight: '700', fontSize: 12 },
+  editTimeValueText: { color: '#FFF', fontWeight: '900', fontSize: 30 },
+  editTimeSeparator: { color: '#FFF', fontSize: 34, fontWeight: '900', marginHorizontal: 2 },
+  editTimeArrowColumn: { gap: 6 },
+  applyTimeBtn: { backgroundColor: '#2FA656' },
   actaText: { color: '#FFF', marginBottom: 6 },
   closeModalBtn: {
     alignSelf: 'center',
