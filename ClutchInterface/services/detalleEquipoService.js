@@ -4,6 +4,7 @@ const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
+const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -34,6 +35,57 @@ const formatDate = (value) => {
   }
 
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
+
+const hasPlayedInActa = (acta) => {
+  const minutes = toSafeNumber(acta?.minutosJugados);
+
+  if (minutes > 0) {
+    return true;
+  }
+
+  return [
+    'puntos',
+    'valoracion',
+    'tlTirados',
+    'tlAnotados',
+    't2Tirados',
+    't2Anotados',
+    'triplesTirados',
+    'triplesAnotados',
+    'rebotes',
+    'tapones',
+    'robos',
+    'perdida',
+    'falta',
+  ].some((field) => toSafeNumber(acta?.[field]) > 0);
+};
+
+const toAverage = (total, count) => {
+  if (!count) {
+    return 0;
+  }
+
+  return Number((total / count).toFixed(1));
+};
+
+const calculatePlayerStatsFromActas = (actas, equipoId) => {
+  const teamActas = safeArray(actas).filter((acta) => String(acta?.equipoId ?? '') === String(equipoId));
+  const playedActas = teamActas.filter(hasPlayedInActa);
+  const statBase = playedActas.length > 0 ? playedActas : teamActas;
+  const partidosJugados = playedActas.length;
+
+  const totalMinutes = statBase.reduce((acc, acta) => acc + toSafeNumber(acta?.minutosJugados), 0);
+  const totalPoints = statBase.reduce((acc, acta) => acc + toSafeNumber(acta?.puntos), 0);
+  const totalValoracion = statBase.reduce((acc, acta) => acc + toSafeNumber(acta?.valoracion), 0);
+
+  return {
+    partidosJugados,
+    minutosPorPartido: toAverage(totalMinutes, partidosJugados),
+    puntosPorPartido: toAverage(totalPoints, partidosJugados),
+    valoracionPorPartido: toAverage(totalValoracion, partidosJugados),
+  };
 };
 
 const buildAbsoluteAssetUrl = (path) => {
@@ -156,16 +208,48 @@ export async function fetchTeamDetailData({ usuarioId, equipoId }) {
     }))
     .sort((a, b) => getDateValue(a?.fechaHoraInicio) - getDateValue(b?.fechaHoraInicio));
 
+  const players = safeArray(team?.jugadores);
+
+  const playersWithStats = await Promise.all(
+    players.map(async (player) => {
+      const playerId = player?.id;
+
+      if (!playerId) {
+        return {
+          ...player,
+          pathFoto: buildAbsoluteAssetUrl(player?.pathFoto),
+          partidosJugados: 0,
+          minutosPorPartido: 0,
+          puntosPorPartido: 0,
+          valoracionPorPartido: 0,
+        };
+      }
+
+      const actasResponse = await fetchJson(`${JUGADORES_URL}/${playerId}/actas`);
+      const stats = actasResponse.ok
+        ? calculatePlayerStatsFromActas(actasResponse.data, equipoId)
+        : {
+          partidosJugados: 0,
+          minutosPorPartido: 0,
+          puntosPorPartido: 0,
+          valoracionPorPartido: 0,
+        };
+
+      return {
+        ...player,
+        ...stats,
+        pathFoto: buildAbsoluteAssetUrl(player?.pathFoto),
+      };
+    })
+  );
+
   return {
     team: {
       ...team,
       urlEscudo: buildAbsoluteAssetUrl(team?.urlEscudo),
       inscripcion: currentInscripcion,
     },
-    players: safeArray(team?.jugadores).map((player) => ({
-      ...player,
-      pathFoto: buildAbsoluteAssetUrl(player?.pathFoto),
-    })),
+    players: playersWithStats,
     classification,
     phases,
     groupsByPhase,
