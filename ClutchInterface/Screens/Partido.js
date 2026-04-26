@@ -33,6 +33,12 @@ const SHOT_GRID = [
 
 const findActaByPlayer = (actas, jugadorId) => (actas || []).find((acta) => String(acta?.jugadorId) === String(jugadorId));
 const EVENT_ORDER = { SALIDA: 0, ENTRADA: 1 };
+const getPlayerSource = (player) => (player?.jugador && typeof player.jugador === 'object' ? player.jugador : player);
+const getPlayerId = (player) => player?.id ?? player?.jugadorId ?? player?.jugador?.id;
+const getPlayerName = (player) => {
+  const source = getPlayerSource(player);
+  return source?.nombreCompleto || [source?.nombre, source?.primerApellido, source?.segundoApellido].filter(Boolean).join(' ').trim();
+};
 
 const fallbackState = (setupData) => ({
   partido: setupData?.partido || null,
@@ -49,16 +55,18 @@ const buildRosterFromState = (state, setupData, sideKey) => {
     ...(setupData?.visitante?.jugadoresDisponibles || []),
   ];
   const playerNameById = new Map(
-    allPlayers.map((player) => [
-      String(player?.id),
-      player?.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim(),
-    ])
+    allPlayers
+      .map((player) => [getPlayerId(player), getPlayerName(player)])
+      .filter(([id]) => id != null)
+      .map(([id, name]) => [String(id), name])
   );
 
   const basePlayers = (setupTeam?.jugadoresDisponibles || []).map((player) => ({
+    ...getPlayerSource(player),
     ...player,
+    id: getPlayerId(player),
     equipoId: teamId,
-    nombreCompleto: player.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim() || 'Nombre jugador',
+    nombreCompleto: getPlayerName(player) || 'Nombre jugador',
   }));
 
   const actasTeam = (state?.actas || []).filter((acta) => String(acta?.equipoId) === String(teamId));
@@ -96,6 +104,9 @@ function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
         onPress={onSelect}
       >
         <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
+        <Text style={styles.playerName} numberOfLines={1}>
+          {player?.nombreCompleto || 'Jugador'}
+        </Text>
         <Text style={styles.playerFouls}>Faltas: {player?.falta || 0}</Text>
       </Pressable>
 
@@ -1210,6 +1221,7 @@ const styles = StyleSheet.create({
   },
   playerCardSelected: { borderColor: '#7DF79A', backgroundColor: '#153A28' },
   playerNumber: { color: '#FFF', fontWeight: '900', fontSize: 20 },
+  playerName: { color: '#E3F1FF', fontWeight: '700', fontSize: 13, textAlign: 'center' },
   playerFouls: { color: '#FFCDD2', fontWeight: '700' },
   playerButtonsCol: { gap: 8 },
   actionMiniButton: {

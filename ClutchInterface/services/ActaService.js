@@ -6,11 +6,16 @@ const INSCRIPCIONES_URL = `${API_BASE_URL}/inscripciones`;
 const PARTIDOS_URL = `${API_BASE_URL}/partidos`;
 
 
-const getPlayerDisplayName = (player) =>
-  [player?.nombre, player?.primerApellido, player?.segundoApellido]
+const getPlayerSource = (player) => (player?.jugador && typeof player.jugador === 'object' ? player.jugador : player);
+const getPlayerId = (player) => player?.id ?? player?.jugadorId ?? player?.jugador?.id;
+
+const getPlayerDisplayName = (player) => {
+  const source = getPlayerSource(player);
+  return [source?.nombre, source?.primerApellido, source?.segundoApellido]
     .filter(Boolean)
     .join(' ')
     .trim() || 'Jugador';
+};
 
 const getCoachDisplayName = (coach) => {
   if (!coach || typeof coach !== 'object') {
@@ -113,7 +118,9 @@ export async function fetchInitialMatchSetup(selectedMatch) {
       coaches: extractCoachNames(equipoLocal),
       inscripciones: inscripcionesLocal,
       jugadoresDisponibles: safeArray(equipoLocal?.jugadores).map((player) => ({
+        ...getPlayerSource(player),
         ...player,
+        id: getPlayerId(player),
         nombreCompleto: getPlayerDisplayName(player),
       })),
     },
@@ -123,7 +130,9 @@ export async function fetchInitialMatchSetup(selectedMatch) {
       coaches: extractCoachNames(equipoVisitante),
       inscripciones: inscripcionesVisitante,
       jugadoresDisponibles: safeArray(equipoVisitante?.jugadores).map((player) => ({
+        ...getPlayerSource(player),
         ...player,
+        id: getPlayerId(player),
         nombreCompleto: getPlayerDisplayName(player),
       })),
     },
