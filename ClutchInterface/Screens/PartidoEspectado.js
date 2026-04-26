@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -64,6 +65,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
   const [activeTab, setActiveTab] = useState(LIVE_TAB);
   const [activeTeamStats, setActiveTeamStats] = useState('local');
   const [selectedBestStat, setSelectedBestStat] = useState(STAT_OPTIONS[0].key);
+  const [showBestStatDropdown, setShowBestStatDropdown] = useState(false);
 
   const partidoId = partido?.id;
 
@@ -204,6 +206,11 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     };
   }, [actasByTeam.local, actasByTeam.visitante, playersById, selectedBestStat]);
 
+  const selectedBestStatLabel = useMemo(
+    () => STAT_OPTIONS.find((option) => option.key === selectedBestStat)?.label || 'Estadística',
+    [selectedBestStat]
+  );
+
   const TeamBadge = ({ side }) => {
     const team = side === 'local' ? match?.equipoLocal : match?.equipoVisitante;
     return (
@@ -222,7 +229,9 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
             <Image source={appLogo} style={styles.headerLogo} />
             <Text style={styles.headerUser}>{user?.apodo || 'Usuario'}</Text>
           </Pressable>
-          <Pressable onPress={onGoBack}><Text style={styles.backText}>Volver</Text></Pressable>
+          <Pressable style={styles.backButton} onPress={onGoBack}>
+            <Text style={styles.backButtonText}>❮ Volver</Text>
+          </Pressable>
         </View>
 
         {loading ? <ActivityIndicator color="#FFF" size="large" /> : null}
@@ -285,36 +294,57 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                   </Pressable>
                 </View>
 
-                <View style={styles.tableHeader}>
-                  <Text style={styles.thDorsal}>D</Text><Text style={styles.thName}>Jugador</Text><Text style={styles.th}>MIN</Text><Text style={styles.th}>PTS</Text><Text style={styles.th}>T2</Text><Text style={styles.th}>T3</Text><Text style={styles.th}>TL</Text>
-                </View>
-                {(activeTeamStats === 'local' ? actasByTeam.local : actasByTeam.visitante).map((row) => {
-                  const player = playersById.get(String(row?.jugadorId));
-                  const onCourt = onCourtByTeam.get(String(row?.equipoId))?.has(String(row?.jugadorId));
-                  return (
-                    <View key={String(row?.id)} style={[styles.tr, onCourt && styles.trOnCourt]}>
-                      <Text style={styles.tdDorsal}>{toSafeNumber(row?.dorsal)}</Text>
-                      <Text style={styles.tdName} numberOfLines={1}>{player?.nombreCompleto || `Jugador ${row?.jugadorId || ''}`}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.minutosJugados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.puntos)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.t2Anotados)}/{toSafeNumber(row?.t2Tirados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.triplesAnotados)}/{toSafeNumber(row?.triplesTirados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.tlAnotados)}/{toSafeNumber(row?.tlTirados)}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <View style={styles.statsTable}>
+                    <View style={styles.tableHeader}>
+                      <Text style={styles.thName}>Jugador</Text>
+                      <Text style={styles.th}>MIN</Text>
+                      <Text style={styles.th}>PTS</Text>
+                      <Text style={styles.th}>T2</Text>
+                      <Text style={styles.th}>T3</Text>
+                      <Text style={styles.th}>TL</Text>
+                      <Text style={styles.th}>REB</Text>
+                      <Text style={styles.th}>ROB</Text>
+                      <Text style={styles.th}>TAP</Text>
+                      <Text style={styles.th}>PER</Text>
+                      <Text style={styles.th}>FAL</Text>
+                      <Text style={styles.th}>VAL</Text>
+                      <Text style={styles.th}>+/-</Text>
                     </View>
-                  );
-                })}
+                    {(activeTeamStats === 'local' ? actasByTeam.local : actasByTeam.visitante).map((row) => {
+                      const player = playersById.get(String(row?.jugadorId));
+                      const onCourt = onCourtByTeam.get(String(row?.equipoId))?.has(String(row?.jugadorId));
+                      return (
+                        <View key={String(row?.id)} style={[styles.tr, onCourt && styles.trOnCourt]}>
+                          <Text style={styles.tdName} numberOfLines={1}>
+                            #{String(toSafeNumber(row?.dorsal)).padStart(2, '0')} {player?.nombreCompleto || `Jugador ${row?.jugadorId || ''}`}
+                          </Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.minutosJugados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.puntos)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.t2Anotados)}/{toSafeNumber(row?.t2Tirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.triplesAnotados)}/{toSafeNumber(row?.triplesTirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.tlAnotados)}/{toSafeNumber(row?.tlTirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.rebotes)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.robos)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.tapones)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.perdida)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.falta)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.valoracion)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.plusMinus)}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
               </View>
             ) : null}
 
             {activeTab === BEST_TAB ? (
               <View style={styles.panel}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsSelector}>
-                  {STAT_OPTIONS.map((opt) => (
-                    <Pressable key={opt.key} style={[styles.statChip, selectedBestStat === opt.key && styles.statChipActive]} onPress={() => setSelectedBestStat(opt.key)}>
-                      <Text style={styles.statChipText}>{opt.label}</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
+                <Pressable style={styles.selectButton} onPress={() => setShowBestStatDropdown(true)}>
+                  <Text style={styles.selectText}>Mejores por: {selectedBestStatLabel}</Text>
+                  <Text style={styles.selectChevron}>▾</Text>
+                </Pressable>
 
                 {['local', 'visitante'].map((side) => {
                   const team = side === 'local' ? match?.equipoLocal : match?.equipoVisitante;
@@ -363,6 +393,30 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
             ) : null}
           </ScrollView>
         ) : null}
+
+        <Modal
+          visible={showBestStatDropdown}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowBestStatDropdown(false)}
+        >
+          <Pressable style={styles.dropdownOverlay} onPress={() => setShowBestStatDropdown(false)}>
+            <View style={styles.dropdownMenu}>
+              {STAT_OPTIONS.map((opt) => (
+                <Pressable
+                  key={opt.key}
+                  style={[styles.dropdownItem, selectedBestStat === opt.key && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedBestStat(opt.key);
+                    setShowBestStatDropdown(false);
+                  }}
+                >
+                  <Text style={styles.dropdownText}>{opt.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -375,8 +429,9 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   headerLogo: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFF' },
   headerUser: { color: '#FFF', fontWeight: '800', fontSize: 16 },
-  backText: { color: '#FFF', fontWeight: '700' },
-  content: { paddingBottom: 30, gap: 12 },
+  backButton: { backgroundColor: '#2D4368', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: '#9EC5FF' },
+  backButtonText: { color: '#FFF', fontWeight: '700' },
+  content: { paddingBottom: 30, gap: 12, marginTop: 10 },
   scoreCard: { backgroundColor: '#14253E', borderRadius: 18, padding: 10 },
   topLine: { color: '#FFF', textAlign: 'center', fontWeight: '700' },
   mainScoreRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -403,19 +458,22 @@ const styles = StyleSheet.create({
   shieldBtn: { backgroundColor: '#2D4368', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
   shieldBtnActive: { backgroundColor: '#00AEEF' },
   shieldBtnText: { color: '#FFF', fontWeight: '700' },
+  statsTable: { minWidth: 940 },
   tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#FFFFFF44', paddingBottom: 5, alignItems: 'center' },
-  thDorsal: { width: 28, color: '#FFF', fontWeight: '800' },
-  thName: { flex: 1, color: '#FFF', fontWeight: '800' },
-  th: { width: 48, color: '#FFF', fontWeight: '800', textAlign: 'center', fontSize: 12 },
+  thName: { width: 260, color: '#FFF', fontWeight: '800' },
+  th: { width: 52, color: '#FFF', fontWeight: '800', textAlign: 'center', fontSize: 12 },
   tr: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#FFFFFF14' },
   trOnCourt: { backgroundColor: '#2B4E76' },
-  tdDorsal: { width: 28, color: '#FF4B4B', fontWeight: '800' },
-  tdName: { flex: 1, color: '#FFF' },
-  td: { width: 48, color: '#FFF', textAlign: 'center', fontSize: 12 },
-  statsSelector: { gap: 8 },
-  statChip: { backgroundColor: '#2D4368', borderRadius: 18, paddingHorizontal: 10, paddingVertical: 7 },
-  statChipActive: { backgroundColor: '#00AEEF' },
-  statChipText: { color: '#FFF', fontWeight: '700' },
+  tdName: { width: 260, color: '#FFF' },
+  td: { width: 52, color: '#FFF', textAlign: 'center', fontSize: 12 },
+  selectButton: { backgroundColor: '#2D4368', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#9EC5FF', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  selectText: { color: '#FFF', fontWeight: '700' },
+  selectChevron: { color: '#FFF', fontSize: 14, fontWeight: '900' },
+  dropdownOverlay: { flex: 1, backgroundColor: '#00000066', justifyContent: 'center', paddingHorizontal: 24 },
+  dropdownMenu: { backgroundColor: '#1F3352', borderRadius: 10, borderWidth: 1, borderColor: '#9EC5FF', overflow: 'hidden' },
+  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#FFFFFF22' },
+  dropdownItemActive: { backgroundColor: '#00AEEF' },
+  dropdownText: { color: '#FFF', fontWeight: '700' },
   subTitle: { color: '#FFF', fontSize: 18, fontWeight: '800', marginTop: 8 },
   bestCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1F3352', borderRadius: 8, padding: 7, marginBottom: 6 },
   bestCardTop: { minHeight: 76 },
