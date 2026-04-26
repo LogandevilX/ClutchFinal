@@ -96,6 +96,9 @@ function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
         onPress={onSelect}
       >
         <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
+        <Text style={styles.playerName} numberOfLines={1}>
+          {player?.nombreCompleto || 'Jugador'}
+        </Text>
         <Text style={styles.playerFouls}>Faltas: {player?.falta || 0}</Text>
       </Pressable>
 
@@ -1210,6 +1213,7 @@ const styles = StyleSheet.create({
   },
   playerCardSelected: { borderColor: '#7DF79A', backgroundColor: '#153A28' },
   playerNumber: { color: '#FFF', fontWeight: '900', fontSize: 20 },
+  playerName: { color: '#E3F1FF', fontWeight: '700', fontSize: 13, textAlign: 'center' },
   playerFouls: { color: '#FFCDD2', fontWeight: '700' },
   playerButtonsCol: { gap: 8 },
   actionMiniButton: {
