@@ -443,8 +443,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       if (closeModal) {
         setShowFoulModal(false);
       }
+      return updated;
     } catch (error) {
       Alert.alert('Error', 'No se pudo registrar la falta.');
+      return null;
     }
   };
 
@@ -483,15 +485,18 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     setTimeoutActive(true);
 
     try {
-      await sendEvent(partidoId, {
+      const updated = await sendEvent(partidoId, {
         equipoId,
         tipoEvento: 'TIEMPO_MUERTO',
         periodo: currentPeriod,
         minuto: minute,
         segundo: second,
       });
+      setState(updated);
+      return updated;
     } catch (error) {
-      // Ignorar: el temporizador local ya está activo.
+      Alert.alert('Error', 'No se pudo registrar el tiempo muerto.');
+      return null;
     }
   };
 
@@ -1011,8 +1016,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   <Pressable
                     style={[styles.resultBtn, styles.successBtn]}
                     onPress={async () => {
-                      await handleNormalFoul(false);
-                      setFoulStep('shooter');
+                      const foulRegistered = await handleNormalFoul(false);
+                      if (foulRegistered) {
+                        setFoulStep('shooter');
+                      }
                     }}
                   >
                     <Text style={styles.resultText}>De tiro</Text>
