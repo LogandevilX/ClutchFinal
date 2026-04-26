@@ -508,19 +508,26 @@ public class PartidoService {
             throw new IllegalArgumentException("Debe indicar periodo del evento.");
         }
 
-        if (eventoDTO.getSegundo() == null && eventoDTO.getMinuto() == null) {
+        Integer minuto = eventoDTO.getMinuto();
+        Integer segundo = eventoDTO.getSegundo();
+
+        if (segundo == null && minuto == null) {
             throw new IllegalArgumentException("Debe indicar el tiempo del evento en segundos o minutos.");
         }
 
-        if (eventoDTO.getSegundo() == null) {
-            eventoDTO.setSegundo(eventoDTO.getMinuto() * 60);
+        if (segundo == null) {
+            segundo = minuto * 60;
+        } else if (segundo >= 0 && segundo <= 59 && minuto != null) {
+            // Cliente nuevo: envia minuto y segundo del reloj (mm:ss) y aqui lo pasamos a segundo absoluto del periodo.
+            segundo = (minuto * 60) + segundo;
         }
 
-        if (eventoDTO.getSegundo() < 0 || eventoDTO.getSegundo() > 600) {
+        if (segundo < 0 || segundo > 600) {
             throw new IllegalArgumentException("El segundo del evento debe estar entre 0 y 600.");
         }
 
-        eventoDTO.setMinuto(eventoDTO.getSegundo() / 60);
+        eventoDTO.setSegundo(segundo);
+        eventoDTO.setMinuto(segundo / 60);
     }
 
     private boolean jugadorEnJuego(List<HistorialPartido> eventosJugador) {
