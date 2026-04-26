@@ -172,6 +172,20 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     visitante: actas.filter((a) => String(a?.equipoId) === teamIds.visitante),
   }), [actas, teamIds.local, teamIds.visitante]);
 
+  const dorsalByPlayerTeam = useMemo(() => {
+    const map = new Map();
+    actas.forEach((acta) => {
+      map.set(`${String(acta?.equipoId)}-${String(acta?.jugadorId)}`, toSafeNumber(acta?.dorsal));
+    });
+    return map;
+  }, [actas]);
+
+  const getPlayerDorsal = (jugadorId, equipoId) => {
+    const dorsalFromActa = dorsalByPlayerTeam.get(`${String(equipoId)}-${String(jugadorId)}`);
+    if (dorsalFromActa !== undefined) return dorsalFromActa;
+    return toSafeNumber(playersById.get(String(jugadorId))?.dorsal);
+  };
+
   const liveEvents = useMemo(() => [...historial].sort((a, b) => toSafeNumber(b?.periodo) - toSafeNumber(a?.periodo) || toEventSeconds(b) - toEventSeconds(a)), [historial]);
 
   const totalsByTeam = useMemo(() => {
@@ -277,7 +291,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                   {player?.pathFoto ? <Image source={{ uri: player.pathFoto }} style={styles.playerPhoto} /> : <Image source={appLogo} style={styles.playerPhoto} />}
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventTitle}>{EVENT_LABELS[evt?.tipoEvento] || evt?.tipoEvento}</Text>
-                    <Text style={styles.eventSub}>{player?.nombreCompleto || 'Jugador'} · #{toSafeNumber(player?.dorsal || 0)}</Text>
+                    <Text style={styles.eventSub}>{player?.nombreCompleto || 'Jugador'} · #{getPlayerDorsal(evt?.jugadorId, evt?.equipoId)}</Text>
                     <Text style={styles.eventTime}>Q{evt?.periodo || 1} - {formatClock(toEventSeconds(evt))}</Text>
                   </View>
                   <Text style={styles.eventIcon}>🏀</Text>
@@ -304,7 +318,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                   const onCourt = onCourtByTeam.get(String(row?.equipoId))?.has(String(row?.jugadorId));
                   return (
                     <View key={String(row?.id)} style={[styles.tr, onCourt && styles.trOnCourt]}>
-                      <Text style={styles.tdDorsal}>{toSafeNumber(row?.dorsal)}</Text>
+                      <Text style={styles.tdDorsal}>{getPlayerDorsal(row?.jugadorId, row?.equipoId)}</Text>
                       <Text style={styles.tdName} numberOfLines={1}>{player?.nombreCompleto || `Jugador ${row?.jugadorId || ''}`}</Text>
                       <Text style={styles.td}>{toSafeNumber(row?.minutosJugados)}</Text>
                       <Text style={styles.td}>{toSafeNumber(row?.puntos)}</Text>
