@@ -311,24 +311,48 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                   </Pressable>
                 </View>
 
-                <View style={styles.tableHeader}>
-                  <Text style={styles.thDorsal}>D</Text><Text style={styles.thName}>Jugador</Text><Text style={styles.th}>MIN</Text><Text style={styles.th}>PTS</Text><Text style={styles.th}>T2</Text><Text style={styles.th}>T3</Text><Text style={styles.th}>TL</Text>
-                </View>
-                {(activeTeamStats === 'local' ? actasByTeam.local : actasByTeam.visitante).map((row) => {
-                  const player = playersById.get(String(row?.jugadorId));
-                  const onCourt = onCourtByTeam.get(String(row?.equipoId))?.has(String(row?.jugadorId));
-                  return (
-                    <View key={String(row?.id)} style={[styles.tr, onCourt && styles.trOnCourt]}>
-                      <Text style={styles.tdDorsal}>{getPlayerDorsal(row?.jugadorId, row?.equipoId)}</Text>
-                      <Text style={styles.tdName} numberOfLines={1}>{player?.nombreCompleto || `Jugador ${row?.jugadorId || ''}`}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.minutosJugados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.puntos)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.t2Anotados)}/{toSafeNumber(row?.t2Tirados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.triplesAnotados)}/{toSafeNumber(row?.triplesTirados)}</Text>
-                      <Text style={styles.td}>{toSafeNumber(row?.tlAnotados)}/{toSafeNumber(row?.tlTirados)}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <View style={styles.statsTable}>
+                    <View style={styles.tableHeader}>
+                      <Text style={styles.thPlayer}>Jugador</Text>
+                      <Text style={styles.th}>MIN</Text>
+                      <Text style={styles.th}>PTS</Text>
+                      <Text style={styles.th}>TL</Text>
+                      <Text style={styles.th}>T2</Text>
+                      <Text style={styles.th}>T3</Text>
+                      <Text style={styles.th}>REB</Text>
+                      <Text style={styles.th}>TAP</Text>
+                      <Text style={styles.th}>ROB</Text>
+                      <Text style={styles.th}>PER</Text>
+                      <Text style={styles.th}>FAL</Text>
+                      <Text style={styles.th}>VAL</Text>
+                      <Text style={styles.th}>+/-</Text>
                     </View>
-                  );
-                })}
+                    {(activeTeamStats === 'local' ? actasByTeam.local : actasByTeam.visitante).map((row) => {
+                      const player = playersById.get(String(row?.jugadorId));
+                      const onCourt = onCourtByTeam.get(String(row?.equipoId))?.has(String(row?.jugadorId));
+                      return (
+                        <View key={String(row?.id)} style={[styles.tr, onCourt && styles.trOnCourt]}>
+                          <Text style={styles.tdPlayer} numberOfLines={1}>
+                            #{getPlayerDorsal(row?.jugadorId, row?.equipoId)} {player?.nombreCompleto || `Jugador ${row?.jugadorId || ''}`}
+                          </Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.minutosJugados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.puntos)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.tlAnotados)}/{toSafeNumber(row?.tlTirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.t2Anotados)}/{toSafeNumber(row?.t2Tirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.triplesAnotados)}/{toSafeNumber(row?.triplesTirados)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.rebotes)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.tapones)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.robos)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.perdida)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.falta)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.valoracion)}</Text>
+                          <Text style={styles.td}>{toSafeNumber(row?.plusMinus)}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
               </View>
             ) : null}
 
@@ -434,15 +458,14 @@ const styles = StyleSheet.create({
   shieldBtn: { backgroundColor: '#2D4368', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
   shieldBtnActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
   shieldBtnText: { color: '#FFF', fontWeight: '700' },
+  statsTable: { minWidth: 860 },
   tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#FFFFFF44', paddingBottom: 5, alignItems: 'center' },
-  thDorsal: { width: 28, color: '#FFF', fontWeight: '800' },
-  thName: { flex: 1, color: '#FFF', fontWeight: '800' },
-  th: { width: 48, color: '#FFF', fontWeight: '800', textAlign: 'center', fontSize: 12 },
+  thPlayer: { width: 260, color: '#FFF', fontWeight: '800' },
+  th: { width: 50, color: '#FFF', fontWeight: '800', textAlign: 'center', fontSize: 12 },
   tr: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#FFFFFF14' },
   trOnCourt: { backgroundColor: '#2B4E76' },
-  tdDorsal: { width: 28, color: '#FF4B4B', fontWeight: '800' },
-  tdName: { flex: 1, color: '#FFF' },
-  td: { width: 48, color: '#FFF', textAlign: 'center', fontSize: 12 },
+  tdPlayer: { width: 260, color: '#FFF' },
+  td: { width: 50, color: '#FFF', textAlign: 'center', fontSize: 12 },
   statsSelector: { gap: 8 },
   statChip: { backgroundColor: '#2D4368', borderRadius: 18, paddingHorizontal: 10, paddingVertical: 7 },
   statChipActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
