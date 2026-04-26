@@ -737,7 +737,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                 <Text style={styles.nextPeriodText}>Siguiente periodo</Text>
               </Pressable>
             ) : (
-              <Text style={styles.mainClock}>{formatClock(mainClock)} - 10:00</Text>
+              <Text style={styles.mainClock}>{formatClock(mainClock)}</Text>
             )}
           </View>
           {timeoutActive ? (
@@ -766,7 +766,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             >
               <Text style={styles.smallControlText}>{clockRunning ? 'Pausa' : 'Play'}</Text>
             </Pressable>
-            <Text style={styles.shotClockText}>{shotClock} - 0</Text>
+            <Text style={styles.shotClockText}>{shotClock}</Text>
             <Pressable
               style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]}
               onPress={() => {
