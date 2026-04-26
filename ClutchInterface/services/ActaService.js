@@ -11,10 +11,19 @@ const getPlayerId = (player) => player?.id ?? player?.jugadorId ?? player?.jugad
 
 const getPlayerDisplayName = (player) => {
   const source = getPlayerSource(player);
-  return [source?.nombre, source?.primerApellido, source?.segundoApellido]
+  const fullNameFromParts = [source?.nombre, source?.primerApellido, source?.segundoApellido]
     .filter(Boolean)
     .join(' ')
-    .trim() || 'Jugador';
+    .trim();
+
+  return (
+    fullNameFromParts
+    || source?.nombreCompleto
+    || player?.nombreCompleto
+    || source?.nombreJugador
+    || player?.nombreJugador
+    || 'Jugador'
+  );
 };
 
 const getCoachDisplayName = (coach) => {
