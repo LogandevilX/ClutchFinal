@@ -3,9 +3,11 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -53,7 +55,6 @@ const toEventSeconds = (event) => {
   const minute = toSafeNumber(event?.minuto);
   const second = toSafeNumber(event?.segundo);
 
-  // Compatibilidad con payloads antiguos donde `segundo` ya viene en segundos acumulados.
   if (!minute && second >= 60) {
     return second;
   }
@@ -250,7 +251,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
           <Pressable onPress={onGoBack}><Text style={styles.backText}>Volver</Text></Pressable>
         </View>
 
-        {loading ? <ActivityIndicator color="#FFF" size="large" /> : null}
+        {loading ? <ActivityIndicator color="#FFF" size="large" style={{ marginTop: 20 }} /> : null}
         {!loading && error ? <Text style={styles.error}>{error}</Text> : null}
 
         {!loading && !error ? (
@@ -395,8 +396,13 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  safe: { flex: 1, paddingHorizontal: 12, paddingTop: 8 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  safe: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    marginTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 20
+  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   headerLeft: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   headerLogo: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFF' },
   headerUser: { color: '#FFF', fontWeight: '800', fontSize: 16 },
@@ -414,7 +420,7 @@ const styles = StyleSheet.create({
   cacheTag: { marginTop: 4, color: '#7BFFB8', textAlign: 'center', fontSize: 12 },
   tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   tabBtn: { backgroundColor: '#243B5C', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
-  tabBtnActive: { backgroundColor: '#00AEEF' },
+  tabBtnActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
   tabText: { color: '#FFF', fontWeight: '700' },
   eventCard: { width: '96%', borderRadius: 12, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
   playerPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFF' },
@@ -426,7 +432,7 @@ const styles = StyleSheet.create({
   panel: { backgroundColor: '#13263D', borderRadius: 14, padding: 10, gap: 8 },
   teamSwitch: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
   shieldBtn: { backgroundColor: '#2D4368', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
-  shieldBtnActive: { backgroundColor: '#00AEEF' },
+  shieldBtnActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
   shieldBtnText: { color: '#FFF', fontWeight: '700' },
   tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#FFFFFF44', paddingBottom: 5, alignItems: 'center' },
   thDorsal: { width: 28, color: '#FFF', fontWeight: '800' },
@@ -439,7 +445,7 @@ const styles = StyleSheet.create({
   td: { width: 48, color: '#FFF', textAlign: 'center', fontSize: 12 },
   statsSelector: { gap: 8 },
   statChip: { backgroundColor: '#2D4368', borderRadius: 18, paddingHorizontal: 10, paddingVertical: 7 },
-  statChipActive: { backgroundColor: '#00AEEF' },
+  statChipActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
   statChipText: { color: '#FFF', fontWeight: '700' },
   subTitle: { color: '#FFF', fontSize: 18, fontWeight: '800', marginTop: 8 },
   bestCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1F3352', borderRadius: 8, padding: 7, marginBottom: 6 },
