@@ -96,7 +96,9 @@ export default function InicioMesaScreen({ user, onGoProfile, onGoStartMatch, on
                 <Text style={styles.emptyText}>No tienes partidos asignados por ahora.</Text>
               ) : null}
 
-              {partidos.map((partido) => (
+              {partidos
+                .filter((partido) => partido?.estado !== 'FINALIZADO')
+                .map((partido) => (
                 <Pressable
                   key={String(partido.id)}
                   style={styles.matchCard}
