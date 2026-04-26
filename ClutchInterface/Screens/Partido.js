@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import * as Haptics from 'expo-haptics';
 import {
   ActivityIndicator,
   Alert,
@@ -80,16 +81,22 @@ const buildRosterFromState = (state, setupData, sideKey) => {
 function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
   return (
     <View style={styles.playerRow}>
-      <Pressable style={[styles.playerCard, isSelected ? styles.playerCardSelected : null]} onPress={onSelect}>
+      <Pressable
+        style={({ pressed }) => [styles.playerCard, isSelected ? styles.playerCardSelected : null, pressed ? styles.buttonPressed : null]}
+        onPress={onSelect}
+      >
         <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
         <Text style={styles.playerFouls}>Faltas: {player?.falta || 0}</Text>
       </Pressable>
 
       <View style={styles.playerButtonsCol}>
-        <Pressable style={styles.actionMiniButton} onPress={onSub}>
-          <Text style={styles.miniButtonText}>{'→\n←'}</Text>
+        <Pressable style={({ pressed }) => [styles.actionMiniButton, pressed ? styles.buttonPressed : null]} onPress={onSub}>
+          <Text style={styles.miniButtonText}>⇄</Text>
         </Pressable>
-        <Pressable style={[styles.actionMiniButton, styles.verActaButton]} onPress={onShowActa}>
+        <Pressable
+          style={({ pressed }) => [styles.actionMiniButton, styles.verActaButton, pressed ? styles.buttonPressed : null]}
+          onPress={onShowActa}
+        >
           <Text style={styles.miniButtonText}>Ver acta</Text>
         </Pressable>
       </View>
@@ -120,6 +127,14 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   const [nextPeriodStarters, setNextPeriodStarters] = useState({ local: [], visitante: [] });
   const [showEditTimeModal, setShowEditTimeModal] = useState(false);
   const [editClockValue, setEditClockValue] = useState(0);
+  const [timeoutActive, setTimeoutActive] = useState(false);
+  const [timeoutRemaining, setTimeoutRemaining] = useState(60);
+  const [timeoutTeam, setTimeoutTeam] = useState('');
+  const [showFoulModal, setShowFoulModal] = useState(false);
+  const [foulStep, setFoulStep] = useState('type');
+  const [foulShooter, setFoulShooter] = useState(null);
+  const [freeThrowsTotal, setFreeThrowsTotal] = useState(0);
+  const [freeThrowsTaken, setFreeThrowsTaken] = useState(0);
 
   const partidoId = partido?.id || setupData?.partido?.id;
   const teamLocal = setupData?.local || state?.partido?.equipoLocal;
@@ -262,6 +277,23 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   }, [clockRunning]);
 
   useEffect(() => {
+    if (!timeoutActive) return undefined;
+
+    const timeoutInterval = setInterval(() => {
+      setTimeoutRemaining((prev) => {
+        if (prev <= 1) {
+          setTimeoutActive(false);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timeoutInterval);
+  }, [timeoutActive]);
+
+  useEffect(() => {
     if (shotClock > 0) {
       return;
     }
@@ -385,6 +417,82 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
   const clearSelectedPlayer = () => {
     setSelectedPlayer(null);
+  };
+
+  const stopAndOpenFoul = () => {
+    if (!selectedPlayer?.id) return;
+    setClockRunning(false);
+    setShowFoulModal(true);
+    setFoulStep('type');
+    setFoulShooter(null);
+    setFreeThrowsTotal(0);
+    setFreeThrowsTaken(0);
+  };
+
+  const handleNormalFoul = async (closeModal = true) => {
+    try {
+      const updated = await sendEvent(partidoId, {
+        equipoId: selectedPlayer.equipoId,
+        jugadorId: selectedPlayer.id,
+        tipoEvento: 'FALTA',
+        periodo: currentPeriod,
+        minuto: minute,
+        segundo: second,
+      });
+      setState(updated);
+      if (closeModal) {
+        setShowFoulModal(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo registrar la falta.');
+    }
+  };
+
+  const handleFreeThrowResult = async (isSuccess) => {
+    if (!foulShooter?.id || freeThrowsTaken >= freeThrowsTotal) {
+      return;
+    }
+    try {
+      const updated = await sendEvent(partidoId, {
+        equipoId: foulShooter.equipoId,
+        jugadorId: foulShooter.id,
+        tipoEvento: 'TL',
+        acierto: isSuccess ? 'SI' : 'NO',
+        periodo: currentPeriod,
+        minuto: minute,
+        segundo: second,
+      });
+      setState(updated);
+
+      if (freeThrowsTaken + 1 >= freeThrowsTotal) {
+        setShowFoulModal(false);
+      }
+      setFreeThrowsTaken((prev) => prev + 1);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo registrar el tiro libre.');
+    }
+  };
+
+  const handleStartTimeout = async (side) => {
+    const equipoId = side === 'local' ? teamLocal?.id : teamVisitante?.id;
+    if (!equipoId) return;
+
+    setClockRunning(false);
+    setTimeoutRemaining(60);
+    setTimeoutTeam(side);
+    setTimeoutActive(true);
+
+    try {
+      await sendEvent(partidoId, {
+        equipoId,
+        tipoEvento: 'TIEMPO_MUERTO',
+        periodo: currentPeriod,
+        minuto: minute,
+        segundo: second,
+      });
+    } catch (error) {
+      // Ignorar: el temporizador local ya está activo.
+    }
   };
 
   const handleQuickAction = async (action) => {
@@ -538,6 +646,9 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       <View style={styles.header}>
         <View style={styles.headerTeamBox}>
           <Text style={styles.teamSideLabel}>Local</Text>
+          <Pressable style={({ pressed }) => [styles.timeoutButton, pressed ? styles.buttonPressed : null]} onPress={() => handleStartTimeout('local')}>
+            <Text style={styles.timeoutButtonText}>TM</Text>
+          </Pressable>
           <Text style={styles.teamLabel}>{teamLocal?.nombreEquipo || 'Local'}</Text>
           <Text style={styles.teamPoints}>{teamPoints.local}</Text>
         </View>
@@ -565,10 +676,13 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               <Text style={styles.mainClock}>{formatClock(mainClock)} - 10:00</Text>
             )}
           </View>
+          {timeoutActive ? (
+            <Text style={styles.timeoutCounter}>⏱ TM {timeoutTeam === 'local' ? 'Local' : 'Visitante'} · {formatClock(timeoutRemaining)}</Text>
+          ) : null}
 
           <View style={styles.possessionRow}>
             <Pressable
-              style={styles.smallControlButton}
+              style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]}
               onPress={() => {
                 clearSelectedPlayer();
                 setShotClock(24);
@@ -577,9 +691,12 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               <Text style={styles.smallControlText}>↺24</Text>
             </Pressable>
             <Pressable
-              style={styles.smallControlButton}
+              style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]}
               onPress={() => {
                 clearSelectedPlayer();
+                if (timeoutActive) {
+                  return;
+                }
                 setClockRunning((prev) => !prev);
               }}
             >
@@ -587,7 +704,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             </Pressable>
             <Text style={styles.shotClockText}>{shotClock} - 0</Text>
             <Pressable
-              style={styles.smallControlButton}
+              style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]}
               onPress={() => {
                 clearSelectedPlayer();
                 setShotClock(14);
@@ -601,6 +718,9 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
         <View style={[styles.headerTeamBox, styles.awayBox]}>
           <Text style={styles.teamSideLabel}>Visitante</Text>
+          <Pressable style={({ pressed }) => [styles.timeoutButton, pressed ? styles.buttonPressed : null]} onPress={() => handleStartTimeout('visitante')}>
+            <Text style={styles.timeoutButtonText}>TM</Text>
+          </Pressable>
           <Text style={styles.teamLabel}>{teamVisitante?.nombreEquipo || 'Visitante'}</Text>
           <Text style={styles.teamPoints}>{teamPoints.visitante}</Text>
         </View>
@@ -630,7 +750,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   shotKey ? (
                     <Pressable
                       key={shotKey}
-                      style={[styles.shotButton, !selectedPlayer?.id ? styles.disabledButton : null]}
+                      style={({ pressed }) => [styles.shotButton, !selectedPlayer?.id ? styles.disabledButton : null, pressed ? styles.buttonPressed : null]}
                       onPress={() => handleShot(shotKey)}
                       disabled={!selectedPlayer?.id}
                     >
@@ -648,13 +768,20 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             {DEFENSIVE_ACTIONS.map((action) => (
               <Pressable
                 key={action}
-                style={[styles.quickActionBtn, !selectedPlayer?.id ? styles.disabledButton : null]}
+                style={({ pressed }) => [styles.quickActionBtn, !selectedPlayer?.id ? styles.disabledButton : null, pressed ? styles.buttonPressed : null]}
                 onPress={() => handleQuickAction(action)}
                 disabled={!selectedPlayer?.id}
               >
                 <Text style={styles.quickActionText}>{action}</Text>
               </Pressable>
             ))}
+            <Pressable
+              style={({ pressed }) => [styles.quickActionBtn, styles.foulActionBtn, !selectedPlayer?.id ? styles.disabledButton : null, pressed ? styles.buttonPressed : null]}
+              onPress={stopAndOpenFoul}
+              disabled={!selectedPlayer?.id}
+            >
+              <Text style={styles.quickActionText}>FALTA</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -869,6 +996,93 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showFoulModal} transparent animationType="fade" onRequestClose={() => setShowFoulModal(false)}>
+        <View style={styles.overlayBackdrop}>
+          <View style={[styles.overlayCard, styles.playerActaCard]}>
+            <Text style={styles.overlayTitle}>Registro de falta</Text>
+            {foulStep === 'type' ? (
+              <>
+                <Text style={styles.actaText}>¿Tipo de falta?</Text>
+                <View style={styles.overlayActions}>
+                  <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={handleNormalFoul}>
+                    <Text style={styles.resultText}>Normal</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.resultBtn, styles.successBtn]}
+                    onPress={async () => {
+                      await handleNormalFoul(false);
+                      setFoulStep('shooter');
+                    }}
+                  >
+                    <Text style={styles.resultText}>De tiro</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : null}
+
+            {foulStep === 'shooter' ? (
+              <>
+                <Text style={styles.actaText}>Selecciona al tirador:</Text>
+                <ScrollView>
+                  {[...localPlayersOnCourt, ...awayPlayersOnCourt].map((player) => (
+                    <Pressable
+                      key={`shooter-${player.id}`}
+                      style={styles.starterRow}
+                      onPress={() => {
+                        setFoulShooter(player);
+                        setFoulStep('count');
+                      }}
+                    >
+                      <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')} {player.nombreCompleto}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </>
+            ) : null}
+
+            {foulStep === 'count' ? (
+              <>
+                <Text style={styles.actaText}>Cantidad de tiros libres</Text>
+                <View style={styles.overlayActions}>
+                  {[1, 2, 3].map((count) => (
+                    <Pressable
+                      key={`ft-${count}`}
+                      style={[styles.resultBtn, styles.clockControlButton]}
+                      onPress={() => {
+                        setFreeThrowsTotal(count);
+                        setFreeThrowsTaken(0);
+                        setFoulStep('result');
+                      }}
+                    >
+                      <Text style={styles.resultText}>{count}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            ) : null}
+
+            {foulStep === 'result' ? (
+              <>
+                <Text style={styles.actaText}>
+                  Tiro libre {freeThrowsTaken + 1} de {freeThrowsTotal}
+                </Text>
+                <View style={styles.overlayActions}>
+                  <Pressable style={[styles.resultBtn, styles.successBtn]} onPress={() => handleFreeThrowResult(true)}>
+                    <Text style={styles.resultText}>Acierto</Text>
+                  </Pressable>
+                  <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={() => handleFreeThrowResult(false)}>
+                    <Text style={styles.resultText}>Fallo</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : null}
+            <Pressable style={styles.closeModalBtn} onPress={() => setShowFoulModal(false)}>
+              <Text style={styles.resultText}>Cerrar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -915,7 +1129,7 @@ const styles = StyleSheet.create({
   playerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   playerCard: {
     flex: 1,
-    minHeight: 54,
+    minHeight: 46,
     backgroundColor: '#FFFFFF14',
     borderRadius: 10,
     borderWidth: 1,
@@ -961,7 +1175,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   quickActionText: { color: '#FFF', fontWeight: '800' },
+  foulActionBtn: { backgroundColor: '#8E2C2C' },
   disabledButton: { opacity: 0.45 },
+  buttonPressed: { opacity: 0.75 },
+  timeoutButton: {
+    alignSelf: 'center',
+    backgroundColor: '#2D4B72',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginVertical: 2,
+  },
+  timeoutButtonText: { color: '#FFF', fontWeight: '800', fontSize: 12 },
+  timeoutCounter: { color: '#FFE290', fontWeight: '800', textAlign: 'center', marginTop: -2 },
   overlayBackdrop: {
     flex: 1,
     backgroundColor: '#000000AA',
