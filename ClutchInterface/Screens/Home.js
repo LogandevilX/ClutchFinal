@@ -74,7 +74,7 @@ function TeamLogo({ uri }) {
 const getPlayerFullName = (player) =>
   [player?.nombre, player?.primerApellido, player?.segundoApellido].filter(Boolean).join(' ');
 
-export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlayerDetail }) {
+export default function HomeScreen({ user, onGoProfile, onGoLiveMatch, onGoTeamDetail, onGoPlayerDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [liveMatches, setLiveMatches] = useState([]);
@@ -277,16 +277,23 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlay
         {!loading && !errorMessage ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-            <View style={styles.sectionHeader}>
+            <Pressable
+              style={styles.sectionHeader}
+              onPress={() => {
+                if (liveMatches.length > 0) {
+                  onGoLiveMatch?.(liveMatches[0]);
+                }
+              }}
+            >
               <Text style={styles.sectionTitle}>Partidos en directo</Text>
-            </View>
+            </Pressable>
 
             {liveMatches.length === 0 ? (
               <Text style={styles.emptyText}>No hay partidos en directo de tus equipos seguidos.</Text>
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveMatchesRow}>
                 {liveMatches.map((match) => (
-                  <View key={match.id} style={styles.liveCard}>
+                  <Pressable key={match.id} style={styles.liveCard} onPress={() => onGoLiveMatch?.(match)}>
                     <Text style={styles.liveBadge}>● LIVE</Text>
                     <View style={styles.teamRow}>
                       <View style={styles.teamColumn}>
@@ -307,7 +314,7 @@ export default function HomeScreen({ user, onGoProfile, onGoTeamDetail, onGoPlay
                         </Text>
                       </View>
                     </View>
-                  </View>
+                  </Pressable>
                 ))}
               </ScrollView>
             )}

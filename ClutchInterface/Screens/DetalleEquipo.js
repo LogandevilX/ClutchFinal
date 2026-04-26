@@ -95,7 +95,7 @@ const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => 
   </View>
 );
 
-export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail }) {
+export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail, onGoMatchDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState('plantilla');
@@ -460,7 +460,11 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                     {selectedJornada.dates.map((dateGroup) => (
                       <View key={`${selectedJornada.key}-${dateGroup.dateLabel}`} style={styles.dateGroup}>
                         {dateGroup.matches.map((match) => (
-                          <View key={match.id} style={[styles.matchCard, { backgroundColor: getMatchBackgroundColor(match.estado) }]}>
+                          <Pressable
+                            key={match.id}
+                            style={[styles.matchCard, { backgroundColor: getMatchBackgroundColor(match.estado) }]}
+                            onPress={() => onGoMatchDetail?.(match)}
+                          >
                             {match.estado === 'EN_CURSO' ? <Text style={styles.liveTag}>LIVE</Text> : null}
                             {match.estado === 'PROGRAMADO' ? <Text style={styles.matchDateText}>{dateGroup.dateLabel}</Text> : null}
                             <Text style={styles.matchTimeText}>
@@ -487,7 +491,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                             <View style={styles.venueWrap}>
                               <Text style={styles.venueText}>{match.pabellonDeJuego || 'Sin dirección del pabellón'}</Text>
                             </View>
-                          </View>
+                          </Pressable>
                         ))}
                       </View>
                     ))}
