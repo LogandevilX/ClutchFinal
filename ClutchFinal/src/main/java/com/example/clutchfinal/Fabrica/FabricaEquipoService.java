@@ -102,27 +102,6 @@ public class FabricaEquipoService {
         return dto;
     }
 
-    public EquipoDetalleDTO createEquipoDetalleBasicoDTO(Equipo equipo, String escudo, String pabellonDireccion){
-        EquipoDetalleDTO dto = new EquipoDetalleDTO();
-        dto.setId(equipo.getId());
-        dto.setNombreEquipo(equipo.getNombreEquipo());
-        dto.setPartidosGanados(equipo.getPartidosGanados());
-        dto.setPartidosPerdidos(equipo.getPartidosPerdidos());
-        dto.setPuntos(equipo.getPuntos());
-        dto.setPosicion(equipo.getPosicion());
-        dto.setPuntosAFavor(equipo.getPuntosAFavor());
-        dto.setPuntosEnContra(equipo.getPuntosEnContra());
-
-        if(escudo != null)
-            dto.setUrlEscudo("/escudos/" + escudo);
-
-        dto.setDireccion(pabellonDireccion);
-        dto.setEntrenadores(List.of());
-        dto.setJugadores(List.of());
-        return dto;
-    }
-
-
     public EquipoDetalleDTO createEquipoDetalleDTO(Equipo equipo, String escudo, String pabellonDireccion,
                                                    List<EntrenadorDTO> entrenadores, List<JugadorResponseDTO> jugadores){
         EquipoDetalleDTO dto = new EquipoDetalleDTO();

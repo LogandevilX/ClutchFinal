@@ -103,7 +103,7 @@ public class EquipoService {
 
     public List<EquipoDetalleDTO> findAll(){
         return equipoRepository.findAll().stream()
-                .map(this::createEquipoDetalleSinPlantilla)
+                .map(this::createEquipoDetalle)
                 .toList();
     }
 
@@ -121,12 +121,6 @@ public class EquipoService {
                 .toList();
 
         return fabricaEquipoService.createEquipoDetalleDTO(equipo, escudo, pabellon, entrenadores, jugadores);
-    }
-
-    private EquipoDetalleDTO createEquipoDetalleSinPlantilla(Equipo equipo) {
-        String escudo = equipoRepository.getEscudo(equipo.getId());
-        String pabellon = equipoRepository.getPabellon(equipo.getId());
-        return fabricaEquipoService.createEquipoDetalleBasicoDTO(equipo, escudo, pabellon);
     }
 
     public void deleteById(Long id){
