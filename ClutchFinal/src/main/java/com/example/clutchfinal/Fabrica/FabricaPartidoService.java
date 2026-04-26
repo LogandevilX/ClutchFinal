@@ -3,6 +3,7 @@ package com.example.clutchfinal.Fabrica;
 import com.example.clutchfinal.DTO.ParcialPartidoDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
 import com.example.clutchfinal.DTO.PartidosResponseDTO;
+import com.example.clutchfinal.Model.Equipo;
 import com.example.clutchfinal.Model.Partido;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,10 @@ public class FabricaPartidoService {
 
     @Autowired
     private FabricaEquipoService fabricaEquipoService;
+    @Autowired
+    private FabricaEntrenadorService fabricaEntrenadorService;
+    @Autowired
+    private FabricaJugadorService fabricaJugadorService;
 
     public PartidoDTO toPartidoDTO(Partido partido) {
         return new PartidoDTO(
@@ -34,6 +39,14 @@ public class FabricaPartidoService {
     }
 
     public PartidosResponseDTO toPartidoResponseDTO(Partido partido) {
+        return toPartidoResponseDTO(partido, false);
+    }
+
+    public PartidosResponseDTO toPartidoResponseDTOConPlantilla(Partido partido) {
+        return toPartidoResponseDTO(partido, true);
+    }
+
+    private PartidosResponseDTO toPartidoResponseDTO(Partido partido, boolean incluirPlantilla) {
         String escudoLocal = partido.getInscripcionLocal().getEquipo().getClub() != null
                 ? partido.getInscripcionLocal().getEquipo().getClub().getEscudo()
                 : null;
@@ -60,11 +73,30 @@ public class FabricaPartidoService {
                 .toList()
                 : new ArrayList<>();
 
+        Equipo equipoLocal = partido.getInscripcionLocal().getEquipo();
+        Equipo equipoVisitante = partido.getInscripcionVisitante().getEquipo();
+
         return new PartidosResponseDTO(
                 partido.getId(),
                 partido.getGrupo().getId(),
-                fabricaEquipoService.createEquipoDetalleBasicoDTO(partido.getInscripcionLocal().getEquipo(), escudoLocal, direccionLocal),
-                fabricaEquipoService.createEquipoDetalleBasicoDTO(partido.getInscripcionVisitante().getEquipo(), escudoVisitante, direccionVisitante),
+                incluirPlantilla
+                        ? fabricaEquipoService.createEquipoDetalleDTO(
+                        equipoLocal,
+                        escudoLocal,
+                        direccionLocal,
+                        fabricaEntrenadorService.createEntrenadoresDTO(equipoLocal.getEntrenadores()),
+                        fabricaJugadorService.createJugadoresDTO(equipoLocal.getJugadores())
+                )
+                        : fabricaEquipoService.createEquipoDetalleBasicoDTO(equipoLocal, escudoLocal, direccionLocal),
+                incluirPlantilla
+                        ? fabricaEquipoService.createEquipoDetalleDTO(
+                        equipoVisitante,
+                        escudoVisitante,
+                        direccionVisitante,
+                        fabricaEntrenadorService.createEntrenadoresDTO(equipoVisitante.getEntrenadores()),
+                        fabricaJugadorService.createJugadoresDTO(equipoVisitante.getJugadores())
+                )
+                        : fabricaEquipoService.createEquipoDetalleBasicoDTO(equipoVisitante, escudoVisitante, direccionVisitante),
                 partido.getJornada(),
                 partido.getFechaHoraInicio(),
                 partido.getFechaHoraFin(),

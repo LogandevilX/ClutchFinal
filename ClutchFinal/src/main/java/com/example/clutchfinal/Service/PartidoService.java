@@ -382,7 +382,7 @@ public class PartidoService {
         List<ActaDTO> actas = actaService.findActasByPartidoId(partidoId);
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
 
-        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTO(partido), actas, historial);
+        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTOConPlantilla(partido), actas, historial);
     }
 
     public PartidosResponseDTO findPartidoById(Long id) {

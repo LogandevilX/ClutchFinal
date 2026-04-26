@@ -44,28 +44,38 @@ const buildRosterFromState = (state, setupData, sideKey) => {
   const setupTeam = sideKey === 'local' ? setupData?.local : setupData?.visitante;
   const stateTeam = sideKey === 'local' ? state?.partido?.equipoLocal : state?.partido?.equipoVisitante;
   const teamId = setupTeam?.id || stateTeam?.id;
+  const actasTeam = (state?.actas || []).filter((acta) => String(acta?.equipoId) === String(teamId));
+  const actaPlayerIds = new Set(actasTeam.map((acta) => String(acta?.jugadorId)));
   const allPlayers = [
     ...(setupData?.local?.jugadoresDisponibles || []),
     ...(setupData?.visitante?.jugadoresDisponibles || []),
   ];
   const playerNameById = new Map(
-    allPlayers.map((player) => [
-      String(player?.id),
-      player?.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim(),
-    ])
+    allPlayers
+      .filter((player) => actaPlayerIds.has(String(player?.id)))
+      .map((player) => [
+        String(player?.id),
+        {
+          nombreCompleto: player?.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim(),
+          pathFoto: player?.pathFoto || player?.foto || null,
+        },
+      ])
   );
 
-  const basePlayers = (setupTeam?.jugadoresDisponibles || []).map((player) => ({
-    ...player,
-    equipoId: teamId,
-    nombreCompleto: player.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim() || 'Nombre jugador',
-  }));
+  const basePlayers = (setupTeam?.jugadoresDisponibles || [])
+    .filter((player) => actaPlayerIds.has(String(player?.id)))
+    .map((player) => ({
+      ...player,
+      equipoId: teamId,
+      nombreCompleto: player.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim() || 'Nombre jugador',
+      pathFoto: player?.pathFoto || player?.foto || null,
+    }));
 
-  const actasTeam = (state?.actas || []).filter((acta) => String(acta?.equipoId) === String(teamId));
   const rosterFromActas = actasTeam.map((acta) => ({
     id: acta?.jugadorId,
     equipoId: acta?.equipoId,
-    nombreCompleto: playerNameById.get(String(acta?.jugadorId)) || 'Jugador',
+    nombreCompleto: playerNameById.get(String(acta?.jugadorId))?.nombreCompleto || 'Jugador',
+    pathFoto: playerNameById.get(String(acta?.jugadorId))?.pathFoto || null,
     dorsal: acta?.dorsal || 0,
     falta: acta?.falta || 0,
     puntos: acta?.puntos || 0,
