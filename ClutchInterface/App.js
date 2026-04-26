@@ -10,6 +10,7 @@ import DetalleJugadorScreen from './Screens/DetalleJugador';
 import InicioMesaScreen from './Screens/InicioMesa';
 import IniciarPartidoScreen from './Screens/IniciarPartido';
 import PartidoScreen from './Screens/Partido';
+import PartidoEspectadoScreen from './Screens/PartidoEspectado';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -19,6 +20,7 @@ export default function App() {
   const [playerDetailBackScreen, setPlayerDetailBackScreen] = useState('home');
   const [selectedMesaMatch, setSelectedMesaMatch] = useState(null);
   const [liveMatchPayload, setLiveMatchPayload] = useState(null);
+  const [selectedLiveMatch, setSelectedLiveMatch] = useState(null);
 
   const goToInitialLoggedScreen = (user) => {
     if (user?.rol === 'ANOTADOR') {
@@ -60,6 +62,10 @@ export default function App() {
         <HomeScreen
           user={loggedUser}
           onGoProfile={() => setScreen('perfil')}
+          onGoLiveMatch={(match) => {
+            setSelectedLiveMatch(match);
+            setScreen('partidoEspectado');
+          }}
           onGoTeamDetail={(teamId) => {
             setSelectedTeamId(teamId);
             setScreen('detalleEquipo');
@@ -68,6 +74,18 @@ export default function App() {
             setSelectedPlayerId(playerId);
             setPlayerDetailBackScreen('home');
             setScreen('detalleJugador');
+          }}
+        />
+      ) : null}
+
+      {screen === 'partidoEspectado' ? (
+        <PartidoEspectadoScreen
+          user={loggedUser}
+          partido={selectedLiveMatch}
+          onGoProfile={() => setScreen('perfil')}
+          onGoBack={() => {
+            setSelectedLiveMatch(null);
+            setScreen('home');
           }}
         />
       ) : null}
@@ -84,6 +102,7 @@ export default function App() {
             setPlayerDetailBackScreen('home');
             setSelectedMesaMatch(null);
             setLiveMatchPayload(null);
+            setSelectedLiveMatch(null);
             setScreen('inicio');
           }}
         />
@@ -139,6 +158,10 @@ export default function App() {
           teamId={selectedTeamId}
           user={loggedUser}
           onGoBack={() => setScreen('home')}
+          onGoMatchDetail={(match) => {
+            setSelectedLiveMatch(match);
+            setScreen('partidoEspectado');
+          }}
           onGoPlayerDetail={(playerId) => {
             setSelectedPlayerId(playerId);
             setPlayerDetailBackScreen('detalleEquipo');
