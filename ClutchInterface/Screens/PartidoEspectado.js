@@ -110,10 +110,11 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
 
   const playersById = useMemo(() => {
     const map = new Map();
+    const actaPlayerIds = new Set((actas || []).map((row) => String(row?.jugadorId)));
     const allPlayers = [
       ...(match?.equipoLocal?.jugadores || []),
       ...(match?.equipoVisitante?.jugadores || []),
-    ];
+    ].filter((jugador) => actaPlayerIds.has(String(jugador?.id)));
 
     allPlayers.forEach((jugador) => {
       map.set(String(jugador?.id), {
@@ -124,7 +125,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     });
 
     return map;
-  }, [match?.equipoLocal?.jugadores, match?.equipoVisitante?.jugadores]);
+  }, [actas, match?.equipoLocal?.jugadores, match?.equipoVisitante?.jugadores]);
 
   const teamIds = {
     local: String(match?.equipoLocal?.id || ''),
