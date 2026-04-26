@@ -44,6 +44,16 @@ const buildRosterFromState = (state, setupData, sideKey) => {
   const setupTeam = sideKey === 'local' ? setupData?.local : setupData?.visitante;
   const stateTeam = sideKey === 'local' ? state?.partido?.equipoLocal : state?.partido?.equipoVisitante;
   const teamId = setupTeam?.id || stateTeam?.id;
+  const allPlayers = [
+    ...(setupData?.local?.jugadoresDisponibles || []),
+    ...(setupData?.visitante?.jugadoresDisponibles || []),
+  ];
+  const playerNameById = new Map(
+    allPlayers.map((player) => [
+      String(player?.id),
+      player?.nombreCompleto || [player?.nombre, player?.primerApellido].filter(Boolean).join(' ').trim(),
+    ])
+  );
 
   const basePlayers = (setupTeam?.jugadoresDisponibles || []).map((player) => ({
     ...player,
@@ -55,7 +65,7 @@ const buildRosterFromState = (state, setupData, sideKey) => {
   const rosterFromActas = actasTeam.map((acta) => ({
     id: acta?.jugadorId,
     equipoId: acta?.equipoId,
-    nombreCompleto: 'Nombre jugador',
+    nombreCompleto: playerNameById.get(String(acta?.jugadorId)) || 'Jugador',
     dorsal: acta?.dorsal || 0,
     falta: acta?.falta || 0,
     puntos: acta?.puntos || 0,
@@ -91,7 +101,7 @@ function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
 
       <View style={styles.playerButtonsCol}>
         <Pressable style={({ pressed }) => [styles.actionMiniButton, pressed ? styles.buttonPressed : null]} onPress={onSub}>
-          <Text style={styles.miniButtonText}>⇄</Text>
+          <Text style={styles.subButtonText}>⇄</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.actionMiniButton, styles.verActaButton, pressed ? styles.buttonPressed : null]}
@@ -135,6 +145,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
   const [foulShooter, setFoulShooter] = useState(null);
   const [freeThrowsTotal, setFreeThrowsTotal] = useState(0);
   const [freeThrowsTaken, setFreeThrowsTaken] = useState(0);
+  const [forcedSubstitution, setForcedSubstitution] = useState(false);
 
   const partidoId = partido?.id || setupData?.partido?.id;
   const teamLocal = setupData?.local || state?.partido?.equipoLocal;
@@ -212,6 +223,11 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     return awayRoster.filter((player) => onCourt.has(String(player.id)));
   }, [awayRoster, playersOnCourtByTeam, teamVisitante?.id]);
 
+  const foulShooterOptions = useMemo(() => {
+    if (!selectedPlayer?.side) return [];
+    return selectedPlayer.side === 'local' ? awayPlayersOnCourt : localPlayersOnCourt;
+  }, [selectedPlayer?.side, awayPlayersOnCourt, localPlayersOnCourt]);
+
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
     return () => {
@@ -253,6 +269,12 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       mounted = false;
     };
   }, [partidoId, setupData]);
+
+  useEffect(() => {
+    if (!partidoId) return;
+    setLocalRoster(buildRosterFromState(state, setupData, 'local'));
+    setAwayRoster(buildRosterFromState(state, setupData, 'visitante'));
+  }, [state, setupData, partidoId]);
 
   useEffect(() => {
     if (!clockRunning) return undefined;
@@ -335,6 +357,28 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
         Alert.alert('Periodo no cerrado', 'No se pudo cerrar el periodo actual en el servidor.');
       });
   }, [mainClock, partidoId, isFourthFinished]);
+
+  useEffect(() => {
+    const playerWithFiveFouls = [
+      ...localPlayersOnCourt.map((player) => ({ ...player, side: 'local', equipoId: teamLocal?.id })),
+      ...awayPlayersOnCourt.map((player) => ({ ...player, side: 'visitante', equipoId: teamVisitante?.id })),
+    ].find((player) => Number(player?.falta || 0) >= 5);
+
+    if (!playerWithFiveFouls) return;
+    if (showSubstitutionModal && substitutionTarget?.id === playerWithFiveFouls.id) return;
+
+    setSubstitutionTarget(playerWithFiveFouls);
+    setForcedSubstitution(true);
+    setShowSubstitutionModal(true);
+    setClockRunning(false);
+  }, [
+    localPlayersOnCourt,
+    awayPlayersOnCourt,
+    showSubstitutionModal,
+    substitutionTarget?.id,
+    teamLocal?.id,
+    teamVisitante?.id,
+  ]);
 
   const minute = Math.floor(mainClock / 60);
   const second = mainClock % 60;
@@ -629,6 +673,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       setState(updated);
       setShowSubstitutionModal(false);
       setSubstitutionTarget(null);
+      setForcedSubstitution(false);
     } catch (error) {
       Alert.alert('Error', 'No se pudo registrar la sustitución.');
     } finally {
@@ -651,7 +696,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       <View style={styles.header}>
         <View style={styles.headerTeamBox}>
           <Text style={styles.teamSideLabel}>Local</Text>
-          <Pressable style={({ pressed }) => [styles.timeoutButton, pressed ? styles.buttonPressed : null]} onPress={() => handleStartTimeout('local')}>
+          <Pressable
+            style={({ pressed }) => [styles.timeoutButton, styles.timeoutButtonLocal, pressed ? styles.buttonPressed : null]}
+            onPress={() => handleStartTimeout('local')}
+          >
             <Text style={styles.timeoutButtonText}>TM</Text>
           </Pressable>
           <Text style={styles.teamLabel}>{teamLocal?.nombreEquipo || 'Local'}</Text>
@@ -723,7 +771,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
         <View style={[styles.headerTeamBox, styles.awayBox]}>
           <Text style={styles.teamSideLabel}>Visitante</Text>
-          <Pressable style={({ pressed }) => [styles.timeoutButton, pressed ? styles.buttonPressed : null]} onPress={() => handleStartTimeout('visitante')}>
+          <Pressable
+            style={({ pressed }) => [styles.timeoutButton, styles.timeoutButtonAway, pressed ? styles.buttonPressed : null]}
+            onPress={() => handleStartTimeout('visitante')}
+          >
             <Text style={styles.timeoutButtonText}>TM</Text>
           </Pressable>
           <Text style={styles.teamLabel}>{teamVisitante?.nombreEquipo || 'Visitante'}</Text>
@@ -947,15 +998,21 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             {loadingActas ? <ActivityIndicator size="small" color="#FFF" /> : null}
             <ScrollView>
               {playerActas.map((acta) => (
-                <Text key={String(acta.id)} style={styles.actaText}>
-                  MIN {acta.minutosJugados || 0} · PTS {acta.puntos || 0} · TL {acta.tlAnotados || 0}/{acta.tlTirados || 0}
-                  {'\n'}
-                  T2 {acta.t2Anotados || 0}/{acta.t2Tirados || 0} · T3 {acta.triplesAnotados || 0}/{acta.triplesTirados || 0}
-                  {'\n'}
-                  REB {acta.rebotes || 0} · ROB {acta.robos || 0} · TAP {acta.tapones || 0}
-                  {'\n'}
-                  PER {acta.perdida || 0} · FALT {acta.falta || 0} · VAL {acta.valoracion || 0} · +/- {acta.plusMinus || 0}
-                </Text>
+                <View key={String(acta.id)} style={styles.actaRowCard}>
+                  <View style={styles.actaColumn}>
+                    <Text style={styles.actaMetric}>MIN: {acta.minutosJugados || 0}</Text>
+                    <Text style={styles.actaMetric}>PTS: {acta.puntos || 0}</Text>
+                    <Text style={styles.actaMetric}>TL: {acta.tlAnotados || 0}/{acta.tlTirados || 0}</Text>
+                    <Text style={styles.actaMetric}>T2: {acta.t2Anotados || 0}/{acta.t2Tirados || 0}</Text>
+                  </View>
+                  <View style={styles.actaColumn}>
+                    <Text style={styles.actaMetric}>T3: {acta.triplesAnotados || 0}/{acta.triplesTirados || 0}</Text>
+                    <Text style={styles.actaMetric}>REB: {acta.rebotes || 0}</Text>
+                    <Text style={styles.actaMetric}>ROB: {acta.robos || 0} · TAP: {acta.tapones || 0}</Text>
+                    <Text style={styles.actaMetric}>PER: {acta.perdida || 0} · FALT: {acta.falta || 0}</Text>
+                    <Text style={styles.actaMetric}>VAL: {acta.valoracion || 0} · +/-: {acta.plusMinus || 0}</Text>
+                  </View>
+                </View>
               ))}
               {!loadingActas && playerActas.length === 0 ? <Text style={styles.actaText}>Sin actas disponibles.</Text> : null}
             </ScrollView>
@@ -992,6 +1049,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             <Pressable
               style={styles.closeModalBtn}
               onPress={() => {
+                if (forcedSubstitution) {
+                  Alert.alert('Sustitución obligatoria', 'Un jugador con 5 faltas debe ser sustituido.');
+                  return;
+                }
                 setShowSubstitutionModal(false);
                 setSubstitutionTarget(null);
               }}
@@ -1030,9 +1091,9 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
             {foulStep === 'shooter' ? (
               <>
-                <Text style={styles.actaText}>Selecciona al tirador:</Text>
+                <Text style={styles.actaText}>Selecciona al tirador del equipo contrario:</Text>
                 <ScrollView>
-                  {[...localPlayersOnCourt, ...awayPlayersOnCourt].map((player) => (
+                  {foulShooterOptions.map((player) => (
                     <Pressable
                       key={`shooter-${player.id}`}
                       style={styles.starterRow}
@@ -1100,6 +1161,7 @@ const styles = StyleSheet.create({
   header: { height: 130, flexDirection: 'row', paddingHorizontal: 10, paddingTop: 6, gap: 10 },
   headerTeamBox: {
     flex: 1,
+    position: 'relative',
     borderColor: '#2E5A95',
     borderWidth: 1,
     borderRadius: 12,
@@ -1136,7 +1198,7 @@ const styles = StyleSheet.create({
   playerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   playerCard: {
     flex: 1,
-    minHeight: 46,
+    minHeight: 66,
     backgroundColor: '#FFFFFF14',
     borderRadius: 10,
     borderWidth: 1,
@@ -1159,6 +1221,7 @@ const styles = StyleSheet.create({
   },
   verActaButton: { backgroundColor: '#1E7F87' },
   miniButtonText: { color: '#FFF', fontSize: 13, fontWeight: '800', textAlign: 'center', lineHeight: 16 },
+  subButtonText: { color: '#FFF', fontSize: 24, fontWeight: '900', lineHeight: 24 },
   shotMap: { flex: 1, gap: 7, justifyContent: 'center' },
   shotRow: { flexDirection: 'row', gap: 7 },
   shotButton: {
@@ -1186,14 +1249,18 @@ const styles = StyleSheet.create({
   disabledButton: { opacity: 0.45 },
   buttonPressed: { opacity: 0.75 },
   timeoutButton: {
-    alignSelf: 'center',
+    position: 'absolute',
+    top: 8,
     backgroundColor: '#2D4B72',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginVertical: 2,
+    borderRadius: 10,
+    minWidth: 52,
+    minHeight: 36,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  timeoutButtonText: { color: '#FFF', fontWeight: '800', fontSize: 12 },
+  timeoutButtonLocal: { right: 8 },
+  timeoutButtonAway: { left: 8 },
+  timeoutButtonText: { color: '#FFF', fontWeight: '900', fontSize: 16 },
   timeoutCounter: { color: '#FFE290', fontWeight: '800', textAlign: 'center', marginTop: -2 },
   overlayBackdrop: {
     flex: 1,
@@ -1245,6 +1312,18 @@ const styles = StyleSheet.create({
   editTimeArrowColumn: { gap: 6 },
   applyTimeBtn: { backgroundColor: '#2FA656' },
   actaText: { color: '#FFF', marginBottom: 6 },
+  actaRowCard: {
+    borderWidth: 1,
+    borderColor: '#55739A',
+    borderRadius: 10,
+    padding: 8,
+    marginBottom: 8,
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: '#163458',
+  },
+  actaColumn: { flex: 1, gap: 4 },
+  actaMetric: { color: '#E3F1FF', fontSize: 13, fontWeight: '600' },
   closeModalBtn: {
     alignSelf: 'center',
     marginTop: 8,
