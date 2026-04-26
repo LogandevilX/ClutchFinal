@@ -110,11 +110,10 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
 
   const playersById = useMemo(() => {
     const map = new Map();
-    const actaPlayerIds = new Set((actas || []).map((row) => String(row?.jugadorId)));
     const allPlayers = [
       ...(match?.equipoLocal?.jugadores || []),
       ...(match?.equipoVisitante?.jugadores || []),
-    ].filter((jugador) => actaPlayerIds.has(String(jugador?.id)));
+    ];
 
     allPlayers.forEach((jugador) => {
       map.set(String(jugador?.id), {
@@ -125,7 +124,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     });
 
     return map;
-  }, [actas, match?.equipoLocal?.jugadores, match?.equipoVisitante?.jugadores]);
+  }, [match?.equipoLocal?.jugadores, match?.equipoVisitante?.jugadores]);
 
   const teamIds = {
     local: String(match?.equipoLocal?.id || ''),
@@ -425,7 +424,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  safe: { flex: 1, paddingHorizontal: 12, paddingTop: 8 },
+  safe: { flex: 1, paddingHorizontal: 12, paddingTop: 8, marginTop: 30 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerLeft: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   headerLogo: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFF' },
