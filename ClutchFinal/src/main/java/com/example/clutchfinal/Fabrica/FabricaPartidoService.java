@@ -3,7 +3,9 @@ package com.example.clutchfinal.Fabrica;
 import com.example.clutchfinal.DTO.ParcialPartidoDTO;
 import com.example.clutchfinal.DTO.PartidoDTO;
 import com.example.clutchfinal.DTO.PartidosResponseDTO;
+import com.example.clutchfinal.Model.Entrenador;
 import com.example.clutchfinal.Model.Equipo;
+import com.example.clutchfinal.Model.Jugador;
 import com.example.clutchfinal.Model.Partido;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,8 +86,8 @@ public class FabricaPartidoService {
                         equipoLocal,
                         escudoLocal,
                         direccionLocal,
-                        fabricaEntrenadorService.createEntrenadoresDTO(equipoLocal.getEntrenadores()),
-                        fabricaJugadorService.createJugadoresDTO(equipoLocal.getJugadores())
+                        fabricaEntrenadorService.createEntrenadoresDTO((List<Entrenador>) equipoLocal.getEntrenadores()),
+                        fabricaJugadorService.createJugadoresDTO((List<Jugador>) equipoLocal.getJugadores())
                 )
                         : fabricaEquipoService.createEquipoDetalleBasicoDTO(equipoLocal, escudoLocal, direccionLocal),
                 incluirPlantilla
@@ -93,8 +95,8 @@ public class FabricaPartidoService {
                         equipoVisitante,
                         escudoVisitante,
                         direccionVisitante,
-                        fabricaEntrenadorService.createEntrenadoresDTO(equipoVisitante.getEntrenadores()),
-                        fabricaJugadorService.createJugadoresDTO(equipoVisitante.getJugadores())
+                        fabricaEntrenadorService.createEntrenadoresDTO((List<Entrenador>) equipoVisitante.getEntrenadores()),
+                        fabricaJugadorService.createJugadoresDTO((List<Jugador>) equipoVisitante.getJugadores())
                 )
                         : fabricaEquipoService.createEquipoDetalleBasicoDTO(equipoVisitante, escudoVisitante, direccionVisitante),
                 partido.getJornada(),

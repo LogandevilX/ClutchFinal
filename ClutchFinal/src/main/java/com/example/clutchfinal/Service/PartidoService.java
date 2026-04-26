@@ -14,11 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -328,6 +324,7 @@ public class PartidoService {
         return construirEstadoPartido(partido.getId());
     }
 
+    @Transactional
     @Cacheable(value = "estadoPartido", key = "#partidoId")
     public EstadoPartidoDTO obtenerEstadoPartido(Long partidoId) {
         return construirEstadoPartido(partidoId);
@@ -382,7 +379,7 @@ public class PartidoService {
         List<ActaDTO> actas = actaService.findActasByPartidoId(partidoId);
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
 
-        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTOConPlantilla(partido), actas, historial);
+        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTO(partido), actas, historial);
     }
 
     public PartidosResponseDTO findPartidoById(Long id) {
