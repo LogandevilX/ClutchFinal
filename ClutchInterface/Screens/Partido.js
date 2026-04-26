@@ -710,14 +710,14 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           <View style={styles.periodRow}>
             <Text style={styles.periodLabel}>P{currentPeriod}</Text>
             <Pressable
-              style={styles.clockControlButton}
+              style={({ pressed }) => [styles.clockControlButton, pressed ? styles.buttonPressed : null]}
               onPress={handleOpenEditTime}
             >
               <Text style={styles.clockControlText}>Editar</Text>
             </Pressable>
             {mainClock >= 600 && !isFourthFinished ? (
               <Pressable
-                style={styles.nextPeriodButton}
+                style={({ pressed }) => [styles.nextPeriodButton, pressed ? styles.buttonPressed : null]}
                 onPress={() => {
                   clearSelectedPlayer();
                   setShowPeriodModal(true);
@@ -862,10 +862,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           <View style={styles.overlayCard}>
             <Text style={styles.overlayTitle}>Resultado del tiro</Text>
             <View style={styles.overlayActions}>
-              <Pressable style={[styles.resultBtn, styles.successBtn]} onPress={() => handleShotResult(true)}>
+              <Pressable style={({ pressed }) => [styles.resultBtn, styles.successBtn, pressed ? styles.buttonPressed : null]} onPress={() => handleShotResult(true)}>
                 <Text style={styles.resultText}>ACIERTO</Text>
               </Pressable>
-              <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={() => handleShotResult(false)}>
+              <Pressable style={({ pressed }) => [styles.resultBtn, styles.failBtn, pressed ? styles.buttonPressed : null]} onPress={() => handleShotResult(false)}>
                 <Text style={styles.resultText}>Fallo</Text>
               </Pressable>
             </View>
@@ -886,10 +886,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                 <Text style={styles.editTimeValueText}>{String(editMinute).padStart(2, '0')}</Text>
               </View>
               <View style={styles.editTimeArrowColumn}>
-                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(60)}>
+                <Pressable style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]} onPress={() => adjustEditClock(60)}>
                   <Text style={styles.smallControlText}>▲</Text>
                 </Pressable>
-                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(-60)}>
+                <Pressable style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]} onPress={() => adjustEditClock(-60)}>
                   <Text style={styles.smallControlText}>▼</Text>
                 </Pressable>
               </View>
@@ -900,24 +900,24 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                 <Text style={styles.editTimeValueLabel}>Segundos</Text>
                 <Text style={styles.editTimeValueText}>{String(editSecond).padStart(2, '0')}</Text>
               </View>
-              <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(10)}>
+              <Pressable style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]} onPress={() => adjustEditClock(10)}>
                 <Text style={styles.smallControlText}>+10s</Text>
               </Pressable>
               <View style={styles.editTimeArrowColumn}>
-                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(1)}>
+                <Pressable style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]} onPress={() => adjustEditClock(1)}>
                   <Text style={styles.smallControlText}>▲</Text>
                 </Pressable>
-                <Pressable style={styles.smallControlButton} onPress={() => adjustEditClock(-1)}>
+                <Pressable style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]} onPress={() => adjustEditClock(-1)}>
                   <Text style={styles.smallControlText}>▼</Text>
                 </Pressable>
               </View>
             </View>
 
             <View style={styles.overlayActions}>
-              <Pressable style={styles.closeModalBtn} onPress={() => setShowEditTimeModal(false)}>
+              <Pressable style={({ pressed }) => [styles.closeModalBtn, pressed ? styles.buttonPressed : null]} onPress={() => setShowEditTimeModal(false)}>
                 <Text style={styles.resultText}>Cancelar</Text>
               </Pressable>
-              <Pressable style={[styles.closeModalBtn, styles.applyTimeBtn]} onPress={handleApplyEditedTime}>
+              <Pressable style={({ pressed }) => [styles.closeModalBtn, styles.applyTimeBtn, pressed ? styles.buttonPressed : null]} onPress={handleApplyEditedTime}>
                 <Text style={styles.resultText}>Aplicar</Text>
               </Pressable>
             </View>
@@ -937,9 +937,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   {localRoster.map((player) => (
                     <Pressable
                       key={`starter-local-${player.id}`}
-                      style={[
+                      style={({ pressed }) => [
                         styles.starterRow,
                         nextPeriodStarters.local.includes(player.id) ? styles.starterRowSelected : null,
+                        pressed ? styles.buttonPressed : null,
                       ]}
                       onPress={() => handleAddStarter('local', player.id)}
                     >
@@ -955,9 +956,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   {awayRoster.map((player) => (
                     <Pressable
                       key={`starter-away-${player.id}`}
-                      style={[
+                      style={({ pressed }) => [
                         styles.starterRow,
                         nextPeriodStarters.visitante.includes(player.id) ? styles.starterRowSelected : null,
+                        pressed ? styles.buttonPressed : null,
                       ]}
                       onPress={() => handleAddStarter('visitante', player.id)}
                     >
@@ -968,7 +970,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               </View>
             </View>
 
-            <Pressable style={styles.startPeriodBtn} onPress={handleStartNextPeriod}>
+            <Pressable style={({ pressed }) => [styles.startPeriodBtn, pressed ? styles.buttonPressed : null]} onPress={handleStartNextPeriod}>
               <Text style={styles.startPeriodText}>Empezar</Text>
             </Pressable>
           </View>
@@ -980,10 +982,10 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           <View style={styles.overlayCard}>
             <Text style={styles.overlayTitle}>Fin del 4º periodo</Text>
             <View style={styles.overlayActions}>
-              <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={handleFinishMatch}>
+              <Pressable style={({ pressed }) => [styles.resultBtn, styles.failBtn, pressed ? styles.buttonPressed : null]} onPress={handleFinishMatch}>
                 <Text style={styles.resultText}>Finalizar partido</Text>
               </Pressable>
-              <Pressable style={[styles.resultBtn, styles.successBtn]} onPress={() => setShowPeriodModal(true)}>
+              <Pressable style={({ pressed }) => [styles.resultBtn, styles.successBtn, pressed ? styles.buttonPressed : null]} onPress={() => setShowPeriodModal(true)}>
                 <Text style={styles.resultText}>Prórroga</Text>
               </Pressable>
             </View>
@@ -1016,7 +1018,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               ))}
               {!loadingActas && playerActas.length === 0 ? <Text style={styles.actaText}>Sin actas disponibles.</Text> : null}
             </ScrollView>
-            <Pressable style={styles.closeModalBtn} onPress={() => setShowPlayerActas(false)}>
+            <Pressable style={({ pressed }) => [styles.closeModalBtn, pressed ? styles.buttonPressed : null]} onPress={() => setShowPlayerActas(false)}>
               <Text style={styles.resultText}>Cerrar</Text>
             </Pressable>
           </View>
@@ -1035,7 +1037,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               {benchOptions.map((player) => (
                 <Pressable
                   key={`bench-${player.id}`}
-                  style={styles.starterRow}
+                  style={({ pressed }) => [styles.starterRow, pressed ? styles.buttonPressed : null]}
                   onPress={() => handleConfirmSubstitution(player)}
                   disabled={processingSubstitution}
                 >
@@ -1047,7 +1049,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               ) : null}
             </ScrollView>
             <Pressable
-              style={styles.closeModalBtn}
+              style={({ pressed }) => [styles.closeModalBtn, pressed ? styles.buttonPressed : null]}
               onPress={() => {
                 if (forcedSubstitution) {
                   Alert.alert('Sustitución obligatoria', 'Un jugador con 5 faltas debe ser sustituido.');
@@ -1071,11 +1073,11 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               <>
                 <Text style={styles.actaText}>¿Tipo de falta?</Text>
                 <View style={styles.overlayActions}>
-                  <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={handleNormalFoul}>
+                  <Pressable style={({ pressed }) => [styles.resultBtn, styles.failBtn, pressed ? styles.buttonPressed : null]} onPress={handleNormalFoul}>
                     <Text style={styles.resultText}>Normal</Text>
                   </Pressable>
                   <Pressable
-                    style={[styles.resultBtn, styles.successBtn]}
+                    style={({ pressed }) => [styles.resultBtn, styles.successBtn, pressed ? styles.buttonPressed : null]}
                     onPress={async () => {
                       const foulRegistered = await handleNormalFoul(false);
                       if (foulRegistered) {
@@ -1096,7 +1098,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   {foulShooterOptions.map((player) => (
                     <Pressable
                       key={`shooter-${player.id}`}
-                      style={styles.starterRow}
+                      style={({ pressed }) => [styles.starterRow, pressed ? styles.buttonPressed : null]}
                       onPress={() => {
                         setFoulShooter(player);
                         setFoulStep('count');
@@ -1116,7 +1118,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   {[1, 2, 3].map((count) => (
                     <Pressable
                       key={`ft-${count}`}
-                      style={[styles.resultBtn, styles.clockControlButton]}
+                      style={({ pressed }) => [styles.resultBtn, styles.clockControlButton, pressed ? styles.buttonPressed : null]}
                       onPress={() => {
                         setFreeThrowsTotal(count);
                         setFreeThrowsTaken(0);
@@ -1136,16 +1138,16 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   Tiro libre {freeThrowsTaken + 1} de {freeThrowsTotal}
                 </Text>
                 <View style={styles.overlayActions}>
-                  <Pressable style={[styles.resultBtn, styles.successBtn]} onPress={() => handleFreeThrowResult(true)}>
+                  <Pressable style={({ pressed }) => [styles.resultBtn, styles.successBtn, pressed ? styles.buttonPressed : null]} onPress={() => handleFreeThrowResult(true)}>
                     <Text style={styles.resultText}>Acierto</Text>
                   </Pressable>
-                  <Pressable style={[styles.resultBtn, styles.failBtn]} onPress={() => handleFreeThrowResult(false)}>
+                  <Pressable style={({ pressed }) => [styles.resultBtn, styles.failBtn, pressed ? styles.buttonPressed : null]} onPress={() => handleFreeThrowResult(false)}>
                     <Text style={styles.resultText}>Fallo</Text>
                   </Pressable>
                 </View>
               </>
             ) : null}
-            <Pressable style={styles.closeModalBtn} onPress={() => setShowFoulModal(false)}>
+            <Pressable style={({ pressed }) => [styles.closeModalBtn, pressed ? styles.buttonPressed : null]} onPress={() => setShowFoulModal(false)}>
               <Text style={styles.resultText}>Cerrar</Text>
             </Pressable>
           </View>
