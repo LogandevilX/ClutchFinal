@@ -49,6 +49,17 @@ const EVENT_LABELS = {
 };
 
 const toFullName = (jugador) => [jugador?.nombre, jugador?.primerApellido, jugador?.segundoApellido].filter(Boolean).join(' ');
+const toEventSeconds = (event) => {
+  const minute = toSafeNumber(event?.minuto);
+  const second = toSafeNumber(event?.segundo);
+
+  // Compatibilidad con payloads antiguos donde `segundo` ya viene en segundos acumulados.
+  if (!minute && second >= 60) {
+    return second;
+  }
+
+  return (minute * 60) + second;
+};
 const formatClock = (seconds = 0) => `${Math.floor(toSafeNumber(seconds) / 60)}:${String(Math.max(0, toSafeNumber(seconds) % 60)).padStart(2, '0')}`;
 
 const calcPct = (made, att) => {
@@ -133,7 +144,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     const result = new Map();
 
     [...historial]
-      .sort((a, b) => toSafeNumber(a?.periodo) - toSafeNumber(b?.periodo) || toSafeNumber(a?.segundo) - toSafeNumber(b?.segundo))
+      .sort((a, b) => toSafeNumber(a?.periodo) - toSafeNumber(b?.periodo) || toEventSeconds(a) - toEventSeconds(b))
       .forEach((evt) => {
         if (!evt?.equipoId || !evt?.jugadorId) return;
         if (!result.has(String(evt.equipoId))) {
@@ -153,7 +164,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
 
   const lastEvent = useMemo(() => {
     if (!historial.length) return null;
-    return [...historial].sort((a, b) => toSafeNumber(b?.periodo) - toSafeNumber(a?.periodo) || toSafeNumber(b?.segundo) - toSafeNumber(a?.segundo))[0];
+    return [...historial].sort((a, b) => toSafeNumber(b?.periodo) - toSafeNumber(a?.periodo) || toEventSeconds(b) - toEventSeconds(a))[0];
   }, [historial]);
 
   const actasByTeam = useMemo(() => ({
@@ -161,7 +172,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     visitante: actas.filter((a) => String(a?.equipoId) === teamIds.visitante),
   }), [actas, teamIds.local, teamIds.visitante]);
 
-  const liveEvents = useMemo(() => [...historial].sort((a, b) => toSafeNumber(b?.periodo) - toSafeNumber(a?.periodo) || toSafeNumber(b?.segundo) - toSafeNumber(a?.segundo)), [historial]);
+  const liveEvents = useMemo(() => [...historial].sort((a, b) => toSafeNumber(b?.periodo) - toSafeNumber(a?.periodo) || toEventSeconds(b) - toEventSeconds(a)), [historial]);
 
   const totalsByTeam = useMemo(() => {
     const base = (list) => list.reduce((acc, row) => {
@@ -231,7 +242,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
         {!loading && !error ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             <View style={styles.scoreCard}>
-              <Text style={styles.topLine}>Q{match?.periodoActual || 1} - {lastEvent ? formatClock(lastEvent?.segundo) : '0:00'}</Text>
+              <Text style={styles.topLine}>Q{match?.periodoActual || 1} - {lastEvent ? formatClock(toEventSeconds(lastEvent)) : '0:00'}</Text>
               <View style={styles.mainScoreRow}>
                 <TeamBadge side="local" />
                 <Text style={styles.score}>{toSafeNumber(match?.puntosLocal)} - {toSafeNumber(match?.puntosVisitante)}</Text>
@@ -267,7 +278,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventTitle}>{EVENT_LABELS[evt?.tipoEvento] || evt?.tipoEvento}</Text>
                     <Text style={styles.eventSub}>{player?.nombreCompleto || 'Jugador'} · #{toSafeNumber(player?.dorsal || 0)}</Text>
-                    <Text style={styles.eventTime}>Q{evt?.periodo || 1} - {formatClock(evt?.segundo)}</Text>
+                    <Text style={styles.eventTime}>Q{evt?.periodo || 1} - {formatClock(toEventSeconds(evt))}</Text>
                   </View>
                   <Text style={styles.eventIcon}>🏀</Text>
                 </View>
