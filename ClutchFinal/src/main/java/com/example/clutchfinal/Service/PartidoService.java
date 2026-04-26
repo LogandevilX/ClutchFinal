@@ -378,21 +378,21 @@ public class PartidoService {
         List<ActaDTO> actas = actaService.findActasByPartidoId(partidoId);
         List<HistorialPartidoDTO> historial = historialPartidoService.findHistorialByPartidoId(partidoId);
 
-        return new EstadoPartidoDTO(fabricaPartidoService.toPartidoResponseDTO(partido), actas, historial);
+        return new EstadoPartidoDTO(fabricaPartidoService.createPartidoResponseDTO(partido), actas, historial);
     }
 
     public PartidosResponseDTO findPartidoById(Long id) {
-        return partidoRepository.findById(id).map(fabricaPartidoService::toPartidoResponseDTO).orElse(null);
+        return partidoRepository.findById(id).map(fabricaPartidoService::createPartidoResponseDTO).orElse(null);
     }
 
     public List<PartidosResponseDTO> findAllPartidos() {
-        return partidoRepository.findAll().stream().map(fabricaPartidoService::toPartidoResponseDTO).toList();
+        return partidoRepository.findAll().stream().map(fabricaPartidoService::createPartidoResponseDTO).toList();
     }
 
     public List<PartidosResponseDTO> findPartidosByUsuarioId(Long usuarioId) {
         return partidoRepository.findByUsuarioId(usuarioId).stream()
                 .sorted(Comparator.comparing(Partido::getFechaHoraInicio, Comparator.nullsLast(Comparator.naturalOrder())))
-                .map(fabricaPartidoService::toPartidoResponseDTO)
+                .map(fabricaPartidoService::createPartidoResponseDTO)
                 .toList();
     }
 
