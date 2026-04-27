@@ -53,6 +53,22 @@ public class InscripcionService {
             throw new NoSuchElementException("Equipo no encontrado con ID: " + dto.getEquipoId());
         }
 
+        if (!faseOpt.get().getId().equals(grupoOpt.get().getFase().getId())) {
+            throw new IllegalArgumentException("El grupo no pertenece a la fase indicada.");
+        }
+
+        Optional<Inscripcion> inscripcionMismaFase = inscripcionRepository
+                .findByEquipoIdAndFaseId(dto.getEquipoId(), dto.getFaseId());
+        if (inscripcionMismaFase.isPresent() && !inscripcionMismaFase.get().getId().equals(dto.getId())) {
+            throw new IllegalArgumentException("Ese equipo ya está inscrito en la fase indicada.");
+        }
+
+        Optional<Inscripcion> inscripcionMismoGrupo = inscripcionRepository
+                .findByEquipoIdAndGrupoId(dto.getEquipoId(), dto.getGrupoId());
+        if (inscripcionMismoGrupo.isPresent() && !inscripcionMismoGrupo.get().getId().equals(dto.getId())) {
+            throw new IllegalArgumentException("Ese equipo ya está inscrito en el grupo indicado.");
+        }
+
         inscripcion.setFase(faseOpt.get());
         inscripcion.setGrupo(grupoOpt.get());
         inscripcion.setEquipo(equipoOpt.get());
