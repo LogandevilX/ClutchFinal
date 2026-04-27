@@ -10,5 +10,4 @@ import java.util.List;
 public interface EntrenadorRepository extends JpaRepository<Entrenador, Long> {
     long countByEquipoId(Long equipoId);
     long countByEquipoIdAndIdNot(Long equipoId, Long id);
-    List<Entrenador> findByEquipoId(Long equipoId);
 }
