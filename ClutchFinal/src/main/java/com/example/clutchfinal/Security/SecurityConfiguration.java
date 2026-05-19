@@ -25,7 +25,7 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/clutch/usuarios/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/clutch/usuarios/login", "/clutch/usuarios", "/clutch/usuarios/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/**").hasAnyRole("ADMIN", "ESPECTADOR", "ANOTADOR")
                         .requestMatchers(HttpMethod.POST, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
                         .requestMatchers(HttpMethod.PUT, "/clutch/favoritos/**", "/clutch/usuarios/**").hasAnyRole("ADMIN", "ESPECTADOR")
