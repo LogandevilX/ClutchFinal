@@ -26,9 +26,10 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/clutch/usuarios/login", "/clutch/usuarios", "/clutch/usuarios/").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/**").hasAnyRole("ADMIN", "ESPECTADOR", "ANOTADOR")
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
-                        .requestMatchers(HttpMethod.PUT, "/clutch/favoritos/**", "/clutch/usuarios/**").hasAnyRole("ADMIN", "ESPECTADOR")
+                        .requestMatchers(HttpMethod.PUT, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
+                        .requestMatchers(HttpMethod.PUT, "/clutch/usuarios/**").hasAnyRole("ADMIN", "ESPECTADOR", "ANOTADOR")
                         .requestMatchers("/clutch/partidos/**", "/clutch/actas/**", "/clutch/historial-partidos/**")
                             .hasAnyRole("ADMIN", "ANOTADOR")
                         .requestMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
