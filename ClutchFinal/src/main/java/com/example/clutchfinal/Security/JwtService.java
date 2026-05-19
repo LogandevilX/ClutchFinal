@@ -31,7 +31,7 @@ public class JwtService {
                 .claim("id", usuario.getId())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
-                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -47,9 +47,9 @@ public class JwtService {
         return extractAllClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token, String email) {
+    public boolean isTokenValid(String token) {
         Claims claims = extractAllClaims(token);
-        return email.equals(claims.getSubject()) && claims.getExpiration().after(new Date());
+        return claims.getExpiration().after(new Date());
     }
 
     private SecretKey getSigningKey() {

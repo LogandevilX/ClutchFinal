@@ -5,9 +5,6 @@ import com.example.clutchfinal.Fabrica.FabricaUsuarioService;
 import com.example.clutchfinal.Model.Usuario;
 import com.example.clutchfinal.Repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,8 +25,6 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtService jwtService;
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     public UsuarioDTO save(UsuarioDTO dto) {
         if (dto.getId() != null) {
@@ -57,6 +52,8 @@ public class UsuarioService {
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setApodo(dto.getApodo());
         usuario.setRol(dto.getRol());
+
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));
     }
 
@@ -88,14 +85,12 @@ public class UsuarioService {
             throw new IllegalArgumentException("Debes indicar la contraseña del usuario.");
         }
 
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (AuthenticationException ex) {
-            throw new NoSuchElementException("Credenciales inválidas.");
-        }
-
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("Credenciales inválidas."));
+
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
+            throw new NoSuchElementException("Credenciales inválidas.");
+        }
 
         String token = jwtService.generateToken(usuario);
         return new LoginResponseDTO(token, fabricaUsuarioService.createUsuarioDTO(usuario));
