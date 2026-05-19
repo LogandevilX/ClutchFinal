@@ -5,6 +5,7 @@ import com.example.clutchfinal.Fabrica.FabricaUsuarioService;
 import com.example.clutchfinal.Model.Usuario;
 import com.example.clutchfinal.Repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,8 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private FabricaUsuarioService fabricaUsuarioService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UsuarioDTO save(UsuarioDTO dto) {
         if (dto.getId() != null) {
@@ -31,6 +34,7 @@ public class UsuarioService {
             usuario.setFechaRegistro(LocalDateTime.now());
         }
 
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));
     }
 
@@ -42,7 +46,7 @@ public class UsuarioService {
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con ID: " + id));
 
         usuario.setEmail(dto.getEmail());
-        usuario.setPassword(dto.getPassword());
+        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setApodo(dto.getApodo());
         usuario.setRol(dto.getRol());
 
@@ -80,7 +84,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("Credenciales inválidas."));
 
-        if (!usuario.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
             throw new NoSuchElementException("Credenciales inválidas.");
         }
 

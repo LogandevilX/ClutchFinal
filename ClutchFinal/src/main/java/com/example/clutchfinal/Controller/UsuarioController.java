@@ -1,13 +1,22 @@
 package com.example.clutchfinal.Controller;
+import com.example.clutchfinal.DTO.AuthResponseDTO;
 import com.example.clutchfinal.DTO.LoginRequestDTO;
 import com.example.clutchfinal.DTO.UsuarioDTO;
+import com.example.clutchfinal.Model.Usuario;
+import com.example.clutchfinal.Repository.UsuarioRepository;
+import com.example.clutchfinal.Security.JwtService;
 import com.example.clutchfinal.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -17,6 +26,14 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @GetMapping
     public ResponseEntity<List<UsuarioDTO>> findAll() {
@@ -33,12 +50,21 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO dto) {
         try {
-            return new ResponseEntity<>(usuarioService.login(dto.getEmail(), dto.getPassword()), HttpStatus.OK);
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
+            );
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(dto.getEmail());
+            Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado"));
+
+            String jwt = jwtService.generateToken(userDetails, Map.of("rol", usuario.getRol().name(), "id", usuario.getId()));
+            return ResponseEntity.ok(new AuthResponseDTO(jwt, "Bearer", usuario.getId(), usuario.getEmail(), usuario.getRol()));
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch (NoSuchElementException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
