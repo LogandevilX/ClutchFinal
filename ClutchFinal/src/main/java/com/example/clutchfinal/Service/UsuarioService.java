@@ -5,14 +5,11 @@ import com.example.clutchfinal.Fabrica.FabricaUsuarioService;
 import com.example.clutchfinal.Model.Usuario;
 import com.example.clutchfinal.Repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
-import com.example.clutchfinal.Security.JwtService;
-import com.example.clutchfinal.DTO.LoginResponseDTO;
 
 @Service
 public class UsuarioService {
@@ -21,10 +18,6 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private FabricaUsuarioService fabricaUsuarioService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
 
     public UsuarioDTO save(UsuarioDTO dto) {
         if (dto.getId() != null) {
@@ -49,11 +42,10 @@ public class UsuarioService {
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con ID: " + id));
 
         usuario.setEmail(dto.getEmail());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        usuario.setPassword(dto.getPassword());
         usuario.setApodo(dto.getApodo());
         usuario.setRol(dto.getRol());
 
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));
     }
 
@@ -77,7 +69,7 @@ public class UsuarioService {
                 });
     }
 
-    public LoginResponseDTO login(String email, String password) {
+    public UsuarioDTO login(String email, String password) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Debes indicar el email del usuario.");
         }
@@ -88,12 +80,11 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("Credenciales inválidas."));
 
-        if (!passwordEncoder.matches(password, usuario.getPassword())) {
+        if (!usuario.getPassword().equals(password)) {
             throw new NoSuchElementException("Credenciales inválidas.");
         }
 
-        String token = jwtService.generateToken(usuario);
-        return new LoginResponseDTO(token, fabricaUsuarioService.createUsuarioDTO(usuario));
+        return fabricaUsuarioService.createUsuarioDTO(usuario);
     }
 
     public UsuarioDTO findById(Long id) {

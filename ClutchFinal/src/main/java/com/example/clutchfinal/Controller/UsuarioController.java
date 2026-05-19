@@ -1,7 +1,6 @@
 package com.example.clutchfinal.Controller;
 import com.example.clutchfinal.DTO.LoginRequestDTO;
 import com.example.clutchfinal.DTO.UsuarioDTO;
-import com.example.clutchfinal.DTO.LoginResponseDTO;
 import com.example.clutchfinal.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,7 +33,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequestDTO dto) {
         try {
             return new ResponseEntity<>(usuarioService.login(dto.getEmail(), dto.getPassword()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
