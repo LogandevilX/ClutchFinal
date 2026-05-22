@@ -261,12 +261,9 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
               ) : null}
             </View>
 
-            {/* NOTA: Z-Index ajustado aquí para evitar problemas con el menú desplegable */}
-            <View style={styles.playerImageWrap}>
-              <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerImage} />
-              <View style={styles.nameOverlay}>
-                <Text style={styles.playerName}>{(detailData.player?.nombreCompleto || 'Jugador').toUpperCase()}</Text>
-              </View>
+            <View style={styles.playerHeaderWrap}>
+              <Image source={detailData.player?.pathFoto ? { uri: detailData.player.pathFoto } : appLogo} style={styles.playerHeaderImage} />
+              <Text style={styles.playerHeaderName}>{(detailData.player?.nombreCompleto || 'Jugador').toUpperCase()}</Text>
             </View>
 
             <View style={styles.summaryPill}>
@@ -392,25 +389,29 @@ const styles = StyleSheet.create({
   },
   teamDropdownItem: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   teamDropdownText: { color: '#fff', fontWeight: '600' },
-  playerImageWrap: {
+  playerHeaderWrap: {
     marginTop: 16,
-    backgroundColor: '#d7d7d7',
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    overflow: 'hidden',
-    zIndex: -1,
-    elevation: -1
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
   },
-  playerImage: { width: '100%', height: 210, resizeMode: 'cover' },
-  nameOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(44,56,69,0.86)',
-    paddingVertical: 14,
+  playerHeaderImage: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    borderWidth: 3,
+    borderColor: '#2b9cff',
+    backgroundColor: '#ffffff',
+    resizeMode: 'cover',
   },
-  playerName: { color: '#fff', textAlign: 'center', fontSize: 42 * 0.55, fontWeight: '900', letterSpacing: 0.7 },
+  playerHeaderName: {
+    flex: 1,
+    marginLeft: 14,
+    color: '#fff',
+    fontSize: 34 * 0.62,
+    fontWeight: '900',
+    letterSpacing: 0.7,
+  },
   summaryPill: {
     marginTop: 14,
     backgroundColor: 'rgba(2, 10, 23, 0.95)',
