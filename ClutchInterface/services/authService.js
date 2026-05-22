@@ -38,6 +38,7 @@ export async function loginUsuario(email, password) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ email, password }),
+    includeAuth: false,
   });
 
   return normalizeUserResponse(withAuthToken(response));
