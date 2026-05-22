@@ -37,8 +37,8 @@ const TeamSection = ({ sideLabel, team, selectedPlayers, onOpenPicker, onRemoveP
     </View>
 
     <View style={styles.coachRow}>
-      <Text style={styles.coachText}>1º Entrenador: {team?.coaches?.firstCoach || 'Sin asignar'}</Text>
-      <Text style={styles.coachText}>2º Entrenador: {team?.coaches?.secondCoach || 'Sin asignar'}</Text>
+      <Text style={styles.coachText}>1º Entrenador: {team?.coaches?.firstCoach || 'Sin Asignar'}</Text>
+      <Text style={styles.coachText}>2º Entrenador: {team?.coaches?.secondCoach || 'Sin Asignar'}</Text>
     </View>
 
     <View style={styles.playersBox}>
