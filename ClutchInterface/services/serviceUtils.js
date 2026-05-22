@@ -54,12 +54,7 @@ export const buildAbsoluteAssetUrl = (path) => {
 
 export async function fetchJson(url, options = undefined) {
   const requestOptions = options ? { ...options } : {};
-  const includeAuth = requestOptions.includeAuth !== false;
-
-  delete requestOptions.includeAuth;
-  requestOptions.headers = includeAuth
-    ? buildAuthHeaders(requestOptions.headers)
-    : { ...(requestOptions.headers || {}) };
+  requestOptions.headers = buildAuthHeaders(requestOptions.headers);
 
   const response = await fetch(url, requestOptions);
   return parseResponse(response);
