@@ -22,6 +22,7 @@ const LIVE_TAB = 'live';
 const STATS_TAB = 'stats';
 const BEST_TAB = 'best';
 const COMPARE_TAB = 'compare';
+const AUTO_REFRESH_SECONDS = 10;
 
 const STAT_OPTIONS = [
   { key: 'puntos', label: 'PTS' },
@@ -76,6 +77,7 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
   const [activeTab, setActiveTab] = useState(LIVE_TAB);
   const [activeTeamStats, setActiveTeamStats] = useState('local');
   const [selectedBestStat, setSelectedBestStat] = useState(STAT_OPTIONS[0].key);
+  const [refreshElapsed, setRefreshElapsed] = useState(0);
 
   const partidoId = partido?.id;
 
@@ -106,13 +108,26 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
     };
 
     load();
-    const interval = setInterval(load, 10000);
+    const interval = setInterval(() => {
+      setRefreshElapsed(0);
+      load();
+    }, AUTO_REFRESH_SECONDS * 1000);
+
+    const progressInterval = setInterval(() => {
+      setRefreshElapsed((prev) => {
+        if (prev >= AUTO_REFRESH_SECONDS) return AUTO_REFRESH_SECONDS;
+        return prev + 1;
+      });
+    }, 1000);
 
     return () => {
       mounted = false;
       clearInterval(interval);
+      clearInterval(progressInterval);
     };
   }, [partidoId]);
+
+  const refreshProgress = Math.min(100, Math.max(0, (refreshElapsed / AUTO_REFRESH_SECONDS) * 100));
 
   const match = data?.estado?.partido || partido;
   const actas = data?.estado?.actas || [];
@@ -283,6 +298,9 @@ export default function PartidoEspectadoScreen({ user, partido, onGoProfile, onG
                 </Pressable>
               ))}
             </View>
+            <View style={styles.refreshBarTrack}>
+              <View style={[styles.refreshBarFill, { width: `${refreshProgress}%` }]} />
+            </View>
 
             {activeTab === LIVE_TAB ? liveEvents.map((evt, index) => {
               const isLocal = String(evt?.equipoId) === teamIds.local;
@@ -443,6 +461,19 @@ const styles = StyleSheet.create({
   parcialText: { color: '#D5E6FF', fontWeight: '600' },
   cacheTag: { marginTop: 4, color: '#7BFFB8', textAlign: 'center', fontSize: 12 },
   tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
+  refreshBarTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#213550',
+    borderWidth: 1,
+    borderColor: '#FFFFFF33',
+  },
+  refreshBarFill: {
+    height: '100%',
+    backgroundColor: '#7BFFB8',
+  },
   tabBtn: { backgroundColor: '#243B5C', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
   tabBtnActive: { backgroundColor: '#7c2a2a' }, // Cambiado a #7c2a2a
   tabText: { color: '#FFF', fontWeight: '700' },
