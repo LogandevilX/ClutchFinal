@@ -30,27 +30,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
                         .requestMatchers(HttpMethod.PUT, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
                         .requestMatchers(HttpMethod.DELETE, "/clutch/favoritos/**").hasAnyRole("ADMIN", "ESPECTADOR")
-                        .requestMatchers(HttpMethod.PUT, "/clutch/usuarios/**").hasAnyRole("ADMIN", "ESPECTADOR")
-                        .requestMatchers(HttpMethod.POST,
-                                "/clutch/partidos/**", "/clutch/actas/**", "/clutch/historial-partidos/**",
-                                "/clutch/temporadas/**", "/clutch/jugadores/**", "/clutch/pabellones/**",
-                                "/clutch/grupos/**", "/clutch/inscripciones/**", "/clutch/fases/**",
-                                "/clutch/entrenadores/**", "/clutch/equipos/**", "/clutch/clubes/**",
-                                "/clutch/divisiones/**", "/clutch/categorias/**")
-                            .hasAnyRole("ADMIN", "ANOTADOR")
-                        .requestMatchers(HttpMethod.PUT,
-                                "/clutch/partidos/**", "/clutch/actas/**", "/clutch/historial-partidos/**",
-                                "/clutch/temporadas/**", "/clutch/jugadores/**", "/clutch/pabellones/**",
-                                "/clutch/grupos/**", "/clutch/inscripciones/**", "/clutch/fases/**",
-                                "/clutch/entrenadores/**", "/clutch/equipos/**", "/clutch/clubes/**",
-                                "/clutch/divisiones/**", "/clutch/categorias/**")
-                            .hasAnyRole("ADMIN", "ANOTADOR")
-                        .requestMatchers(HttpMethod.DELETE,
-                                "/clutch/partidos/**", "/clutch/actas/**", "/clutch/historial-partidos/**",
-                                "/clutch/temporadas/**", "/clutch/jugadores/**", "/clutch/pabellones/**",
-                                "/clutch/grupos/**", "/clutch/inscripciones/**", "/clutch/fases/**",
-                                "/clutch/entrenadores/**", "/clutch/equipos/**", "/clutch/clubes/**",
-                                "/clutch/divisiones/**", "/clutch/categorias/**")
+                        .requestMatchers(HttpMethod.PUT, "/clutch/usuarios/**").hasAnyRole("ADMIN", "ESPECTADOR", "ANOTADOR")
+                        .requestMatchers("/clutch/partidos/**", "/clutch/actas/**", "/clutch/historial-partidos/**")
                             .hasAnyRole("ADMIN", "ANOTADOR")
                         .requestMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/**").hasRole("ADMIN")
