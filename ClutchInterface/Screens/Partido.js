@@ -299,8 +299,9 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
       });
 
       setShotClock((prev) => {
-        if (prev <= 0) {
-          return 0;
+        if (prev <= 1) {
+          setPose14Mode(false);
+          return 24;
         }
         return prev - 1;
       });
@@ -325,16 +326,6 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
     return () => clearInterval(timeoutInterval);
   }, [timeoutActive]);
-
-  useEffect(() => {
-    if (shotClock > 0) {
-      return;
-    }
-
-    setClockRunning(false);
-    setShotClock(24);
-    setPose14Mode(false);
-  }, [shotClock]);
 
   useEffect(() => {
     if (!selectedPlayer?.id || !selectedPlayer?.equipoId) {
@@ -1200,7 +1191,7 @@ const styles = StyleSheet.create({
   mainClock: { color: '#FFF', fontSize: 28, fontWeight: '900' },
   nextPeriodButton: { backgroundColor: '#2FA656', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   nextPeriodText: { color: '#FFF', fontWeight: '800' },
-  possessionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  possessionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   shotClockText: { color: '#9EFCB4', fontWeight: '900', fontSize: 26 },
   smallControlButton: { backgroundColor: '#385E8C', borderRadius: 6, paddingHorizontal: 9, paddingVertical: 5 },
   smallControlText: { color: '#FFFFFF', fontWeight: '700' },
