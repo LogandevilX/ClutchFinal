@@ -351,7 +351,6 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     finishPeriod(partidoId)
       .then((newState) => {
         setState(newState);
-        setShowPeriodModal(true);
       })
       .catch(() => {
         Alert.alert('Periodo no cerrado', 'No se pudo cerrar el periodo actual en el servidor.');
