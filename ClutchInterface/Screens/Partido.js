@@ -940,12 +940,12 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             <View style={styles.periodColumns}>
               <View style={styles.periodColumn}>
                 <Text style={styles.periodTeamLabel}>Local</Text>
-                <ScrollView contentContainerStyle={styles.playerCardGrid}>
+                <ScrollView>
                   {localRoster.map((player) => (
                     <Pressable
                       key={`starter-local-${player.id}`}
                       style={({ pressed }) => [
-                        styles.starterSquare,
+                        styles.starterRow,
                         nextPeriodStarters.local.includes(player.id) ? styles.starterRowSelected : null,
                         pressed ? styles.buttonPressed : null,
                       ]}
@@ -959,12 +959,12 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
 
               <View style={styles.periodColumn}>
                 <Text style={styles.periodTeamLabel}>Visitante</Text>
-                <ScrollView contentContainerStyle={styles.playerCardGrid}>
+                <ScrollView>
                   {awayRoster.map((player) => (
                     <Pressable
                       key={`starter-away-${player.id}`}
                       style={({ pressed }) => [
-                        styles.starterSquare,
+                        styles.starterRow,
                         nextPeriodStarters.visitante.includes(player.id) ? styles.starterRowSelected : null,
                         pressed ? styles.buttonPressed : null,
                       ]}
@@ -1040,11 +1040,11 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
               Sale #{String(substitutionTarget?.dorsal || 0).padStart(2, '0')}
             </Text>
             {processingSubstitution ? <ActivityIndicator size="small" color="#FFF" /> : null}
-            <ScrollView contentContainerStyle={styles.playerCardGrid}>
+            <ScrollView>
               {benchOptions.map((player) => (
                 <Pressable
                   key={`bench-${player.id}`}
-                  style={({ pressed }) => [styles.starterSquare, pressed ? styles.buttonPressed : null]}
+                  style={({ pressed }) => [styles.starterRow, pressed ? styles.buttonPressed : null]}
                   onPress={() => handleConfirmSubstitution(player)}
                   disabled={processingSubstitution}
                 >
@@ -1310,15 +1310,8 @@ const styles = StyleSheet.create({
   resultText: { color: '#FFF', fontWeight: '800' },
   periodCard: { maxHeight: '92%' },
   periodColumns: { flexDirection: 'row', gap: 12 },
-  periodColumn: { flex: 1, maxHeight: 320 },
+  periodColumn: { flex: 1, maxHeight: 260 },
   periodTeamLabel: { color: '#BBD7F4', fontWeight: '800', marginBottom: 8, textAlign: 'center' },
-  playerCardGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 10,
-    paddingBottom: 6,
-  },
   starterRow: {
     borderRadius: 8,
     borderWidth: 1,
@@ -1327,18 +1320,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     marginBottom: 6,
   },
-  starterSquare: {
-    width: '48%',
-    aspectRatio: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#55739A',
-    backgroundColor: '#D0D3D8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   starterRowSelected: { backgroundColor: '#205137', borderColor: '#75D59A' },
-  starterText: { color: '#102743', fontWeight: '900', fontSize: 20 },
+  starterText: { color: '#FFF', fontWeight: '600' },
   startPeriodBtn: { backgroundColor: '#2FA656', borderRadius: 8, paddingVertical: 11, alignItems: 'center' },
   startPeriodText: { color: '#FFF', fontWeight: '900', fontSize: 16 },
   playerActaCard: { maxHeight: '70%' },
