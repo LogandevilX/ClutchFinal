@@ -1,12 +1,24 @@
 import { API_BASE_URL } from './apiConfig';
-import { fetchJson } from './serviceUtils';
+import { fetchJson, setAuthToken } from './serviceUtils';
 
 const USERS_URL = `${API_BASE_URL}/usuarios`;
+const AUTH_URL = `${API_BASE_URL}/auth`;
 
 const normalizeAuthUser = (payload = {}) => ({
   ...payload,
   id: payload?.id ?? payload?.userId ?? null,
 });
+
+const withAuthToken = (response) => {
+  if (!response?.ok) {
+    return response;
+  }
+
+  const token = response?.data?.token;
+  setAuthToken(token);
+
+  return response;
+};
 
 const normalizeUserResponse = (response) => {
   if (!response?.ok) {
@@ -20,7 +32,7 @@ const normalizeUserResponse = (response) => {
 };
 
 export async function loginUsuario(email, password) {
-  const response = await fetchJson(`${USERS_URL}/login`, {
+  const response = await fetchJson(`${AUTH_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,7 +40,7 @@ export async function loginUsuario(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  return normalizeUserResponse(response);
+  return normalizeUserResponse(withAuthToken(response));
 }
 
 
@@ -66,4 +78,8 @@ export async function actualizarUsuario(id, { email, password, apodo, rol, fecha
   });
 
   return normalizeUserResponse(response);
+}
+
+export function logoutUsuario() {
+  setAuthToken(null);
 }

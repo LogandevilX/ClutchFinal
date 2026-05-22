@@ -1,5 +1,5 @@
 import { API_BASE_URL } from './apiConfig';
-import { buildAbsoluteAssetUrl, fetchJson, getDateValue, safeArray, toId, toSafeNumber } from './serviceUtils';
+import { buildAbsoluteAssetUrl, buildAuthHeaders, fetchJson, getDateValue, safeArray, toId, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const JUGADORES_URL = `${API_BASE_URL}/jugadores`;
@@ -266,6 +266,7 @@ export async function toggleFavoritePlayer({ usuarioId, jugadorId }) {
   if (playerFavorite?.id) {
     const deleteResponse = await fetch(`${FAVORITOS_URL}/${playerFavorite.id}`, {
       method: 'DELETE',
+      headers: buildAuthHeaders(),
     });
 
     return parseResponse(deleteResponse);
@@ -273,7 +274,7 @@ export async function toggleFavoritePlayer({ usuarioId, jugadorId }) {
 
   const createResponse = await fetch(FAVORITOS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ usuarioId, equipoId: null, jugadorId }),
   });
 

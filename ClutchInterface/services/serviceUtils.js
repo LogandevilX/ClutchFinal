@@ -1,5 +1,23 @@
 import { API_ASSETS_BASE_URL, parseResponse } from './apiConfig';
 
+let authToken = null;
+
+export const setAuthToken = (token) => {
+  authToken = token || null;
+};
+
+export const getAuthToken = () => authToken;
+
+export const buildAuthHeaders = (headers = {}) => {
+  const normalizedHeaders = { ...(headers || {}) };
+
+  if (authToken) {
+    normalizedHeaders.Authorization = `Bearer ${authToken}`;
+  }
+
+  return normalizedHeaders;
+};
+
 export const safeArray = (value) => (Array.isArray(value) ? value : []);
 
 export const toSafeNumber = (value, fallback = 0) => {
@@ -35,6 +53,9 @@ export const buildAbsoluteAssetUrl = (path) => {
 };
 
 export async function fetchJson(url, options = undefined) {
-  const response = await fetch(url, options);
+  const requestOptions = options ? { ...options } : {};
+  requestOptions.headers = buildAuthHeaders(requestOptions.headers);
+
+  const response = await fetch(url, requestOptions);
   return parseResponse(response);
 }
