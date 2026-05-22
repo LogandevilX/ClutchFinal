@@ -68,8 +68,6 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome, onLogout })
       const response = await actualizarUsuario(user.id, {
         apodo: nextApodo,
         email: nextEmail,
-        password: user.password,
-        rol: user.rol,
       });
 
       if (!response.ok || !response.data) {

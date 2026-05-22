@@ -32,16 +32,39 @@ const normalizeUserResponse = (response) => {
 };
 
 export async function loginUsuario(email, password) {
-  const response = await fetchJson(`${AUTH_URL}/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-    includeAuth: false,
-  });
+  const authResponse = withAuthToken(
+    await fetchJson(`${AUTH_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      includeAuth: false,
+    })
+  );
 
-  return normalizeUserResponse(withAuthToken(response));
+  if (!authResponse?.ok) {
+    return authResponse;
+  }
+
+  const userId = authResponse?.data?.id ?? authResponse?.data?.userId;
+  if (!userId) {
+    return normalizeUserResponse(authResponse);
+  }
+
+  const profileResponse = await fetchJson(`${USERS_URL}/${userId}`);
+
+  if (!profileResponse?.ok || !profileResponse?.data) {
+    return normalizeUserResponse(authResponse);
+  }
+
+  return normalizeUserResponse({
+    ...authResponse,
+    data: {
+      ...authResponse.data,
+      ...profileResponse.data,
+    },
+  });
 }
 
 
@@ -63,7 +86,7 @@ export async function registrarEspectador({ email, password, apodo }) {
 }
 
 
-export async function actualizarUsuario(id, { email, password, apodo, rol, fechaRegistro }) {
+export async function actualizarUsuario(id, { email, apodo, password = null, rol = null, fechaRegistro = null }) {
   const response = await fetchJson(`${USERS_URL}/${id}`, {
     method: 'PUT',
     headers: {
