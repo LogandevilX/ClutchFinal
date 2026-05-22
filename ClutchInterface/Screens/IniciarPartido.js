@@ -302,17 +302,23 @@ export default function IniciarPartidoScreen({ partido, onGoBack, onMatchStarted
           />
 
           <View style={styles.centerSection}>
-            <Text style={styles.startLabel}>
-              Inicio: {new Date(setupData.partido?.fechaHoraInicio || '').toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-            <Text style={styles.remainingLabel}>{remainingTimeLabel}</Text>
-
             <Pressable
               style={[styles.startButton, !canStart || submitting ? styles.startButtonDisabled : null]}
               onPress={onStartMatch}
               disabled={!canStart || submitting}
             >
               <Text style={styles.startButtonText}>{submitting ? 'Inicializando...' : 'Iniciar partido'}</Text>
+            </Pressable>
+
+            <View style={styles.centerInfo}>
+              <Text style={styles.startLabel}>
+                Inicio: {new Date(setupData.partido?.fechaHoraInicio || '').toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+              <Text style={styles.remainingLabel}>{remainingTimeLabel}</Text>
+            </View>
+
+            <Pressable style={styles.backButton} onPress={onGoBack}>
+              <Text style={styles.backButtonText}>Cancelar</Text>
             </Pressable>
           </View>
 
@@ -445,9 +451,15 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF33',
     borderRadius: 14,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 16,
     paddingVertical: 20,
     paddingHorizontal: 12,
+  },
+  centerInfo: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 8,
   },
   startLabel: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', textAlign: 'center' },
   remainingLabel: { color: '#C8E1F7', fontSize: 15, fontWeight: '600', textAlign: 'center' },
@@ -459,6 +471,14 @@ const styles = StyleSheet.create({
   },
   startButtonDisabled: { backgroundColor: '#4E6C56' },
   startButtonText: { color: '#FFF', fontWeight: '800', textAlign: 'center' },
+  backButton: {
+    marginTop: 'auto',
+    backgroundColor: '#95A4B8',
+    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  backButtonText: { color: '#FFF', fontWeight: '800', textAlign: 'center' },
   modalBackdrop: {
     flex: 1,
     backgroundColor: '#000000AA',
