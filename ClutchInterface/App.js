@@ -11,6 +11,7 @@ import InicioMesaScreen from './Screens/InicioMesa';
 import IniciarPartidoScreen from './Screens/IniciarPartido';
 import PartidoScreen from './Screens/Partido';
 import PartidoEspectadoScreen from './Screens/PartidoEspectado';
+import { logoutUsuario } from './services/authService';
 
 export default function App() {
   const [screen, setScreen] = useState('inicio');
@@ -96,6 +97,7 @@ export default function App() {
           onUserUpdate={(updatedUser) => setLoggedUser(updatedUser)}
           onGoHome={() => setScreen(loggedUser?.rol === 'ANOTADOR' ? 'inicioMesa' : 'home')}
           onLogout={() => {
+            logoutUsuario();
             setLoggedUser(null);
             setSelectedTeamId(null);
             setSelectedPlayerId(null);

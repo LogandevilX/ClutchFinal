@@ -1,5 +1,5 @@
 import { API_BASE_URL, parseResponse } from './apiConfig';
-import { buildAbsoluteAssetUrl, fetchJson, getDateValue, safeArray, toSafeNumber } from './serviceUtils';
+import { buildAbsoluteAssetUrl, buildAuthHeaders, fetchJson, getDateValue, safeArray, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;
 const EQUIPOS_URL = `${API_BASE_URL}/equipos`;
@@ -114,7 +114,7 @@ async function getSearchStaticDataset() {
 export async function addFavorite({ usuarioId, equipoId = null, jugadorId = null }) {
   const response = await fetch(FAVORITOS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ usuarioId, equipoId, jugadorId }),
   });
 
@@ -135,6 +135,7 @@ export async function toggleFavoriteTeam({ usuarioId, equipoId }) {
   if (teamFavorite?.id) {
     const deleteResponse = await fetch(`${FAVORITOS_URL}/${teamFavorite.id}`, {
       method: 'DELETE',
+      headers: buildAuthHeaders(),
     });
     return parseResponse(deleteResponse);
   }
