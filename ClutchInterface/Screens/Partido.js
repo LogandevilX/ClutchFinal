@@ -104,9 +104,6 @@ function PlayerCard({ player, isSelected, onSelect, onShowActa, onSub }) {
         onPress={onSelect}
       >
         <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
-        <Text style={styles.playerName} numberOfLines={1}>
-          {player?.nombreCompleto || 'Jugador'}
-        </Text>
         <Text style={styles.playerFouls}>Faltas: {player?.falta || 0}</Text>
       </Pressable>
 
@@ -238,6 +235,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
     if (!selectedPlayer?.side) return [];
     return selectedPlayer.side === 'local' ? awayPlayersOnCourt : localPlayersOnCourt;
   }, [selectedPlayer?.side, awayPlayersOnCourt, localPlayersOnCourt]);
+  const canUse14Mode = shotClock < 14;
 
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
@@ -759,12 +757,20 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
             </Pressable>
             <Text style={styles.shotClockText}>{shotClock}</Text>
             <Pressable
-              style={({ pressed }) => [styles.smallControlButton, pressed ? styles.buttonPressed : null]}
+              style={({ pressed }) => [
+                styles.smallControlButton,
+                !canUse14Mode ? styles.smallControlButtonDisabled : null,
+                pressed && canUse14Mode ? styles.buttonPressed : null,
+              ]}
               onPress={() => {
+                if (!canUse14Mode) {
+                  return;
+                }
                 clearSelectedPlayer();
                 setShotClock(14);
                 setPose14Mode(true);
               }}
+              disabled={!canUse14Mode}
             >
               <Text style={styles.smallControlText}>{pose14Mode ? '14*' : '14'}</Text>
             </Pressable>
@@ -946,7 +952,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                       ]}
                       onPress={() => handleAddStarter('local', player.id)}
                     >
-                      <Text style={styles.starterText}>#{String(player.dorsal).padStart(2, '0')} {player.nombreCompleto}</Text>
+                      <Text style={styles.starterText}>#{String(player.dorsal).padStart(2, '0')}</Text>
                     </Pressable>
                   ))}
                 </ScrollView>
@@ -965,7 +971,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                       ]}
                       onPress={() => handleAddStarter('visitante', player.id)}
                     >
-                      <Text style={styles.starterText}>#{String(player.dorsal).padStart(2, '0')} {player.nombreCompleto}</Text>
+                      <Text style={styles.starterText}>#{String(player.dorsal).padStart(2, '0')}</Text>
                     </Pressable>
                   ))}
                 </ScrollView>
@@ -1032,7 +1038,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
           <View style={[styles.overlayCard, styles.playerActaCard]}>
             <Text style={styles.overlayTitle}>Sustitución</Text>
             <Text style={styles.actaText}>
-              Sale #{String(substitutionTarget?.dorsal || 0).padStart(2, '0')} {substitutionTarget?.nombreCompleto || ''}
+              Sale #{String(substitutionTarget?.dorsal || 0).padStart(2, '0')}
             </Text>
             {processingSubstitution ? <ActivityIndicator size="small" color="#FFF" /> : null}
             <ScrollView>
@@ -1043,7 +1049,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                   onPress={() => handleConfirmSubstitution(player)}
                   disabled={processingSubstitution}
                 >
-                  <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')} {player.nombreCompleto}</Text>
+                  <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')}</Text>
                 </Pressable>
               ))}
               {!processingSubstitution && benchOptions.length === 0 ? (
@@ -1106,7 +1112,7 @@ export default function PartidoScreen({ partido, setupData, initialState, onExit
                         setFoulStep('count');
                       }}
                     >
-                      <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')} {player.nombreCompleto}</Text>
+                      <Text style={styles.starterText}>#{String(player.dorsal || 0).padStart(2, '0')}</Text>
                     </Pressable>
                   ))}
                 </ScrollView>
@@ -1194,6 +1200,7 @@ const styles = StyleSheet.create({
   possessionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   shotClockText: { color: '#9EFCB4', fontWeight: '900', fontSize: 26 },
   smallControlButton: { backgroundColor: '#385E8C', borderRadius: 6, paddingHorizontal: 9, paddingVertical: 5 },
+  smallControlButtonDisabled: { opacity: 0.4 },
   smallControlText: { color: '#FFFFFF', fontWeight: '700' },
   mainContent: { flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 10, paddingBottom: 8 },
   sideZone: { flex: 1, borderWidth: 1, borderColor: '#2E5A95', borderRadius: 12, padding: 8 },
