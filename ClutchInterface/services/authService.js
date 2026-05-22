@@ -1,8 +1,8 @@
-import { API_BASE_URL } from './apiConfig';
+import { API_ASSETS_BASE_URL, API_BASE_URL } from './apiConfig';
 import { fetchJson, setAuthToken } from './serviceUtils';
 
 const USERS_URL = `${API_BASE_URL}/usuarios`;
-const AUTH_URL = `${API_BASE_URL}/auth`;
+const AUTH_URL = `${API_ASSETS_BASE_URL}/auth`;
 
 const normalizeAuthUser = (payload = {}) => ({
   ...payload,
