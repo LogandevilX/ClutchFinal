@@ -98,6 +98,7 @@ const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => 
 export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail, onGoMatchDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState('plantilla');
   const [detailData, setDetailData] = useState(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState(null);
@@ -183,9 +184,11 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
     const response = await toggleFavoriteTeam({ usuarioId: user.id, equipoId: teamId });
 
     if (!response.ok) {
-      setErrorMessage('No se pudo actualizar el estado de favorito.');
+      setFavoriteErrorMessage('No se pudo actualizar el estado de favorito.');
       return;
     }
+
+    setFavoriteErrorMessage('');
 
     setDetailData((previous) => ({
       ...previous,
@@ -212,6 +215,12 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
             <Text style={[styles.favoriteIcon, { color: detailData?.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
           </Pressable>
         </View>
+
+        {!loading && !errorMessage && favoriteErrorMessage ? (
+          <View style={styles.inlineErrorMessage}>
+            <Text style={styles.errorText}>{favoriteErrorMessage}</Text>
+          </View>
+        ) : null}
 
         {loading ? (
           <View style={styles.centerMessage}>
@@ -550,6 +559,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  inlineErrorMessage: {
+    paddingHorizontal: 18,
+    paddingBottom: 8,
   },
   errorText: {
     color: '#fff',

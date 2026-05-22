@@ -110,6 +110,7 @@ const TableRow = ({ label, values, highlighted }) => (
 export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState('totales');
   const [detailData, setDetailData] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -192,9 +193,11 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
     const response = await toggleFavoritePlayer({ usuarioId: user.id, jugadorId: playerId });
 
     if (!response.ok) {
-      setErrorMessage('No se pudo actualizar el estado de favorito.');
+      setFavoriteErrorMessage('No se pudo actualizar el estado de favorito.');
       return;
     }
+
+    setFavoriteErrorMessage('');
 
     setDetailData((previous) => ({
       ...previous,
@@ -214,6 +217,12 @@ export default function DetalleJugadorScreen({ playerId, user, onGoBack }) {
             <Text style={[styles.favoriteIcon, { color: detailData?.isFavorite ? '#ffd84d' : '#ffffff' }]}>★</Text>
           </Pressable>
         </View>
+
+        {!loading && !errorMessage && favoriteErrorMessage ? (
+          <View style={styles.inlineErrorMessage}>
+            <Text style={styles.errorText}>{favoriteErrorMessage}</Text>
+          </View>
+        ) : null}
 
         {loading ? (
           <View style={styles.centerMessage}>
@@ -352,6 +361,7 @@ const styles = StyleSheet.create({
   favoriteButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   favoriteIcon: { fontSize: 32 },
   centerMessage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  inlineErrorMessage: { paddingHorizontal: 18, paddingBottom: 8 },
   errorText: { color: '#fff', fontWeight: '700' },
   scrollContent: { paddingBottom: 28 },
   teamSelectorWrap: { position: 'relative', zIndex: 9, elevation: 9 },
