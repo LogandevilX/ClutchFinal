@@ -26,7 +26,7 @@ public class UsuarioService {
         if (dto.getId() != null) {
             throw new IllegalArgumentException("Para crear un usuario no debes enviar ID.");
         }
-        validarUsuario(dto);
+        validarUsuarioCreacion(dto);
         validarEmailUnico(dto.getEmail(), null);
 
         Usuario usuario = fabricaUsuarioService.createUsuario(dto);
@@ -39,21 +39,22 @@ public class UsuarioService {
     }
 
     public UsuarioDTO update(Long id, UsuarioDTO dto) {
-        validarUsuario(dto);
+        validarUsuarioActualizacion(dto);
         validarEmailUnico(dto.getEmail(), id);
 
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con ID: " + id));
 
-        usuario.setEmail(dto.getEmail());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-        usuario.setApodo(dto.getApodo());
-        usuario.setRol(dto.getRol());
+        usuario.setEmail(dto.getEmail().trim());
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        usuario.setApodo(dto.getApodo().trim());
 
         return fabricaUsuarioService.createUsuarioDTO(usuarioRepository.save(usuario));
     }
 
-    private void validarUsuario(UsuarioDTO dto) {
+    private void validarUsuarioCreacion(UsuarioDTO dto) {
         if (dto.getRol() == null) {
             throw new IllegalArgumentException("Debes indicar el rol del usuario.");
         }
@@ -62,6 +63,17 @@ public class UsuarioService {
         }
         if (dto.getPassword() == null || dto.getPassword().isBlank()) {
             throw new IllegalArgumentException("Debes indicar la contraseña del usuario.");
+        }
+    }
+
+
+
+    private void validarUsuarioActualizacion(UsuarioDTO dto) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Debes indicar el email del usuario.");
+        }
+        if (dto.getApodo() == null || dto.getApodo().isBlank()) {
+            throw new IllegalArgumentException("Debes indicar el apodo del usuario.");
         }
     }
 
