@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './apiConfig';
+import { API_BASE_URL, parseResponse } from './apiConfig';
 import { buildAbsoluteAssetUrl, buildAuthHeaders, fetchJson, getDateValue, safeArray, toId, toSafeNumber } from './serviceUtils';
 
 const FAVORITOS_URL = `${API_BASE_URL}/favoritos`;

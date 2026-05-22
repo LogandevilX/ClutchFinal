@@ -284,7 +284,6 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                   <Pressable key={player.id} style={styles.playerRow} onPress={() => onGoPlayerDetail?.(player.id)}>
                     <Image source={player.pathFoto ? { uri: player.pathFoto } : appLogo} style={styles.playerAvatar} />
                     <View style={styles.playerInfoBlock}>
-                      <Text style={styles.playerNumber}>#{String(player?.dorsal || 0).padStart(2, '0')}</Text>
                       <Text style={styles.playerName}>{[player.nombre, player.primerApellido, player.segundoApellido].filter(Boolean).join(' ')}</Text>
                       <View style={styles.playerStatsRow}>
                         <View style={styles.playerStatItem}>
