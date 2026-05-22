@@ -128,8 +128,10 @@ export async function toggleFavoriteTeam({ usuarioId, equipoId }) {
     throw new Error('No se pudieron cargar los favoritos para actualizar el equipo.');
   }
 
+  const normalizedTeamId = Number(equipoId);
+
   const teamFavorite = safeArray(favoritosResponse.data).find(
-    (favorito) => favorito?.equipoId === equipoId && !favorito?.jugadorId
+    (favorito) => Number(favorito?.equipoId) === normalizedTeamId && !favorito?.jugadorId
   );
 
   if (teamFavorite?.id) {
