@@ -169,6 +169,10 @@ export default function App() {
             setPlayerDetailBackScreen('detalleEquipo');
             setScreen('detalleJugador');
           }}
+          onGoTeamDetail={(nextTeamId) => {
+            setSelectedTeamId(nextTeamId);
+            setScreen('detalleEquipo');
+          }}
         />
       ) : null}
 

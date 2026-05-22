@@ -95,7 +95,7 @@ const DropdownFilter = ({ label, value, open, onToggle, options, onSelect }) => 
   </View>
 );
 
-export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail, onGoMatchDetail }) {
+export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayerDetail, onGoMatchDetail, onGoTeamDetail }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [favoriteErrorMessage, setFavoriteErrorMessage] = useState('');
@@ -364,13 +364,14 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                   </View>
 
                   {filteredClassification.map((team, index) => (
-                    <View
+                    <Pressable
                       key={team.id}
                       style={[
                         styles.classificationRow,
                         index === 0 ? styles.firstPlace : null,
                         index === filteredClassification.length - 1 ? styles.lastPlace : null,
                       ]}
+                      onPress={() => onGoTeamDetail?.(team.id)}
                     >
                       <Text style={[styles.classificationText, styles.positionCol]}>
                         {String(team.posicion || index + 1).padStart(2, '0')}
@@ -387,7 +388,7 @@ export default function DetalleEquipoScreen({ teamId, user, onGoBack, onGoPlayer
                       <Text style={styles.classificationText}>{team.partidosGanados || 0}</Text>
                       <Text style={styles.classificationText}>{team.partidosPerdidos || 0}</Text>
                       <Text style={styles.classificationText}>{team.puntos || 0}</Text>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               </View>
