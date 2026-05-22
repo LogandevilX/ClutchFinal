@@ -49,8 +49,8 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome, onLogout })
       return;
     }
 
-    const nextApodo = fieldName === 'apodo' ? apodoDraft.trim() : (user.apodo || '').trim();
-    const nextEmail = fieldName === 'email' ? emailDraft.trim() : (user.email || '').trim();
+    const nextApodo = apodoDraft.trim();
+    const nextEmail = emailDraft.trim();
 
     if (!nextApodo || !nextEmail) {
       Alert.alert('Campos inválidos', 'El apodo y el correo son obligatorios.');
@@ -76,6 +76,8 @@ export default function PerfilScreen({ user, onUserUpdate, onGoHome, onLogout })
       }
 
       onUserUpdate?.(response.data);
+      setApodoDraft(response.data.apodo || nextApodo);
+      setEmailDraft(response.data.email || nextEmail);
       setEditingField(null);
       Alert.alert('Perfil actualizado', 'Tus datos se han guardado correctamente.');
     } catch (error) {
